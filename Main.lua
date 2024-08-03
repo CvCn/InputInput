@@ -644,15 +644,17 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 				-- 上滚历史消息
 				if historyIndex > 1 then
 					historyIndex = historyIndex - 1
-					self:SetText(messageHistory[historyIndex])
-					self:SetCursorPosition(self:GetNumLetters())
+					local h = messageHistory[historyIndex]
+					self:SetText(h)
+					self:SetCursorPosition(#h)
 				end
 			elseif key == "DOWN" then
 				-- 下滚历史消息
 				if historyIndex < #messageHistory then
 					historyIndex = historyIndex + 1
-					self:SetText(messageHistory[historyIndex])
-					self:SetCursorPosition(self:GetNumLetters())
+					local h = messageHistory[historyIndex]
+					self:SetText(h)
+					self:SetCursorPosition(#h)
 				elseif historyIndex == #messageHistory then
 					-- 如果是最新消息，清空输入框
 					historyIndex = #messageHistory + 1
