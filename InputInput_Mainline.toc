@@ -1,0 +1,15 @@
+## Interface: 110000, 110002
+## IconTexture: Interface\ICONS\pet_type_dragon
+
+## Title: InputInput
+## Notes: 
+## Author: York
+## Version: 1.0.0
+
+## X-Category: Interface Enhancements
+## X-Curse-Project-ID: 
+## X-Wago-ID: 
+
+## SavedVariables: InputInput_DB
+
+Init.xml
