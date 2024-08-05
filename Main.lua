@@ -1,4 +1,4 @@
-local W, M, U, D, G = unpack((select(2, ...)))
+local W, M, U, D, G, L = unpack((select(2, ...)))
 local MAIN = {}
 M.MAIN = MAIN
 
@@ -324,7 +324,7 @@ end
 function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
 	local info = ChatTypeInfo[channel]
 	local channelColor = U:RGBToHex(info.r, info.g, info.b)
-	local name_realm
+	local name_realm = L['unknown']
 	local class
 	if senderGUID then
 		if tonumber(senderGUID) ~= nil then

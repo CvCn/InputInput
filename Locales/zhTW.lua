@@ -68,3 +68,8 @@ L["Moon"] = "月亮"
 L["Square"] = "方形"
 L["Cross"] = "十字"
 L["Skull"] = "頭顱"
+
+
+
+-- 主界面 main frame
+L['unknown'] = "未知"

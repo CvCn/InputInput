@@ -70,7 +70,16 @@ local emotes = {
     { value = "Square",     key = L["Square"],    texture = "Interface\\TargetingFrame\\ui-raidtargetingicon_6" },
     { value = "Cross",      key = L["Cross"],     texture = "Interface\\TargetingFrame\\ui-raidtargetingicon_7" },
     { value = "Skull",      key = L["Skull"],     texture = "Interface\\TargetingFrame\\ui-raidtargetingicon_8" },
+    { value = "rt1",        key = "rt1",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_1"},
+    { value = "rt2",        key = "rt2",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_2"},
+    { value = "rt3",        key = "rt3",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_3"},
+    { value = "rt4",        key = "rt4",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_4"},
+    { value = "rt5",        key = "rt5",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_5"},
+    { value = "rt6",        key = "rt6",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_6"},
+    { value = "rt7",        key = "rt7",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_7"},
+    { value = "rt8",        key = "rt8",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8"},
 }
+
 local function ReplaceEmote(value)
     if not value or value == '' then return '' end
     local emote = gsub(value, "[%{%}]", "")
