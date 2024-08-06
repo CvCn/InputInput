@@ -19,8 +19,14 @@ jobs:
 
     - name: Package files as ZIP
       run: |
-        mkdir -p package
-        zip -r "${{ steps.vars.outputs.project_name }}-${{ github.ref_name }}.zip" . package/ -x ".github/*" -x ".gitignore" -x "pkgmeta.yaml"
+        # 定义忽略文件和目录的列表
+        IGNORED_FILES="
+          .github/*
+          pkgmeta.yaml
+          .gitignore
+        "
+        # 使用 zip 命令打包，并忽略指定的文件和目录
+        zip -r "${{ steps.vars.outputs.project_name }}-${{ github.ref_name }}.zip" . -x $IGNORED_FILES
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
