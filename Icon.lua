@@ -80,7 +80,6 @@ local emotes = {
     { value = "rt8",        key = "rt8",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8"},
 }
 
-
 local function ReplaceEmote(value)
     if not value or value == '' then return '' end
     local emote = gsub(value, "[%{%}]", "")
