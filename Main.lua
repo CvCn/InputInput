@@ -364,18 +364,10 @@ function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
 	end
 
 	if isChannel then
-		-- return string.format('[%s] %s %s: %s',
-		-- 	GetFormattedTimestamp(),
-		-- 	'|cFF' .. channelColor .. '[' .. channelName .. ']',
-		-- 	'[|c' .. classColor.colorStr .. sender .. '|r]|r', msg)
 		return TO .. string.format('|W|cFF%s|c%s|r : %s|r|w',
 			channelColor,
 			classColor.colorStr .. name_realm, msg)
 	else
-		-- return string.format('[%s] |cFF%s %s: %s|r',
-		-- 	GetFormattedTimestamp(),
-		-- 	channelColor .. '[' .. channelName .. ']',
-		-- 	'[|c' .. classColor.colorStr .. sender .. '|r]', msg)
 		return TO .. string.format('|W|cFF%s|c%s|r : %s|r|w',
 			channelColor,
 			classColor.colorStr .. name_realm, msg)
