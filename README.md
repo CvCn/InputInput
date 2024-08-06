@@ -36,7 +36,7 @@
 # 关于作者 Author：
 **York**
 - 国服 1区-艾萨拉 China
-- 臺服 二組-水晶之刺 Taiwan, China
+-      臺服 二組-水晶之刺 Taiwan, China
 
 # github：
 [https://github.com/CvCn/InputInput](https://github.com/CvCn/InputInput)
