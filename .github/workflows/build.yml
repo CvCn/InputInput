@@ -21,7 +21,7 @@ jobs:
       run: |
         mkdir -p package
         cp -r build/* package/
-        zip -r "${{ steps.vars.outputs.project_name }}-${{ github.ref_name }}.zip" package/
+        zip -r "${{ steps.vars.outputs.project_name }}-${{ github.ref_name }}.zip" package/ -x ".github/*" -x ".gitignore" -x "pkgmeta.yaml"
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
