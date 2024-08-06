@@ -6,8 +6,8 @@
 ## Version: 1.0.1
 
 ## X-Category: Interface Enhancements
-## X-Curse-Project-ID: 
-## X-Wago-ID: 
+## X-Curse-Project-ID: 1076615
+## X-Wago-ID: aNevRn62
 
 ## SavedVariables: InputInput_DB
 
