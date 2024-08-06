@@ -20,8 +20,7 @@ jobs:
     - name: Package files as ZIP
       run: |
         mkdir -p package
-        cp -r * package/
-        zip -r "${{ steps.vars.outputs.project_name }}-${{ github.ref_name }}.zip" package/ -x ".github/*" -x ".gitignore" -x "pkgmeta.yaml"
+        zip -r "${{ steps.vars.outputs.project_name }}-${{ github.ref_name }}.zip" . package/ -x ".github/*" -x ".gitignore" -x "pkgmeta.yaml"
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
