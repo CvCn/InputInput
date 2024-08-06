@@ -1,7 +1,8 @@
+package-as: /
+
 enable-nolib-creation: no
 
 ignore:
-  - pkgmeta.yaml
+  - "pkgmeta.yaml"
   - ".gitignore"
   - ".github"
-  - ".DS_Store"
