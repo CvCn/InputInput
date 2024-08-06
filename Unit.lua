@@ -127,7 +127,6 @@ function U:BTagFilter(text)
     end)
 end
 
-
 -- 使用string.find来进行纯文本匹配替换
 function U:ReplacePlainTextUsingFind(text, pattern, replacement)
     local result = ""
