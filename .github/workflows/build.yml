@@ -1,0 +1,30 @@
+name: Build and Package for Tag ${{ github.ref_name }}
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Get project name
+      id: vars
+      run: echo "::set-output name=project_name::$(basename $(git rev-parse --show-toplevel))"
+
+    - name: Package files as ZIP
+      run: |
+        mkdir -p package
+        cp -r build/* package/
+        zip -r "${{ steps.vars.outputs.project_name }}-${{ github.ref_name }}.zip" package/
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-artifact
+        path: "${{ steps.vars.outputs.project_name }}-${{ github.ref_name }}.zip"
