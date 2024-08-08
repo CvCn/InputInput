@@ -15,9 +15,12 @@ W.C_Item = C_Item
 if not W.C_Item then
     W.C_Item = {}
 end
-W.C_Item.GetItemInfo = GetItemInfo
-W.C_Item.GetDetailedItemLevelInfo = GetDetailedItemLevelInfo
-W.C_Item.GetAffixInfo = function() end
+
+---@diagnostic disable-next-line: deprecated
+W.C_Item.GetItemInfo = C_Item.GetItemInfo or GetItemInfo
+---@diagnostic disable-next-line: deprecated
+W.C_Item.GetDetailedItemLevelInfo = C_Item.GetDetailedItemLevelInfo or GetDetailedItemLevelInfo
+W.C_Item.GetAffixInfo = C_Item.GetAffixInfo or function() end
 
 W.C_ChallengeMode = C_ChallengeMode
 if not W.C_ChallengeMode then
@@ -35,7 +38,9 @@ end
 
 -- talentID, name, texture, selected, available, spellID, unknown, row, column, known, grantedByAura
 W.GetTalentInfoByID = GetTalentInfoByID or function(talentID, specGroupIndex, ...)
+    ---@diagnostic disable-next-line: undefined-global
     for tabIndex = 1, GetNumTalentTabs() do
+        ---@diagnostic disable-next-line: undefined-global
         for talentIndex = 1, GetNumTalents(tabIndex) do
             local name, iconTexture, tier, column, rank, maxRank,
             isExceptional, available, previewRank, previewAvailable, id = GetTalentInfo(tabIndex, talentIndex)
@@ -45,5 +50,23 @@ W.GetTalentInfoByID = GetTalentInfoByID or function(talentID, specGroupIndex, ..
             end
         end
     end
+    return nil
+end
+
+
+W.C_Spell = C_Spell
+if not W.C_Spell then
+    W.C_Spell = {}
+end
+
+---@diagnostic disable-next-line: deprecated
+W.C_Spell.GetSpellTexture = C_Spell.GetSpellTexture or GetSpellTexture
+
+W.C_ClubFinder = C_ClubFinder
+if not W.C_ClubFinder then
+    W.C_ClubFinder = {}
+end
+
+W.C_ClubFinder.GetRecruitingClubInfoFromFinderGUID = C_ClubFinder.GetRecruitingClubInfoFromFinderGUID or function()
     return nil
 end

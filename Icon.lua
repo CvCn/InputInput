@@ -70,14 +70,14 @@ local emotes = {
     { value = "Square",     key = L["Square"],    texture = "Interface\\TargetingFrame\\ui-raidtargetingicon_6" },
     { value = "Cross",      key = L["Cross"],     texture = "Interface\\TargetingFrame\\ui-raidtargetingicon_7" },
     { value = "Skull",      key = L["Skull"],     texture = "Interface\\TargetingFrame\\ui-raidtargetingicon_8" },
-    -- { value = "rt1",        key = "rt1",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_1"},
-    -- { value = "rt2",        key = "rt2",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_2"},
-    -- { value = "rt3",        key = "rt3",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_3"},
-    -- { value = "rt4",        key = "rt4",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_4"},
-    -- { value = "rt5",        key = "rt5",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_5"},
-    -- { value = "rt6",        key = "rt6",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_6"},
-    -- { value = "rt7",        key = "rt7",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_7"},
-    -- { value = "rt8",        key = "rt8",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8"},
+    { value = "rt1",        key = "rt1",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_1" },
+    { value = "rt2",        key = "rt2",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_2" },
+    { value = "rt3",        key = "rt3",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_3" },
+    { value = "rt4",        key = "rt4",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_4" },
+    { value = "rt5",        key = "rt5",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_5" },
+    { value = "rt6",        key = "rt6",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_6" },
+    { value = "rt7",        key = "rt7",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_7" },
+    { value = "rt8",        key = "rt8",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8" },
 }
 
 local function ReplaceEmote(value)
@@ -102,54 +102,72 @@ ReplaceIconString(text)
     local H_type, id = text:match("%|H(.-):(%d+)")
     local icon
     local suffix = ''
-    if H_type == 'item' then
-        local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount,
-        itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType, expansionID, setID, isCraftingReagent =
-            W.C_Item.GetItemInfo(id)
-        icon = itemTexture
-        if U:HasKey(itemshowLevel, classID) then
-            local effectiveILvl, isPreview, baseILvl = W.C_Item.GetDetailedItemLevelInfo(text:match("%|H(.-)|h"))
-            suffix = tostring(effectiveILvl)
+    if H_type then
+        if H_type == 'item' then
+            local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount,
+            itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType, expansionID, setID, isCraftingReagent =
+                W.C_Item.GetItemInfo(id)
+            icon = itemTexture
+            if U:HasKey(itemshowLevel, classID) then
+                local effectiveILvl, isPreview, baseILvl = W.C_Item.GetDetailedItemLevelInfo(text:match("%|H(.-)|h"))
+                suffix = tostring(effectiveILvl)
+            end
+        elseif H_type == 'spell' then
+            local spellPath = W.C_Spell.GetSpellTexture(id)
+            icon = spellPath
+        elseif H_type == 'achievement' then
+            icon = select(10, GetAchievementInfo(id))
+        elseif H_type == 'talentbuild' then
+            -- local id, level = text:match("talentbuild:(.+):(%d+):")
+            local _, _, _, path = W.GetSpecializationInfoByID(id)
+            icon = path
+            -- suffix = level
+        elseif H_type == 'talent' then -- |cff4e96f7|Htalent:1898:4|h[双生戒律]|h|r
+            -- local id, level = text:match("talentbuild:(.+):(%d+):")
+            local _, _, path = W.GetTalentInfoByID(tonumber(id))
+            icon = path
+            -- suffix = level
+        elseif H_type:match("trade:(.+)") then
+            local guid, spellID, tradeSkillLineID = text:match("trade:(.+):(%d+):(%d+)")
+            -- trade_level = level
+            local unit = W.UnitTokenFromGUID(guid)
+            if unit then
+                local classColor = RAID_CLASS_COLORS[select(2, UnitClass(unit))]
+                if not classColor then
+                    classColor = {
+                        colorStr = 'ffffffff'
+                    }
+                end
+                suffix = string.format('|c%s%s|r', classColor.colorStr, W.UnitName(unit))
+            end
+
+            icon = W.C_Spell.GetSpellTexture(spellID)
+        elseif H_type == 'quest' then
+            local questId, questLevel = text:match("quest:(%d+):(%d+)")
+            suffix = questLevel
+        elseif H_type == 'currency' then
+            local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(id)
+            icon = currencyInfo.iconFileID
+        elseif H_type == 'dungeonScore' then
+            icon = 'Interface\\Icons\\inv_relics_hourglass'
+            suffix = id
+        elseif H_type == 'keystone' then
+            local id, challengeModeID, level, a1, a2, a3, a4 = text:match(
+                "keystone:(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):(%d+)")
+            suffix = U:GetAffixName(a1, a2, a3, a4)
+        elseif H_type == 'mount' then
+            icon = W.C_Spell.GetSpellTexture(id)
         end
-    elseif H_type == 'spell' then
-        local spellPath = GetSpellTexture(id)
-        icon = spellPath
-    elseif H_type == 'achievement' then
-        icon = select(10, GetAchievementInfo(id))
-    elseif H_type == 'talentbuild' then
-        -- local id, level = text:match("talentbuild:(.+):(%d+):")
-        local _, _, _, path = W.GetSpecializationInfoByID(id)
-        icon = path
-        -- suffix = level
-    elseif H_type == 'talent' then -- |cff4e96f7|Htalent:1898:4|h[双生戒律]|h|r
-        -- local id, level = text:match("talentbuild:(.+):(%d+):")
-        local _, _, path = W.GetTalentInfoByID(tonumber(id))
-        icon = path
-        -- suffix = level
-    elseif H_type:match("trade:(.+)") then
-        local guid, spellID, tradeSkillLineID = text:match("trade:(.+):(%d+):(%d+)")
-        -- trade_level = level
-        local classColor = RAID_CLASS_COLORS[select(2, UnitClass(W.UnitTokenFromGUID(guid)))]
-        if not classColor then
-            classColor = {
-                colorStr = 'ffffffff'
-            }
+    else
+        H_type, id = text:match("%|H(.-):(.+)|h%[.-%]")
+        if H_type then
+            if H_type == 'clubFinder' then
+                local clubInfo = C_ClubFinder.GetRecruitingClubInfoFromFinderGUID(id)
+                if clubInfo and clubInfo.numActiveMembers then
+                    suffix = '|Tinterface\\friendsframe\\ui-toast-chatinviteicon:15|t' .. clubInfo.numActiveMembers
+                end
+            end
         end
-        suffix = string.format('|c%s%s|r', classColor.colorStr, W.UnitName(W.UnitTokenFromGUID(guid)))
-        icon = GetSpellTexture(spellID)
-    elseif H_type == 'quest' then
-        local questId, questLevel = text:match("quest:(%d+):(%d+)")
-        suffix = questLevel
-    elseif H_type == 'currency' then
-        local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(id)
-        icon = currencyInfo.iconFileID
-    elseif H_type == 'dungeonScore' then
-        icon = 'Interface\\Icons\\inv_relics_hourglass'
-        suffix = id
-    elseif H_type == 'keystone' then
-        local id, challengeModeID, level, a1, a2, a3, a4 = text:match(
-            "keystone:(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):(%d+)")
-        suffix = U:GetAffixName(a1, a2, a3, a4)
     end
     local itemSrtr = ''
     if icon then

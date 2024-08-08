@@ -293,8 +293,8 @@ function MAIN:Init()
 	-- backdropFrame2:SetPoint("BOTTOMRIGHT", editBox, "BOTTOMRIGHT", 5, -5)
 
 	backdropFrame2:SetFrameLevel(editBox:GetFrameLevel())
-
-	-- local bg3 = backdropFrame2:CreateTexture("II_CHAT_BG_FRAME_Texture", "BACKGROUND")
+	local bg3
+	-- bg3 = backdropFrame2:CreateTexture("II_CHAT_BG_FRAME_Texture", "BACKGROUND")
 	-- bg3:SetAllPoints(backdropFrame2)
 	-- bg3:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
 
@@ -327,7 +327,7 @@ function MAIN:Init()
 
 	LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 
-	return editBox, bg, border, backdropFrame2, resizeButton, texture_btn, channel_name, II_TIP, II_LANG
+	return editBox, bg, border, backdropFrame2, resizeButton, texture_btn, channel_name, II_TIP, II_LANG, bg3
 end
 
 function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
@@ -419,6 +419,7 @@ local ChatLabels = {
 }
 
 function HideEuiBorder(editBox)
+---@diagnostic disable-next-line: undefined-global
 	if ElvUI then
 		C_Timer.After(0.001, function()
 			editBox:SetBackdropBorderColor(0, 0, 0, 0)
@@ -495,13 +496,15 @@ function ChannelChange(editBox, bg, bg3, border, backdropFrame2, resizeBtnTextur
 end
 
 local ChatChange = false
+---@diagnostic disable-next-line: deprecated
 local IsAddOnLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or IsAddOnLoaded
 local frame = CreateFrame("Frame", "II_MAIN_FRAME")
 frame:RegisterEvent("PLAYER_LOGIN")
 frame:SetScript("OnEvent", function(self_f, event, ...)
+---@diagnostic disable-next-line: undefined-global
 	if (ElvUI ~= nil and IsAddOnLoaded("ElvUI") or ElvUI == nil) and
 		(NDui ~= nil and IsAddOnLoaded("NDui") or NDui == nil) then
-		local editBox, bg, border, backdropFrame2, resizeButton, texture_btn, channel_name, II_TIP, II_LANG = MAIN:Init()
+		local editBox, bg, border, backdropFrame2, resizeButton, texture_btn, channel_name, II_TIP, II_LANG, bg3 = MAIN:Init()
 		editBox:SetScript("OnEscapePressed", editBox.ClearFocus) -- 允许按下 Esc 清除焦点+
 		-- NDui
 		if NDui then
@@ -618,12 +621,20 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 			historyIndex = #messageHistory + 1
 
 			if message:sub(1, 4) == "/sp " then
-				message = string.gsub(message, "/sp ", "")
+				message = string.gsub(message, "/sp ", "", 1)
 				message = '/script print(' .. message .. ')'
 				self:SetText(message)
 			elseif message:sub(1, 5) == "/sps " then
-				message = string.gsub(message, "/sps ", "")
+				message = string.gsub(message, "/sps ", "", 1)
 				message = '/script print("' .. message .. '")'
+				self:SetText(message)
+			elseif message:sub(1, 5) == "/spa " then
+				message = string.gsub(message, "/spa ", "", 1)
+				message = '/script for _, v in ipairs(' .. message .. ') do print(v) end'
+				self:SetText(message)
+			elseif message:sub(1, 5) == "/spt " then
+				message = string.gsub(message, "/spt ", "", 1)
+				message = '/script for k, v in pairs(' .. message .. ') do print(k, v) end'
 				self:SetText(message)
 			end
 
@@ -722,9 +733,10 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 
 		frame_E:SetScript("OnEvent",
 			function(self, ...)
-				-- U:SaveLog('msg_even_' .. event, { ... })
 				local event, msg, sender, language, channelString, target, flags, zoneChannelID, channelNumber,
 				channelName, languageID, _, guid, bnSenderID, isMobile, isSubtitle, supressRaidIcons = ...
+
+				U:SaveLog('msg_even_' .. event, { ... })
 
 				local type = strsub(event, 10) or 'SAY';
 				local chatGroup = Chat_GetChatCategory(type);
@@ -732,8 +744,8 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 					local info = ChatTypeInfo[type];
 					msg = ChatFrame_GetMobileEmbeddedTexture(info.r, info.g, info.b) .. msg;
 				end
-				msg = C_ChatInfo.ReplaceIconAndGroupExpressions(msg, supressRaidIcons,
-					not ChatFrame_CanChatGroupPerformExpressionExpansion(chatGroup))
+				-- msg = C_ChatInfo.ReplaceIconAndGroupExpressions(msg, supressRaidIcons,
+				-- 	not ChatFrame_CanChatGroupPerformExpressionExpansion(chatGroup))
 				if event == 'CHAT_MSG_CHANNEL' then
 					SaveMSG('CHANNEL' .. channelNumber, 'CHANNEL' .. channelNumber, guid or bnSenderID, msg,
 						true, sender)

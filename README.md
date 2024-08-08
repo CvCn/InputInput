@@ -7,7 +7,6 @@
 - 输入提示、自动补充（Control+Enter） Input prompts, automatic supplementation
 - 撤销（Control+Z）反撤销（Control+Shift+Z） undo、redo
 - 最近消息 Recent chat messages
-- /sp ? 指令：相当于/script print(?) （/sp ?  Instruction: Equivalent to /script print (?)）
 
 # 支持的游戏版本 Supported WOW Versions：
 - 地心之战（TWW） 110000
@@ -33,6 +32,13 @@
 - 如果安装了ElvUI或者NdUI，Tab切换频道功能将由这些插件接管 If ElvUI or NdUI is installed, the Tab channel switching function will be taken over by these plugins
 - 以上未列出的功能均为暴雪默认的交互逻辑 The functions not listed above are Blizzard's default interaction logic
 - 以上为机翻，请见谅 The above is machine translation, please forgive me
+
+# 开发者功能 Developer Features:
+- /sp ? 指令：相当于/script print(?) （/sp ?  Instruction: Equivalent to /script print (?)）
+- /sps ? 指令：相当于/script print("?") （/sps ?  Instruction: Equivalent to /script print ("?")）
+- /spa ? 指令：相当于/script for _, v in ipairs(?) do print(v) end （/spa ?  Instruction: Equivalent to /script for _, v in ipairs(?) do print(v) end）
+- /spt ? 指令：相当于/script for k, v in pairs(?) do print(k, v) end （/spt ?  Instruction: Equivalent to /script for k, v in pairs(?) do print(k, v) end）
+
 
 # 关于作者 Author：
 **York**
