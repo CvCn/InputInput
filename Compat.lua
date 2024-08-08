@@ -60,13 +60,13 @@ if not W.C_Spell then
 end
 
 ---@diagnostic disable-next-line: deprecated
-W.C_Spell.GetSpellTexture = C_Spell.GetSpellTexture or GetSpellTexture
+W.C_Spell.GetSpellTexture = W.C_Spell.GetSpellTexture or GetSpellTexture
 
 W.C_ClubFinder = C_ClubFinder
 if not W.C_ClubFinder then
     W.C_ClubFinder = {}
 end
 
-W.C_ClubFinder.GetRecruitingClubInfoFromFinderGUID = C_ClubFinder.GetRecruitingClubInfoFromFinderGUID or function()
+W.C_ClubFinder.GetRecruitingClubInfoFromFinderGUID = W.C_ClubFinder.GetRecruitingClubInfoFromFinderGUID or function()
     return nil
 end

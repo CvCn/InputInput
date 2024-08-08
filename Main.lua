@@ -330,19 +330,32 @@ function MAIN:Init()
 	return editBox, bg, border, backdropFrame2, resizeButton, texture_btn, channel_name, II_TIP, II_LANG, bg3
 end
 
+local function addLevel(name, realm)
+	local maxLevel = GetMaxPlayerLevel()
+	local level = UnitLevel(name)
+	local name_realm = name
+	if realm ~= GetRealmName() then
+		name_realm = U:join('-', name, realm)
+	end
+	if level and level ~= 0 and maxLevel ~= level then
+		name_realm = '|cFF909399' .. level .. '.|r' .. name_realm
+	end
+	return name_realm
+end
+
 function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
 	local info = ChatTypeInfo[channel]
 	local channelColor = U:RGBToHex(info.r, info.g, info.b)
 	local name_realm = ''
 	local class
-	if senderGUID then
+	if senderGUID and #senderGUID > 0 then
 		if tonumber(senderGUID) ~= nil then
 			local accountInfo = C_BattleNet.GetAccountInfoByID(senderGUID)
 			if accountInfo then
 				local gameFriend = accountInfo.gameAccountInfo
 				if gameFriend and gameFriend.realmName then
 					class = gameFriend.className
-					name_realm = U:join('-', gameFriend.characterName, gameFriend.realmName)
+					name_realm = addLevel(gameFriend.characterName, gameFriend.realmName)
 				else
 					name_realm = accountInfo.accountName
 				end
@@ -351,13 +364,17 @@ function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
 				end
 			end
 		else
-			local _, class_, _, race, sex, name, realm = GetPlayerInfoByGUID(senderGUID)
-			class = class_
-			realm = realm or GetRealmName()
-			name_realm = U:join('-', name, realm)
+			local localizedClass, englishClass, localizedRace, englishRace, sex, name, realmName = GetPlayerInfoByGUID(
+				senderGUID)
+			class = englishClass
+			realmName = (realmName and #realmName > 0) and realmName or GetRealmName()
+			name_realm = addLevel(name, realmName)
 		end
 	else
 		name_realm = sender
+		local name, realm = strsplit('-', name_realm)
+		class = UnitClass(name)
+		name_realm = addLevel(name, realm)
 	end
 
 	local classColor = RAID_CLASS_COLORS[class]
@@ -419,7 +436,7 @@ local ChatLabels = {
 }
 
 function HideEuiBorder(editBox)
----@diagnostic disable-next-line: undefined-global
+	---@diagnostic disable-next-line: undefined-global
 	if ElvUI then
 		C_Timer.After(0.001, function()
 			editBox:SetBackdropBorderColor(0, 0, 0, 0)
@@ -501,10 +518,11 @@ local IsAddOnLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or IsAddOnLoaded
 local frame = CreateFrame("Frame", "II_MAIN_FRAME")
 frame:RegisterEvent("PLAYER_LOGIN")
 frame:SetScript("OnEvent", function(self_f, event, ...)
----@diagnostic disable-next-line: undefined-global
+	---@diagnostic disable-next-line: undefined-global
 	if (ElvUI ~= nil and IsAddOnLoaded("ElvUI") or ElvUI == nil) and
 		(NDui ~= nil and IsAddOnLoaded("NDui") or NDui == nil) then
-		local editBox, bg, border, backdropFrame2, resizeButton, texture_btn, channel_name, II_TIP, II_LANG, bg3 = MAIN:Init()
+		local editBox, bg, border, backdropFrame2, resizeButton, texture_btn, channel_name, II_TIP, II_LANG, bg3 = MAIN
+			:Init()
 		editBox:SetScript("OnEscapePressed", editBox.ClearFocus) -- 允许按下 Esc 清除焦点+
 		-- NDui
 		if NDui then
@@ -737,6 +755,12 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 				channelName, languageID, _, guid, bnSenderID, isMobile, isSubtitle, supressRaidIcons = ...
 
 				U:SaveLog('msg_even_' .. event, { ... })
+
+				-- if language and #language > 0 then
+				-- 	if UnitFactionGroup('player') ~= UnitFactionGroup(sender) then
+				-- 		msg = '[' .. language .. ']' .. msg
+				-- 	end
+				-- end
 
 				local type = strsub(event, 10) or 'SAY';
 				local chatGroup = Chat_GetChatCategory(type);
