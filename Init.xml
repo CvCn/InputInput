@@ -3,8 +3,8 @@
     <Include file ='Locales\Load_Locales.xml'/>
     <Script file='Compat.lua'/>
     <Script file='Save.lua'/>
-    <Script file='Animation.lua'/>
     <Script file='Icon.lua'/>
     <Script file='Unit.lua'/>
+    <Script file='History.lua'/>
     <Script file='Main.lua'/>
 </Ui>

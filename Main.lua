@@ -106,14 +106,14 @@ local function FindHis(his, patt)
 		local h = his[i]
 		if h and #h > 0 then
 			-- |cff0070dd|Hitem:38613::::::::80:::::::::|h[火热珠串]|h|r
-			local inp, count = h:gsub("(%|c.-%|H.-%|h(%[.-%])%|h|r)", function (a1, a2)
+			local inp, count = h:gsub("(%|c.-%|H.-%|h(%[.-%])%|h|r)", function(a1, a2)
 				replace[a2] = a1
 				return a2
 			end)
 			local start, _end = strfind(inp, patt, 1, true)
 			if start and start > 0 and _end ~= #inp then
 				local p = strsub(inp, _end + 1)
-				
+
 				if start == 1 then
 					return p
 				else
@@ -169,7 +169,7 @@ local scale = 1
 local chat_frame = {}
 local scale_temp = scale
 local chat_h = 1
-function LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP)
+function LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 	editBox:SetWidth(480 * scale)
 	local font, _, flags = editBox:GetFont()
 	editBox:SetFont(font, newFontSize * scale, flags)
@@ -198,6 +198,9 @@ function LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP)
 	end
 	backdropFrame2:SetHeight(c_h + 10)
 	UpdateFontStringPosition(editBox, II_TIP, tip)
+
+	local font, fontsize, flags = editBox:GetFont()
+	II_LANG:SetFont(font, fontsize * 0.4, flags)
 	scale_temp = scale
 end
 
@@ -283,7 +286,6 @@ function MAIN:Init()
 	editBox:RegisterForDrag("LeftButton")
 
 	-- 聊天窗口
-	-- 创建自定义背景和边框
 	local backdropFrame2 = CreateFrame("Frame", "II_CHAT_BG_FRAME", editBox)
 	backdropFrame2:SetPoint("BOTTOM", editBox, "TOP", 0, 15)
 	backdropFrame2:SetWidth(480)
@@ -311,20 +313,27 @@ function MAIN:Init()
 
 	resizeButton:Hide()
 
-
 	local II_TIP = editBox:CreateFontString('II_TIP', "OVERLAY", "GameFontNormal")
 	II_TIP:SetTextColor(1, 1, 1, 0.3) -- 设置颜色为白色
 	II_TIP:Hide()
 
-	LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP)
+	-- 语言
+	local II_LANG = editBox:CreateFontString('II_LANG', "OVERLAY", "GameFontNormal")
+	II_LANG:SetTextColor(1, 1, 1, 0.6) -- 设置颜色为白色
+	II_LANG:SetPoint('BOTTOMRIGHT', editBox, 'BOTTOMRIGHT', 0, 0)
+	local font, fontsize, flags = editBox:GetFont()
+	II_LANG:SetFont(font, fontsize * 0.4, flags)
+	II_LANG:SetText(_G["INPUT_" .. editBox:GetInputLanguage()])
 
-	return editBox, bg, border, backdropFrame2, resizeButton, texture_btn, channel_name, II_TIP
+	LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
+
+	return editBox, bg, border, backdropFrame2, resizeButton, texture_btn, channel_name, II_TIP, II_LANG
 end
 
 function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
 	local info = ChatTypeInfo[channel]
 	local channelColor = U:RGBToHex(info.r, info.g, info.b)
-	local name_realm = L['unknown']
+	local name_realm = ''
 	local class
 	if senderGUID then
 		if tonumber(senderGUID) ~= nil then
@@ -362,13 +371,15 @@ function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
 	if isPlayer then
 		TO = 'TO: '
 	end
-
+	if #name_realm > 0 then
+		name_realm = name_realm .. ' : '
+	end
 	if isChannel then
-		return TO .. string.format('|W|cFF%s|c%s|r : %s|r|w',
+		return TO .. string.format('|W|cFF%s|c%s|r%s|r|w',
 			channelColor,
 			classColor.colorStr .. name_realm, msg)
 	else
-		return TO .. string.format('|W|cFF%s|c%s|r : %s|r|w',
+		return TO .. string.format('|W|cFF%s|c%s|r%s|r|w',
 			channelColor,
 			classColor.colorStr .. name_realm, msg)
 	end
@@ -422,23 +433,25 @@ function Chat(editBox, chatType, backdropFrame2, channel_name)
 	local msg_list
 	local info = ChatTypeInfo[chatType]
 	local r, g, b = info.r, info.g, info.b
+	local chatGroup = Chat_GetChatCategory(chatType);
 	if chatType == "CHANNEL" then
 		local channelTarget = editBox:GetAttribute("channelTarget") or 'SAY'
 		local channelNumber, channelname = GetChannelName(channelTarget)
 		channel_name:SetText('|cFF' .. U:RGBToHex(r, g, b) .. '/' .. channelTarget .. ' ' .. channelname .. '|r')
-		msg_list = D:ReadDB('CHAT_MSG_CHANNEL' .. channelNumber)
+		msg_list = D:ReadDB('CHANNEL' .. channelNumber)
 	else
 		local target = 'TO: ' .. (editBox:GetAttribute("tellTarget") or '')
 		if not chatType:find('WHISPER') then target = '' end
 		channel_name:SetText('|cFF' .. U:RGBToHex(r, g, b) .. U:join(' ', G[chatType], target) .. '|r')
-		msg_list = D:ReadDB(ChatLabels[chatType])
+		msg_list = D:ReadDB(chatGroup)
 	end
-	chat_h = 1
+	-- chat_h = 1
 	local c_h = 0
 	for k = 0, 4 do
 		local msg = msg_list[#msg_list - k]
 		msg = M.ICON:IconFilter(msg)
 		msg = U:BTagFilter(msg)
+
 		-- if msg and #msg > 0 then chat_h = chat_h + 1 end
 		local fontString = chat_frame[k + 1] or
 			backdropFrame2:CreateFontString("II_CHAT_FONTSTRING" .. (k + 1), "OVERLAY", "GameFontNormal")
@@ -464,7 +477,7 @@ function Chat(editBox, chatType, backdropFrame2, channel_name)
 	backdropFrame2:SetHeight(c_h)
 end
 
-function ChannelChange(editBox, bg, bg3, border, backdropFrame2, resizeBtnTexture, channel_name)
+function ChannelChange(editBox, bg, bg3, border, backdropFrame2, resizeBtnTexture, channel_name, II_LANG)
 	HideEuiBorder(editBox)
 	ChatFrame1EditBoxHeader:Hide()
 	editBox:SetTextInsets(10, 10, 0, 0) -- 左, 右, 上, 下
@@ -472,6 +485,7 @@ function ChannelChange(editBox, bg, bg3, border, backdropFrame2, resizeBtnTextur
 	local info = ChatTypeInfo[chatType]
 	local r, g, b = info.r, info.g, info.b
 	bg:SetColorTexture(r, g, b, 0.15)
+	II_LANG:SetTextColor(r, g, b, 0.6) -- 设置颜色为白色
 	-- local c_start = CreateColor(0, 0, 0, 0.3)
 	-- local c_end = CreateColor(r, g, b, 0.15)
 	-- bg3:SetGradient("VERTICAL", c_start, c_end)
@@ -487,7 +501,7 @@ frame:RegisterEvent("PLAYER_LOGIN")
 frame:SetScript("OnEvent", function(self_f, event, ...)
 	if (ElvUI ~= nil and IsAddOnLoaded("ElvUI") or ElvUI == nil) and
 		(NDui ~= nil and IsAddOnLoaded("NDui") or NDui == nil) then
-		local editBox, bg, border, backdropFrame2, resizeButton, texture_btn, channel_name, II_TIP = MAIN:Init()
+		local editBox, bg, border, backdropFrame2, resizeButton, texture_btn, channel_name, II_TIP, II_LANG = MAIN:Init()
 		editBox:SetScript("OnEscapePressed", editBox.ClearFocus) -- 允许按下 Esc 清除焦点+
 		-- NDui
 		if NDui then
@@ -518,7 +532,7 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 				})
 				scale = 1
 				scale_temp = 1
-				LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP)
+				LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 				D:SaveDB('input_size', 1)
 			end
 		end);
@@ -547,7 +561,7 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 				self:SetAlpha(0.6)
 				local x, y = GetCursorPosition()
 				local _scale = scale + (x - X_g) / w * 4
-				LoadSize(_scale, editBox, backdropFrame2, channel_name, II_TIP)
+				LoadSize(_scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 			else
 				self:SetAlpha(0.3)
 			end
@@ -570,7 +584,7 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 			local message = self:GetText()
 			if II_TIP:IsShown() and IsLeftControlKeyDown() then
 				local p = message .. tip
-				local inp, count = p:gsub("(%|c.-%|H.-%|h(%[.-%])%|h|r)", function (a1, a2)
+				local inp, count = p:gsub("(%|c.-%|H.-%|h(%[.-%])%|h|r)", function(a1, a2)
 					replace[a2] = a1
 					return a2
 				end)
@@ -578,6 +592,7 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 					inp = U:ReplacePlainTextUsingFind(inp, k, v)
 				end
 				self:SetText(inp)
+				M.HISTORY:simulateInputChange(inp, self:GetInputLanguage())
 				return
 			end
 			-- 检查输入框是否有内容
@@ -616,20 +631,33 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 				originalOnEnterPressed(self)
 			end
 		end)
-
-		editBox:SetScript("OnTextChanged", function(self)
-			tip = FindHis(messageHistory, self:GetText())
-			UpdateFontStringPosition(self, II_TIP, tip)
+		editBox:HookScript("OnTextChanged", function(self, userInput)
+			local text = self:GetText()
+			if userInput then
+				M.HISTORY:simulateInputChange(text, self:GetInputLanguage())
+			end
 		end)
-
-		editBox:SetScript("OnKeyDown", function(self, key)
+		local originalOnTextChanged = editBox:GetScript("OnTextChanged")
+		editBox:SetScript("OnTextChanged", function(self, ...)
+			local text = self:GetText()
+			tip = FindHis(messageHistory, text)
+			UpdateFontStringPosition(self, II_TIP, tip)
+			if originalOnTextChanged then
+				originalOnTextChanged(self, ...)
+			end
+		end)
+		editBox:HookScript("OnInputLanguageChanged", function(self)
+			II_LANG:SetText(_G["INPUT_" .. self:GetInputLanguage()])
+		end)
+		local originalOnOnKeyDown = editBox:GetScript("OnKeyDown")
+		editBox:SetScript("OnKeyDown", function(self, key, ...)
 			if key == "TAB" then
 				if not ElvUI and not NDui then
 					UpdateChannel(self)
 				end
 				if NDui then
 					hooksecurefunc("ChatEdit_CustomTabPressed", function(self)
-						ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name)
+						ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
 					end)
 				end
 			elseif key == "UP" then
@@ -652,10 +680,25 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 					historyIndex = #messageHistory + 1
 					self:SetText("")
 				end
+			elseif key == "Z" and IsLeftControlKeyDown() and IsLeftShiftKeyDown() then
+				local text = M.HISTORY:redo()
+				if text then
+					self:SetText(text)
+				end
+			elseif key == "Z" and IsLeftControlKeyDown() then
+				local text = M.HISTORY:undo()
+				if text then
+					self:SetText(text)
+				end
+			else
+			end
+
+			if originalOnOnKeyDown then
+				originalOnOnKeyDown(self, key, ...)
 			end
 		end)
 		hooksecurefunc("ChatEdit_UpdateHeader", function(self)
-			ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name)
+			ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
 		end)
 
 		-- 设置焦点获得事件处理函数
@@ -667,8 +710,10 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 		editBox:SetScript("OnEditFocusLost", function(self)
 			self:Hide()
 			ChatChange = false
+			if not self:GetText() or #self:GetText() <= 0 then
+				M.HISTORY:clearHistory()
+			end
 		end)
-
 		local frame_E = CreateFrame("Frame", "II_EVENT_FRAME")
 		for k, v in pairs(ChatLabels) do
 			frame_E:RegisterEvent(v)
@@ -676,24 +721,31 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 		frame_E:RegisterEvent('CHAT_MSG_CHANNEL')
 
 		frame_E:SetScript("OnEvent",
-			function(self, event, msg, sender, language, channelString, target, flags, zoneChannelID, channelNumber,
-					 channelName, ...)
-				local _, _, guid, bnSenderID = ...
+			function(self, ...)
+				-- U:SaveLog('msg_even_' .. event, { ... })
+				local event, msg, sender, language, channelString, target, flags, zoneChannelID, channelNumber,
+				channelName, languageID, _, guid, bnSenderID, isMobile, isSubtitle, supressRaidIcons = ...
+
+				local type = strsub(event, 10) or 'SAY';
+				local chatGroup = Chat_GetChatCategory(type);
+				if isMobile then
+					local info = ChatTypeInfo[type];
+					msg = ChatFrame_GetMobileEmbeddedTexture(info.r, info.g, info.b) .. msg;
+				end
+				msg = C_ChatInfo.ReplaceIconAndGroupExpressions(msg, supressRaidIcons,
+					not ChatFrame_CanChatGroupPerformExpressionExpansion(chatGroup))
 				if event == 'CHAT_MSG_CHANNEL' then
-					SaveMSG('CHAT_MSG_CHANNEL' .. channelNumber, 'CHANNEL' .. channelNumber, guid or bnSenderID, msg,
+					SaveMSG('CHANNEL' .. channelNumber, 'CHANNEL' .. channelNumber, guid or bnSenderID, msg,
 						true, sender)
 					if ChatChange then
-						ChannelChange(editBox, bg, bg3, border, backdropFrame2, texture_btn, channel_name)
+						ChannelChange(editBox, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
 					end
 				end
 				for k, v in pairs(ChatLabels) do
 					if event == v then
-						v = string.gsub(v, "_LEADER", "")
-						v = string.gsub(v, "_WARNING", "")
-						v = string.gsub(v, "_INFORM", "")
-						SaveMSG(v, k, guid or bnSenderID, msg, false, sender, event:find('_INFORM'))
+						SaveMSG(chatGroup, k, guid or bnSenderID, msg, false, sender, event:find('_INFORM'))
 						if ChatChange then
-							ChannelChange(editBox, bg, bg3, border, backdropFrame2, texture_btn, channel_name)
+							ChannelChange(editBox, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
 						end
 						break
 					end

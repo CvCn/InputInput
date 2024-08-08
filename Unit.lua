@@ -6,7 +6,7 @@ function U:GetFormattedTimestamp()
     local milliseconds = math.floor((GetTime() % 1) * 1000) -- 获取当前时间的毫秒数
 
     -- 格式化时间戳
-    local formattedTime = date("%y%m/%d %H:%M:%S", currentTime)
+    local formattedTime = date("%y/%m/%d %H:%M:%S", currentTime)
 
     -- 添加毫秒数
     formattedTime = formattedTime .. string.format(".%03d", milliseconds)
@@ -143,4 +143,30 @@ function U:ReplacePlainTextUsingFind(text, pattern, replacement)
     -- 拼接最后一部分
     result = result .. text:sub(searchFrom)
     return result
+end
+
+function U:SaveLog(key, value)
+    local log = D:ReadDB('LOG__', {})
+    local thisKey = log[key] or {}
+    tinsert(thisKey, {
+        t = U:GetFormattedTimestamp(),
+        v = value
+    })
+    if #thisKey >= 200 then
+        tremove(thisKey, 1)
+    end
+    log[key] = thisKey
+    D:SaveDB('LOG__', log)
+end
+
+function U:PrintLog(key)
+    local log = D:ReadDB('LOG__', {})
+    if not log[key] then return end
+    for _, v in ipairs(log[key]) do
+        U:Print('[' .. v.t .. ']', v.v)
+    end
+end
+
+function U:ClearLog()
+    D:SaveDB('LOG__', {})
 end

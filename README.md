@@ -1,12 +1,13 @@
 
 # 关于插件 Features：
 - 重写了游戏内默认的输入框，位于角色下方，习惯了你就会爱上它 Rewrite the default input box in the game, located below the character. Once you get used to it, you will fall in love with it
-- 支持移动（shift+左键）、缩放（shift+右边箭头）、重置（shift+右键）Support movement (shift+left button), zoom (shift+right arrow), reset (shift+right button)
+- 支持移动（Shift+左键）、缩放（Shift+右边箭头）、重置（Shift+右键）Support movement (Shift+left button), zoom (Shift+right arrow), reset (Shift+right button)
 - 频道颜色、Tab切换 Channel color, Tab switching
 - 历史记录（⬆️⬇️） Historical records
 - 输入提示、自动补充（Control+Enter） Input prompts, automatic supplementation
+- 撤销（Control+Z）反撤销（Control+Shift+Z） undo、redo
 - 最近消息 Recent chat messages
-- /sp ? 指令：相当于/script print(?) （/sp ?  Instruction: Equivalent to/script print (?)）
+- /sp ? 指令：相当于/script print(?) （/sp ?  Instruction: Equivalent to /script print (?)）
 
 # 支持的游戏版本 Supported WOW Versions：
 - 地心之战（TWW） 110000
@@ -36,7 +37,7 @@
 # 关于作者 Author：
 **York**
 - 国服 1区-艾萨拉 China
--      臺服 二組-水晶之刺 Taiwan, China
+- 臺服 二組-水晶之刺 Taiwan, China
 
 # github：
 [https://github.com/CvCn/InputInput](https://github.com/CvCn/InputInput)
