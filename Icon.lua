@@ -104,24 +104,30 @@ ReplaceIconString(text)
     local suffix = ''
     if H_type then
         if H_type == 'item' then
-            local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount,
-            itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType, expansionID, setID, isCraftingReagent =
-                W.C_Item.GetItemInfo(id)
-            icon = itemTexture
-            if U:HasKey(itemshowLevel, classID) then
-                local effectiveILvl, isPreview, baseILvl = W.C_Item.GetDetailedItemLevelInfo(text:match("%|H(.-)|h"))
-                suffix = tostring(effectiveILvl)
+            if ElvUI == nil then
+                local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount,
+                itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType, expansionID, setID, isCraftingReagent =
+                    W.C_Item.GetItemInfo(id)
+                icon = itemTexture
+                if U:HasKey(itemshowLevel, classID) then
+                    local effectiveILvl, isPreview, baseILvl = W.C_Item.GetDetailedItemLevelInfo(text:match("%|H(.-)|h"))
+                    suffix = tostring(effectiveILvl)
+                end
             end
         elseif H_type == 'spell' then
-            local spellPath = W.C_Spell.GetSpellTexture(id)
-            icon = spellPath
+            if ElvUI == nil then
+                local spellPath = W.C_Spell.GetSpellTexture(id)
+                icon = spellPath
+            end
         elseif H_type == 'achievement' then
             icon = select(10, GetAchievementInfo(id))
         elseif H_type == 'talentbuild' then
-            -- local id, level = text:match("talentbuild:(.+):(%d+):")
-            local _, _, _, path = W.GetSpecializationInfoByID(id)
-            icon = path
-            -- suffix = level
+            if ElvUI == nil then
+                -- local id, level = text:match("talentbuild:(.+):(%d+):")
+                local _, _, _, path = W.GetSpecializationInfoByID(id)
+                icon = path
+                -- suffix = level
+            end
         elseif H_type == 'talent' then -- |cff4e96f7|Htalent:1898:4|h[双生戒律]|h|r
             -- local id, level = text:match("talentbuild:(.+):(%d+):")
             local _, _, path = W.GetTalentInfoByID(tonumber(id))
@@ -143,11 +149,14 @@ ReplaceIconString(text)
 
             icon = W.C_Spell.GetSpellTexture(spellID)
         elseif H_type == 'quest' then
-            local questId, questLevel = text:match("quest:(%d+):(%d+)")
-            suffix = questLevel
+            -- local questId, questLevel = text:match("quest:(%d+):(%d+)")
+            -- suffix = questLevel
+            -- local tagID, tagName, worldQuestType, rarity, isElite, tradeskillLineIndex, displayTitle, isDaily, isStory = C_QuestLog.GetQuestTagInfo(questId)
         elseif H_type == 'currency' then
-            local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(id)
-            icon = currencyInfo.iconFileID
+            if ElvUI == nil then
+                local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(id)
+                icon = currencyInfo.iconFileID
+            end
         elseif H_type == 'dungeonScore' then
             icon = 'Interface\\Icons\\inv_relics_hourglass'
             suffix = id
@@ -162,8 +171,8 @@ ReplaceIconString(text)
         H_type, id = text:match("%|H(.-):(.+)|h%[.-%]")
         if H_type then
             if H_type == 'clubFinder' then
-                local clubInfo = C_ClubFinder.GetRecruitingClubInfoFromFinderGUID(id)
-                if clubInfo and clubInfo.numActiveMembers then
+                local clubInfo = W.C_ClubFinder.GetRecruitingClubInfoFromFinderGUID(id)
+                if clubInfo and clubInfo.numActiveMembers > 0 then
                     suffix = '|Tinterface\\friendsframe\\ui-toast-chatinviteicon:15|t' .. clubInfo.numActiveMembers
                 end
             end
@@ -186,7 +195,6 @@ function ICON:EmojiFilter(msg)
     re = gsub(re, "%{.-%}", ReplaceEmote)
     return re
 end
-
 
 function ICON:IconFilter(msg)
     if not msg or msg == '' then return '' end

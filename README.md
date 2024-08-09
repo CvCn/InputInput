@@ -10,10 +10,10 @@
 - 聊天过滤器 Chat filter
 
 # 支持的游戏版本 Supported WOW Versions：
-- 地心之战（TWW） 110000
+- 地心之战（TWW） 110000, 110002
 - 大地的裂变（Cata） 40400
 - 巫妖王之怒（WotLK） 30403
-- 香草60（Vanilla） 11503
+- 香草60（Vanilla） 11403
 
 *未做充分测试，有问题请提交反馈 Not fully tested, please submit feedback if there are any issues*
 

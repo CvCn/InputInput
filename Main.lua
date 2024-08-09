@@ -468,9 +468,7 @@ function Chat(editBox, chatType, backdropFrame2, channel_name)
 	for k = 0, 4 do
 		local msg = msg_list[#msg_list - k]
 		msg = M.ICON:EmojiFilter(msg)
-		if ElvUI == nil then
-			msg = M.ICON:IconFilter(msg)
-		end
+		msg = M.ICON:IconFilter(msg)
 		msg = U:BTagFilter(msg)
 
 		-- if msg and #msg > 0 then chat_h = chat_h + 1 end
