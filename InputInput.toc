@@ -4,7 +4,8 @@
 ## Title: InputInput
 ## Notes:
 ## Author: York
-## Version: 1.0.1
+## Version: 1.0.2
+## X-Date: 2024-08-09
 
 ## X-Category: Interface Enhancements
 ## X-Curse-Project-ID: 1076615

@@ -1,4 +1,4 @@
-local W, M, U, D, G = unpack((select(2, ...)))
+local W, M, U, D, G, L, E = unpack((select(2, ...)))
 
 -- 获取当前时间戳和毫秒数
 function U:GetFormattedTimestamp()
@@ -131,7 +131,7 @@ end
 function U:ReplacePlainTextUsingFind(text, pattern, replacement)
     local result = ""
     local searchFrom = 1
-    local startPos, endPos = text:find(pattern, searchFrom, true)  -- true 表示纯文本匹配
+    local startPos, endPos = text:find(pattern, searchFrom, true) -- true 表示纯文本匹配
 
     while startPos do
         -- 拼接结果字符串
@@ -146,6 +146,7 @@ function U:ReplacePlainTextUsingFind(text, pattern, replacement)
 end
 
 function U:SaveLog(key, value)
+    if E ~= 'DEV' then return end
     local log = D:ReadDB('LOG__', {})
     local thisKey = log[key] or {}
     tinsert(thisKey, {

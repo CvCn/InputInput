@@ -180,10 +180,17 @@ ReplaceIconString(text)
     return newText
 end
 
-function ICON:IconFilter(msg)
+function ICON:EmojiFilter(msg)
     if not msg or msg == '' then return '' end
     local re = msg
     re = gsub(re, "%{.-%}", ReplaceEmote)
+    return re
+end
+
+
+function ICON:IconFilter(msg)
+    if not msg or msg == '' then return '' end
+    local re = msg
     re = gsub(re, "%|H.-%]%|h", ReplaceIconString)
     return re
 end

@@ -1,4 +1,4 @@
-local W, M, U, D, G, L = unpack((select(2, ...)))
+local W, M, U, D, G, L, E = unpack((select(2, ...)))
 local MAIN = {}
 M.MAIN = MAIN
 
@@ -467,7 +467,10 @@ function Chat(editBox, chatType, backdropFrame2, channel_name)
 	local c_h = 0
 	for k = 0, 4 do
 		local msg = msg_list[#msg_list - k]
-		msg = M.ICON:IconFilter(msg)
+		msg = M.ICON:EmojiFilter(msg)
+		if ElvUI == nil then
+			msg = M.ICON:IconFilter(msg)
+		end
 		msg = U:BTagFilter(msg)
 
 		-- if msg and #msg > 0 then chat_h = chat_h + 1 end
@@ -805,7 +808,7 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 					return
 				end
 
-				if language and #language > 0 then
+				if language and #language > 0 and sender and #sender > 0 then
 					if UnitFactionGroup('player') ~= UnitFactionGroup(sender) then
 						msg = '[' .. language .. ']' .. msg
 					end
