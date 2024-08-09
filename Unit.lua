@@ -171,3 +171,33 @@ end
 function U:ClearLog()
     D:SaveDB('LOG__', {})
 end
+
+function U:MergeMultipleArrays(...)
+    local merged = {}
+    for _, array in ipairs({ ... }) do
+        for i = 1, #array do
+            table.insert(merged, array[i])
+        end
+    end
+    return merged
+end
+
+function U:SplitMSG(input)
+    local result = {}
+    local pattern = "[%p%s%c%z]"
+
+    local lastEnd = 1
+    for start, stop in string.gmatch(input, "()" .. pattern .. "()") do
+        if lastEnd < start then
+            table.insert(result, string.sub(input, lastEnd, start - 1))
+        end
+        lastEnd = stop
+    end
+
+    -- 插入最后一个分割结果
+    if lastEnd <= #input then
+        table.insert(result, string.sub(input, lastEnd))
+    end
+
+    return result
+end

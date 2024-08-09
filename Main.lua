@@ -19,7 +19,6 @@ local function UpdateFontStringPosition(editBox, displayFontString, msg)
 	-- 获取内边距
 	local leftPadding, rightPadding, topPadding, bottomPadding = 10, 10, 0, 0
 
-	-- 分割文本为显示行，处理自动换行
 	local lines = {}
 	local lineStart = 1
 	local editBoxWidth = editBox:GetWidth() - leftPadding - rightPadding
@@ -106,19 +105,26 @@ local function FindHis(his, patt)
 		local h = his[i]
 		if h and #h > 0 then
 			-- |cff0070dd|Hitem:38613::::::::80:::::::::|h[火热珠串]|h|r
-			local inp, count = h:gsub("(%|c.-%|H.-%|h(%[.-%])%|h|r)", function(a1, a2)
+			h = h:gsub("(%|c.-%|H.-%|h(%[.-%])%|h|r)", function(a1, a2)
 				replace[a2] = a1
 				return a2
 			end)
-			local start, _end = strfind(inp, patt, 1, true)
-			if start and start > 0 and _end ~= #inp then
-				local p = strsub(inp, _end + 1)
-
-				if start == 1 then
-					return p
-				else
-					if second == '' then
-						second = p
+			local hisp = U:MergeMultipleArrays({ h }, U:SplitMSG(h))
+			for h_index, h2 in ipairs(hisp) do
+				local ha = U:MergeMultipleArrays({ patt }, U:SplitMSG(patt))
+				for p_index, patt2 in ipairs(ha) do
+					if not (p_index == 1 and h_index == 1) then
+						local start, _end = strfind(h2, patt2, 1, true)
+						if start and start > 0 and _end ~= #h2 then
+							local p = strsub(h2, _end + 1)
+							if start == 1 then
+								return p
+							else
+								if second == '' then
+									second = p
+								end
+							end
+						end
 					end
 				end
 			end
@@ -525,30 +531,32 @@ local function chatEventHandler(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7,
 								arg13, arg14, arg15, arg16, arg17)
 	local useFunc = {}
 	for _, chatFrame in ipairs(G.CHAT_FRAMES) do
-		for _, messageType in pairs(G[chatFrame].messageTypeList) do
-			if gsub(strsub(event, 10), '_INFORM', '') == messageType and arg1 and not MessageIsProtected(arg1) then
-				local chatFilters = ChatFrame_GetMessageEventFilters(event)
-				if chatFilters then
-					for _, filterFunc in ipairs(chatFilters) do
-						local isUse = false
-						for _, v in ipairs(useFunc) do
-							if v == filterFunc then
-								isUse = true
+		if G[chatFrame] then
+			for _, messageType in pairs(G[chatFrame].messageTypeList) do
+				if gsub(strsub(event, 10), '_INFORM', '') == messageType and arg1 and not MessageIsProtected(arg1) then
+					local chatFilters = ChatFrame_GetMessageEventFilters(event)
+					if chatFilters then
+						for _, filterFunc in ipairs(chatFilters) do
+							local isUse = false
+							for _, v in ipairs(useFunc) do
+								if v == filterFunc then
+									isUse = true
+								end
 							end
-						end
-						if not isUse then
-							local filter, new1, new2, new3, new4, new5, new6, new7, new8, new9, new10, new11, new12, new13, new14, new15, new16, new17 =
-								filterFunc(G[chatFrame], event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9,
-									arg10,
-									arg11, arg12, arg13, arg14, arg15, arg16, arg17)
-							tinsert(useFunc, filterFunc)
-							if filter then
-								return true
-							elseif new1 then
-								arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17 =
-									new1, new2, new3, new4, new5, new6, new7, new8, new9, new10, new11, new12, new13,
-									new14,
-									new15, new16, new17
+							if not isUse then
+								local filter, new1, new2, new3, new4, new5, new6, new7, new8, new9, new10, new11, new12, new13, new14, new15, new16, new17 =
+									filterFunc(G[chatFrame], event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9,
+										arg10,
+										arg11, arg12, arg13, arg14, arg15, arg16, arg17)
+								tinsert(useFunc, filterFunc)
+								if filter then
+									return true
+								elseif new1 then
+									arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17 =
+										new1, new2, new3, new4, new5, new6, new7, new8, new9, new10, new11, new12, new13,
+										new14,
+										new15, new16, new17
+								end
 							end
 						end
 					end
@@ -671,7 +679,6 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 					table.insert(messageHistory, message)
 				end
 			end
-
 			local temp = {}
 			if #messageHistory > 200 then
 				for k = #messageHistory - 200, #messageHistory do
@@ -702,6 +709,11 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 				message = string.gsub(message, "/spt ", "", 1)
 				message = '/script for k, v in pairs(' .. message .. ') do print(k, v) end'
 				self:SetText(message)
+				-- elseif message:sub(1, 7) == "/iclear" then
+				-- 	for _, chatFrame in ipairs(G.CHAT_FRAMES) do
+				-- 		local frame1 = G[chatFrame]
+				-- 		frame1:Clear()
+				-- 	end
 			end
 
 			if originalOnEnterPressed then
@@ -739,23 +751,27 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 				end
 			elseif key == "UP" then
 				-- 上滚历史消息
-				if historyIndex > 1 then
-					historyIndex = historyIndex - 1
-					local h = messageHistory[historyIndex]
-					self:SetText(h)
-					self:SetCursorPosition(#h)
+				if not ElvUI and not NDui then
+					if historyIndex > 1 then
+						historyIndex = historyIndex - 1
+						local h = messageHistory[historyIndex]
+						self:SetText(h)
+						self:SetCursorPosition(#h)
+					end
 				end
 			elseif key == "DOWN" then
-				-- 下滚历史消息
-				if historyIndex < #messageHistory then
-					historyIndex = historyIndex + 1
-					local h = messageHistory[historyIndex]
-					self:SetText(h)
-					self:SetCursorPosition(#h)
-				elseif historyIndex == #messageHistory then
-					-- 如果是最新消息，清空输入框
-					historyIndex = #messageHistory + 1
-					self:SetText("")
+				if not ElvUI and not NDui then
+					-- 下滚历史消息
+					if historyIndex < #messageHistory then
+						historyIndex = historyIndex + 1
+						local h = messageHistory[historyIndex]
+						self:SetText(h)
+						self:SetCursorPosition(#h)
+					elseif historyIndex == #messageHistory then
+						-- 如果是最新消息，清空输入框
+						historyIndex = #messageHistory + 1
+						self:SetText("")
+					end
 				end
 			elseif key == "Z" and IsLeftControlKeyDown() and IsLeftShiftKeyDown() then
 				local text = M.HISTORY:redo()
