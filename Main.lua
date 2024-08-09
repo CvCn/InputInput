@@ -523,31 +523,41 @@ end
 
 local function chatEventHandler(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12,
 								arg13, arg14, arg15, arg16, arg17)
-	local filter, new1, new2, new3, new4, new5, new6, new7, new8, new9, new10, new11, new12, new13, new14, new15, new16, new17 =
-		false, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
-
+	local useFunc = {}
 	for _, chatFrame in ipairs(G.CHAT_FRAMES) do
 		for _, messageType in pairs(G[chatFrame].messageTypeList) do
 			if gsub(strsub(event, 10), '_INFORM', '') == messageType and arg1 and not MessageIsProtected(arg1) then
 				local chatFilters = ChatFrame_GetMessageEventFilters(event)
 				if chatFilters then
 					for _, filterFunc in ipairs(chatFilters) do
-						filter, new1, new2, new3, new4, new5, new6, new7, new8, new9, new10, new11, new12, new13, new14, new15, new16, new17 =
-							filterFunc(G[chatFrame], event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10,
-								arg11, arg12, arg13, arg14, arg15, arg16, arg17)
-						if filter then
-							return true
-						elseif new1 then
-							arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17 =
-								new1, new2, new3, new4, new5, new6, new7, new8, new9, new10, new11, new12, new13, new14,
-								new15, new16, new17
+						local isUse = false
+						for _, v in ipairs(useFunc) do
+							if v == filterFunc then
+								isUse = true
+							end
+						end
+						if not isUse then
+							local filter, new1, new2, new3, new4, new5, new6, new7, new8, new9, new10, new11, new12, new13, new14, new15, new16, new17 =
+								filterFunc(G[chatFrame], event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9,
+									arg10,
+									arg11, arg12, arg13, arg14, arg15, arg16, arg17)
+							tinsert(useFunc, filterFunc)
+							if filter then
+								return true
+							elseif new1 then
+								arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17 =
+									new1, new2, new3, new4, new5, new6, new7, new8, new9, new10, new11, new12, new13,
+									new14,
+									new15, new16, new17
+							end
 						end
 					end
 				end
 			end
 		end
 	end
-	return filter, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17
+	return false, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16,
+		arg17
 end
 
 local ChatChange = false

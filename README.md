@@ -40,7 +40,6 @@
 - /spa ? 指令：相当于/script for _, v in ipairs(?) do print(v) end （/spa ?  Instruction: Equivalent to /script for _, v in ipairs(?) do print(v) end）
 - /spt ? 指令：相当于/script for k, v in pairs(?) do print(k, v) end （/spt ?  Instruction: Equivalent to /script for k, v in pairs(?) do print(k, v) end）
 
-
 # 关于作者 Author：
 **York**
 - 国服 1区-艾萨拉 China
@@ -49,5 +48,7 @@
 # github：
 [https://github.com/CvCn/InputInput](https://github.com/CvCn/InputInput)
 
+# Discord
+[https://discord.gg/qC9RAdXN](https://discord.gg/qC9RAdXN)
 # LICENSE：
 GNU GENERAL PUBLIC LICENSE
