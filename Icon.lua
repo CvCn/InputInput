@@ -157,6 +157,11 @@ ReplaceIconString(text)
                 local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(id)
                 icon = currencyInfo.iconFileID
             end
+            local id, amount = text:match(
+                "currency:(%d+):(%d+)")
+            if amount and tonumber(amount) ~= nil and tonumber(amount) > 0 then
+                suffix = amount
+            end
         elseif H_type == 'dungeonScore' then
             icon = 'Interface\\Icons\\inv_relics_hourglass'
             suffix = id
