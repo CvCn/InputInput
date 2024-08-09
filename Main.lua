@@ -334,7 +334,7 @@ local function addLevel(name, realm)
 	local maxLevel = GetMaxPlayerLevel()
 	local level = UnitLevel(name)
 	local name_realm = name
-	if realm ~= GetRealmName() then
+	if realm and #realm > 0 and realm ~= GetRealmName() then
 		name_realm = U:join('-', name, realm)
 	end
 	if level and level ~= 0 and maxLevel ~= level then
@@ -348,7 +348,7 @@ function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
 	local channelColor = U:RGBToHex(info.r, info.g, info.b)
 	local name_realm = ''
 	local class
-	if senderGUID and #senderGUID > 0 then
+	if senderGUID then
 		if tonumber(senderGUID) ~= nil then
 			local accountInfo = C_BattleNet.GetAccountInfoByID(senderGUID)
 			if accountInfo then
@@ -363,14 +363,14 @@ function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
 					name_realm = '|BTag:' .. accountInfo.battleTag .. '|BTag'
 				end
 			end
-		else
+		elseif #senderGUID > 0 then
 			local localizedClass, englishClass, localizedRace, englishRace, sex, name, realmName = GetPlayerInfoByGUID(
 				senderGUID)
 			class = englishClass
-			realmName = (realmName and #realmName > 0) and realmName or GetRealmName()
 			name_realm = addLevel(name, realmName)
 		end
-	else
+	end
+	if #name_realm <= 0 then
 		name_realm = sender
 		local name, realm = strsplit('-', name_realm)
 		class = UnitClass(name)
@@ -510,6 +510,43 @@ function ChannelChange(editBox, bg, bg3, border, backdropFrame2, resizeBtnTextur
 	border:SetBackdropBorderColor(r, g, b, 1)
 	resizeBtnTexture:SetVertexColor(r, g, b, 1)
 	Chat(editBox, chatType, backdropFrame2, channel_name)
+end
+
+local canChangeMessage = function(arg1, id)
+	if id and arg1 == '' then return id end
+end
+
+local function MessageIsProtected(message)
+	return message and (message ~= gsub(message, '(:?|?)|K(.-)|k', canChangeMessage))
+end
+
+local function chatEventHandler(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12,
+								arg13, arg14, arg15, arg16, arg17)
+	local filter, new1, new2, new3, new4, new5, new6, new7, new8, new9, new10, new11, new12, new13, new14, new15, new16, new17 =
+		false, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+
+	for _, chatFrame in ipairs(G.CHAT_FRAMES) do
+		for _, messageType in pairs(G[chatFrame].messageTypeList) do
+			if gsub(strsub(event, 10), '_INFORM', '') == messageType and arg1 and not MessageIsProtected(arg1) then
+				local chatFilters = ChatFrame_GetMessageEventFilters(event)
+				if chatFilters then
+					for _, filterFunc in ipairs(chatFilters) do
+						filter, new1, new2, new3, new4, new5, new6, new7, new8, new9, new10, new11, new12, new13, new14, new15, new16, new17 =
+							filterFunc(G[chatFrame], event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10,
+								arg11, arg12, arg13, arg14, arg15, arg16, arg17)
+						if filter then
+							return true
+						elseif new1 then
+							arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17 =
+								new1, new2, new3, new4, new5, new6, new7, new8, new9, new10, new11, new12, new13, new14,
+								new15, new16, new17
+						end
+					end
+				end
+			end
+		end
+	end
+	return filter, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17
 end
 
 local ChatChange = false
@@ -756,13 +793,25 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 
 				U:SaveLog('msg_even_' .. event, { ... })
 
-				-- if language and #language > 0 then
-				-- 	if UnitFactionGroup('player') ~= UnitFactionGroup(sender) then
-				-- 		msg = '[' .. language .. ']' .. msg
-				-- 	end
-				-- end
-
 				local type = strsub(event, 10) or 'SAY';
+
+				local filter = false
+				filter, msg, sender, language, channelString, target, flags, zoneChannelID, channelNumber,
+				channelName, languageID, _, guid, bnSenderID, isMobile, isSubtitle, supressRaidIcons =
+					chatEventHandler(event, msg, sender, language, channelString, target, flags, zoneChannelID,
+						channelNumber,
+						channelName, languageID, _, guid, bnSenderID, isMobile, isSubtitle, supressRaidIcons)
+				if filter then
+					return
+				end
+
+				if language and #language > 0 then
+					if UnitFactionGroup('player') ~= UnitFactionGroup(sender) then
+						msg = '[' .. language .. ']' .. msg
+					end
+				end
+
+
 				local chatGroup = Chat_GetChatCategory(type);
 				if isMobile then
 					local info = ChatTypeInfo[type];

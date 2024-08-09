@@ -7,6 +7,7 @@
 - 输入提示、自动补充（Control+Enter） Input prompts, automatic supplementation
 - 撤销（Control+Z）反撤销（Control+Shift+Z） undo、redo
 - 最近消息 Recent chat messages
+- 聊天过滤器 Chat filter
 
 # 支持的游戏版本 Supported WOW Versions：
 - 地心之战（TWW） 110000
