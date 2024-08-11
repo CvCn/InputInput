@@ -1,4 +1,5 @@
 local W, M, U, D, G, L, E = unpack((select(2, ...)))
+GetAffixInfo = C_Item.GetAffixInfo or function(affixID) end
 
 -- 获取当前时间戳和毫秒数
 function U:GetFormattedTimestamp(foramt, notMilli)
@@ -43,7 +44,7 @@ function U:GetAffixName(...)
     local name = {}
     for _, v in ipairs({ ... }) do
         if v then
-            local affixName, affixDesc, affixIcon = W.C_ChallengeMode.GetAffixInfo(v)
+            local affixName, affixDesc, affixIcon = GetAffixInfo(v)
             tinsert(name, affixName)
         end
     end

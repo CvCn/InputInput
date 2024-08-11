@@ -1,6 +1,31 @@
 local W, M, U, D, G, L = unpack((select(2, ...)))
 local ICON = {}
 M.ICON = ICON
+
+GetItemInfo = C_Item.GetItemInfo or GetItemInfo
+GetDetailedItemLevelInfo = C_Item.GetDetailedItemLevelInfo or GetDetailedItemLevelInfo
+GetSpellTexture = C_Spell.GetSpellTexture or GetSpellTexture
+GetSpecializationInfoByID = GetSpecializationInfoByID or function(id) end
+GetTalentInfoByID = function(talentID)
+    ---@diagnostic disable-next-line: undefined-global
+    for tabIndex = 1, GetNumTalentTabs() do
+        ---@diagnostic disable-next-line: undefined-global
+        for talentIndex = 1, GetNumTalents(tabIndex) do
+            local name, iconTexture, tier, column, rank, maxRank,
+            isExceptional, available, previewRank, previewAvailable, id = GetTalentInfo(tabIndex, talentIndex)
+            if id == talentID then
+                return id, name, iconTexture, available == 1, available ~= 1, nil, nil, tier, column, available == 1,
+                    false
+            end
+        end
+    end
+    return nil
+end
+UnitTokenFromGUID = UnitTokenFromGUID or function(GUID) return GUID end
+UnitName = UnitName or function(unit) return '' end
+GetSpellTexture = C_Spell.GetSpellTexture or GetSpellTexture
+GetRecruitingClubInfoFromFinderGUID = C_ClubFinder.GetRecruitingClubInfoFromFinderGUID or function() return nil end
+
 local emotes = {
     { value = "angel",      key = L["angel"] },
     { value = "angry",      key = L["angry"] },
@@ -107,16 +132,16 @@ ReplaceIconString(text)
             if ElvUI == nil then
                 local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount,
                 itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType, expansionID, setID, isCraftingReagent =
-                    W.C_Item.GetItemInfo(id)
+                    GetItemInfo(id)
                 icon = itemTexture
                 if U:HasKey(itemshowLevel, classID) then
-                    local effectiveILvl, isPreview, baseILvl = W.C_Item.GetDetailedItemLevelInfo(text:match("%|H(.-)|h"))
+                    local effectiveILvl, isPreview, baseILvl = GetDetailedItemLevelInfo(text:match("%|H(.-)|h"))
                     suffix = tostring(effectiveILvl)
                 end
             end
         elseif H_type == 'spell' then
             if ElvUI == nil then
-                local spellPath = W.C_Spell.GetSpellTexture(id)
+                local spellPath = GetSpellTexture(id)
                 icon = spellPath
             end
         elseif H_type == 'achievement' then
@@ -124,19 +149,19 @@ ReplaceIconString(text)
         elseif H_type == 'talentbuild' then
             if ElvUI == nil then
                 -- local id, level = text:match("talentbuild:(.+):(%d+):")
-                local _, _, _, path = W.GetSpecializationInfoByID(id)
+                local _, _, _, path = GetSpecializationInfoByID(id)
                 icon = path
                 -- suffix = level
             end
         elseif H_type == 'talent' then -- |cff4e96f7|Htalent:1898:4|h[双生戒律]|h|r
             -- local id, level = text:match("talentbuild:(.+):(%d+):")
-            local _, _, path = W.GetTalentInfoByID(tonumber(id))
+            local _, _, path = GetTalentInfoByID(tonumber(id))
             icon = path
             -- suffix = level
         elseif H_type:match("trade:(.+)") then
             local guid, spellID, tradeSkillLineID = text:match("trade:(.+):(%d+):(%d+)")
             -- trade_level = level
-            local unit = W.UnitTokenFromGUID(guid)
+            local unit = UnitTokenFromGUID(guid)
             if unit then
                 local classColor = RAID_CLASS_COLORS[select(2, UnitClass(unit))]
                 if not classColor then
@@ -144,10 +169,10 @@ ReplaceIconString(text)
                         colorStr = 'ffffffff'
                     }
                 end
-                suffix = string.format('|c%s%s|r', classColor.colorStr, W.UnitName(unit))
+                suffix = string.format('|c%s%s|r', classColor.colorStr, UnitName(unit))
             end
 
-            icon = W.C_Spell.GetSpellTexture(spellID)
+            icon = GetSpellTexture(spellID)
         elseif H_type == 'quest' then
             -- local questId, questLevel = text:match("quest:(%d+):(%d+)")
             -- suffix = questLevel
@@ -170,13 +195,13 @@ ReplaceIconString(text)
                 "keystone:(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):(%d+)")
             suffix = U:GetAffixName(a1, a2, a3, a4)
         elseif H_type == 'mount' then
-            icon = W.C_Spell.GetSpellTexture(id)
+            icon = GetSpellTexture(id)
         end
     else
         H_type, id = text:match("%|H(.-):(.+)|h%[.-%]")
         if H_type then
             if H_type == 'clubFinder' then
-                local clubInfo = W.C_ClubFinder.GetRecruitingClubInfoFromFinderGUID(id)
+                local clubInfo = GetRecruitingClubInfoFromFinderGUID(id)
                 if clubInfo and clubInfo.numActiveMembers > 0 then
                     suffix = '|Tinterface\\friendsframe\\ui-toast-chatinviteicon:15|t' .. clubInfo.numActiveMembers
                 end

@@ -621,7 +621,7 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 		(NDui ~= nil and IsAddOnLoaded("NDui") or NDui == nil) then
 		local editBox, bg, border, backdropFrame2, resizeButton, texture_btn, channel_name, II_TIP, II_LANG, bg3 = MAIN
 			:Init()
-		editBox:SetScript("OnEscapePressed", editBox.ClearFocus) -- 允许按下 Esc 清除焦点+
+		editBox:HookScript("OnEscapePressed", editBox.ClearFocus) -- 允许按下 Esc 清除焦点+
 		-- NDui
 		if NDui then
 			editBox:HookScript("OnShow", function(self)
@@ -635,12 +635,12 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 				end
 			end)
 		end
-		editBox:SetScript("OnDragStart", function(...)
+		editBox:HookScript("OnDragStart", function(...)
 			if IsShiftKeyDown() then
 				editBox.StartMoving(...)
 			end
 		end);
-		editBox:SetScript("OnDragStop", function()
+		editBox:HookScript("OnDragStop", function()
 			editBox:StopMovingOrSizing()
 			local point, _, relativePoint, xOfs, yOfs = editBox:GetPoint(1)
 			D:SaveDB('editBoxPosition', {
@@ -648,7 +648,7 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 			})
 		end);
 		-- resize repoint
-		editBox:SetScript("OnMouseDown", function(self, button)
+		editBox:HookScript("OnMouseDown", function(self, button)
 			if IsShiftKeyDown() and button == "RightButton" then
 				editBox:ClearAllPoints()
 				editBox:SetPoint("CENTER", UIParent, "BOTTOM", 0, 330)
@@ -705,8 +705,7 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 			end
 		end)
 
-		local originalOnEnterPressed = editBox:GetScript("OnEnterPressed")
-		editBox:SetScript("OnEnterPressed", function(self)
+		editBox:HookScript("OnEnterPressed", function(self)
 			local message = self:GetText()
 			if II_TIP:IsShown() and IsLeftControlKeyDown() then
 				local p = message .. tip
@@ -764,31 +763,19 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 				-- 		frame1:Clear()
 				-- 	end
 			end
-
-			if originalOnEnterPressed then
-				originalOnEnterPressed(self)
-			end
 		end)
 		editBox:HookScript("OnTextChanged", function(self, userInput)
 			local text = self:GetText()
-			if userInput then
-				M.HISTORY:simulateInputChange(text, self:GetInputLanguage())
-			end
-		end)
-		local originalOnTextChanged = editBox:GetScript("OnTextChanged")
-		editBox:SetScript("OnTextChanged", function(self, ...)
-			local text = self:GetText()
 			tip = FindHis(messageHistory, text)
 			UpdateFontStringPosition(self, II_TIP, tip)
-			if originalOnTextChanged then
-				originalOnTextChanged(self, ...)
+			if userInput then
+				M.HISTORY:simulateInputChange(text, self:GetInputLanguage())
 			end
 		end)
 		editBox:HookScript("OnInputLanguageChanged", function(self)
 			II_LANG:SetText(_G["INPUT_" .. self:GetInputLanguage()])
 		end)
-		local originalOnOnKeyDown = editBox:GetScript("OnKeyDown")
-		editBox:SetScript("OnKeyDown", function(self, key, ...)
+		editBox:HookScript("OnKeyDown", function(self, key, ...)
 			if key == "TAB" then
 				if not ElvUI and not NDui then
 					UpdateChannel(self)
@@ -834,28 +821,25 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 				end
 			else
 			end
-
-			if originalOnOnKeyDown then
-				originalOnOnKeyDown(self, key, ...)
-			end
 		end)
 		hooksecurefunc("ChatEdit_UpdateHeader", function(self)
 			ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
 		end)
 
 		-- 设置焦点获得事件处理函数
-		editBox:SetScript("OnEditFocusGained", function(self)
+		editBox:HookScript("OnEditFocusGained", function(self)
 			HideEuiBorder(self)
 			ChatChange = true
 		end)
 
-		editBox:SetScript("OnEditFocusLost", function(self)
+		editBox:HookScript("OnEditFocusLost", function(self)
 			self:Hide()
 			ChatChange = false
 			if not self:GetText() or #self:GetText() <= 0 then
 				M.HISTORY:clearHistory()
 			end
 		end)
+
 		local frame_E = CreateFrame("Frame", "II_EVENT_FRAME")
 		for k, v in pairs(ChatLabels) do
 			frame_E:RegisterEvent(v)
