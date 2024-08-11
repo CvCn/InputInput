@@ -72,3 +72,11 @@ L["Skull"] = "Skull"
 
 -- 主界面 main frame
 L['unknown'] = "unknown"
+L['TO'] = "TO"
+
+
+-- 设置 options
+L['Show Chat'] = "Show Chat"
+L['Show channel Name'] = 'Show channel Name'
+L['Show Timestamp'] = "Show Timestamp"
+L['Show bg'] = "Show Message Background"

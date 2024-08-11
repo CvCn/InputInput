@@ -6,5 +6,6 @@
     <Script file='Icon.lua'/>
     <Script file='Unit.lua'/>
     <Script file='History.lua'/>
+    <Script file='Options.lua'/>
     <Script file='Main.lua'/>
 </Ui>

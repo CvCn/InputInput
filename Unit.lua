@@ -1,15 +1,18 @@
 local W, M, U, D, G, L, E = unpack((select(2, ...)))
 
 -- 获取当前时间戳和毫秒数
-function U:GetFormattedTimestamp()
+function U:GetFormattedTimestamp(foramt, notMilli)
     local currentTime = GetServerTime()                     -- 获取当前时间戳（秒）
     local milliseconds = math.floor((GetTime() % 1) * 1000) -- 获取当前时间的毫秒数
 
     -- 格式化时间戳
-    local formattedTime = date("%y/%m/%d %H:%M:%S", currentTime)
+    local formattedTime = date(foramt or "%y/%m/%d %H:%M:%S", currentTime)
 
-    -- 添加毫秒数
-    formattedTime = formattedTime .. string.format(".%03d", milliseconds)
+    if not notMilli then
+        -- 添加毫秒数
+        formattedTime = formattedTime .. string.format(".%03d", milliseconds)
+    end
+
 
     return formattedTime
 end
@@ -109,6 +112,27 @@ function U:Print(...)
     print(unpack(ps))
 end
 
+local function lcoalClassToEnglishClass(localizedClass)
+    -- 尝试在男性职业表中查找
+    local englishClass = nil
+    for enClass, locClass in pairs(LOCALIZED_CLASS_NAMES_MALE) do
+        if locClass == localizedClass then
+            englishClass = enClass
+            break
+        end
+    end
+    -- 如果未找到，再尝试在女性职业表中查找
+    if not englishClass then
+        for enClass, locClass in pairs(LOCALIZED_CLASS_NAMES_FEMALE) do
+            if locClass == localizedClass then
+                englishClass = enClass
+                break
+            end
+        end
+    end
+    return englishClass
+end
+
 -- |BTag:沉沦血刃#5247|BTag|Kp61|k
 function U:BTagFilter(text)
     local patt = '%|BTag:.-%|BTag'
@@ -118,11 +142,11 @@ function U:BTagFilter(text)
         local accountInfo = U:GetAccountInfoByBattleTag(BTag)
         if accountInfo then
             local gameFriend = accountInfo.gameAccountInfo
-            if gameFriend and gameFriend.realmName then
-                return U:join('-', gameFriend.characterName, gameFriend.realmName)
-            else
-                return accountInfo.accountName
+            if gameFriend and gameFriend.className then
+                local classColor = RAID_CLASS_COLORS[lcoalClassToEnglishClass(gameFriend.className)]
+                return '|c' .. classColor.colorStr .. accountInfo.accountName .. '|r'
             end
+            return accountInfo.accountName
         end
     end)
 end

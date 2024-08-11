@@ -144,7 +144,6 @@ function UpdateChannel(editBox)
 	elseif IsInGroup() then
 		tinsert(channels, 'PARTY')
 	end
-
 	currentChannelIndex = currentChannelIndex + 1
 	if currentChannelIndex > #channels then
 		currentChannelIndex = 1
@@ -173,6 +172,7 @@ end
 
 local scale = 1
 local chat_frame = {}
+local chat_frame_texture = {}
 local scale_temp = scale
 local chat_h = 1
 function LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
@@ -212,7 +212,7 @@ end
 
 function MAIN:Init()
 	scale = D:ReadDB('input_size', 1)
-	messageHistory = D:ReadDB('messageHistory') or {}
+	messageHistory = D:ReadDB('messageHistory', {}, true)
 	historyIndex = #messageHistory + 1
 	-- 获取默认的聊天输入框
 	local editBox = ChatFrame1EditBox
@@ -344,7 +344,7 @@ local function addLevel(name, realm)
 		name_realm = U:join('-', name, realm)
 	end
 	if level and level ~= 0 and maxLevel ~= level then
-		name_realm = '|cFF909399' .. level .. '.|r' .. name_realm
+		name_realm = '|cFF909399' .. level .. ' |r' .. name_realm
 	end
 	return name_realm
 end
@@ -358,13 +358,7 @@ function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
 		if tonumber(senderGUID) ~= nil then
 			local accountInfo = C_BattleNet.GetAccountInfoByID(senderGUID)
 			if accountInfo then
-				local gameFriend = accountInfo.gameAccountInfo
-				if gameFriend and gameFriend.realmName then
-					class = gameFriend.className
-					name_realm = addLevel(gameFriend.characterName, gameFriend.realmName)
-				else
-					name_realm = accountInfo.accountName
-				end
+				name_realm = accountInfo.accountName
 				if name_realm:find('%|K.-%|k') then
 					name_realm = '|BTag:' .. accountInfo.battleTag .. '|BTag'
 				end
@@ -392,26 +386,33 @@ function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
 
 	local TO = ''
 	if isPlayer then
-		TO = 'TO: '
+		TO = L['TO'] .. ': '
 	end
 	if #name_realm > 0 then
 		name_realm = name_realm .. ' : '
 	end
 	if isChannel then
-		return TO .. string.format('|W|cFF%s|c%s|r%s|r|w',
+		return TO .. string.format('|cFF%s|W|c%s|r|w%s|r',
 			channelColor,
 			classColor.colorStr .. name_realm, msg)
 	else
-		return TO .. string.format('|W|cFF%s|c%s|r%s|r|w',
+		return TO .. string.format('|cFF%s|W|c%s|r|w%s|r',
 			channelColor,
 			classColor.colorStr .. name_realm, msg)
 	end
 end
 
+local showTime = false
+local showbg = false
 function SaveMSG(saveKey, channel, senderGUID, msg, isChannel, sender, isPlayer)
 	local key = saveKey
-	local channelMsg = D:ReadDB(key)
-	tinsert(channelMsg, FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer))
+	local w = strfind(channel, 'BN_WHISPER')
+	local channelMsg = D:ReadDB(key, {}, w)
+	local time = ""
+	if showTime then
+		time = "|cffC0C4CC" .. U:GetFormattedTimestamp("%H:%M", true) .. " |r"
+	end
+	tinsert(channelMsg, time .. FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer))
 	local temp = {}
 	if #channelMsg > 10 then
 		for k = #channelMsg - 10, #channelMsg do
@@ -420,7 +421,7 @@ function SaveMSG(saveKey, channel, senderGUID, msg, isChannel, sender, isPlayer)
 	else
 		temp = channelMsg
 	end
-	D:SaveDB(key, temp)
+	D:SaveDB(key, temp, w)
 end
 
 local ChatLabels = {
@@ -444,15 +445,20 @@ local ChatLabels = {
 function HideEuiBorder(editBox)
 	---@diagnostic disable-next-line: undefined-global
 	if ElvUI then
-		C_Timer.After(0.001, function()
-			editBox:SetBackdropBorderColor(0, 0, 0, 0)
-			editBox:SetBackdropColor(0, 0, 0, 0)
-			local font, _, flags = editBox:GetFont()
-			editBox:SetFont(font, newFontSize * scale, flags)
-		end)
+		editBox:SetBackdropBorderColor(0, 0, 0, 0)
+		editBox:SetBackdropColor(0, 0, 0, 0)
+		-- editBox:StripTextures()
+		if editBox.shadow then
+			editBox.shadow:Hide()
+		end
+		local font, _, flags = editBox:GetFont()
+		editBox:SetFont(font, newFontSize * scale, flags)
+
+		editBox.characterCount:Hide()
 	end
 end
 
+local showChannelName = true
 function Chat(editBox, chatType, backdropFrame2, channel_name)
 	local msg_list
 	local info = ChatTypeInfo[chatType]
@@ -461,13 +467,33 @@ function Chat(editBox, chatType, backdropFrame2, channel_name)
 	if chatType == "CHANNEL" then
 		local channelTarget = editBox:GetAttribute("channelTarget") or 'SAY'
 		local channelNumber, channelname = GetChannelName(channelTarget)
-		channel_name:SetText('|cFF' .. U:RGBToHex(r, g, b) .. '/' .. channelTarget .. ' ' .. channelname .. '|r')
+		local channelText = ""
+		if showChannelName then
+			channelText = '|cFF' .. U:RGBToHex(r, g, b) .. channelTarget .. ' ' .. channelname .. '|r'
+		end
+		channel_name:SetText(channelText)
 		msg_list = D:ReadDB('CHANNEL' .. channelNumber)
 	else
-		local target = 'TO: ' .. (editBox:GetAttribute("tellTarget") or '')
+		local target = (editBox:GetAttribute("tellTarget") or '')
 		if not chatType:find('WHISPER') then target = '' end
-		channel_name:SetText('|cFF' .. U:RGBToHex(r, g, b) .. U:join(' ', G[chatType], target) .. '|r')
-		msg_list = D:ReadDB(chatGroup)
+		local channelText = ""
+		if showChannelName then
+			channelText = '|cFF' .. U:RGBToHex(r, g, b) .. U:join(' : ', G[chatType], target) .. '|r'
+		else
+			channelText = '|cFF' .. U:RGBToHex(r, g, b) .. target .. '|r'
+		end
+		channel_name:SetText(channelText)
+		if strfind(chatType, "BN_WHISPER") then
+			msg_list = D:ReadDB(chatGroup, {}, true)
+		else
+			msg_list = D:ReadDB(chatGroup)
+		end
+	end
+	for _, v in ipairs(chat_frame) do
+		v:Hide()
+	end
+	for _, v in ipairs(chat_frame_texture) do
+		v:Hide()
 	end
 	-- chat_h = 1
 	local c_h = 0
@@ -476,41 +502,57 @@ function Chat(editBox, chatType, backdropFrame2, channel_name)
 		msg = M.ICON:EmojiFilter(msg)
 		msg = M.ICON:IconFilter(msg)
 		msg = U:BTagFilter(msg)
+		if msg and #msg > 0 then
+			-- if msg and #msg > 0 then chat_h = chat_h + 1 end
+			local fontString = chat_frame[k + 1] or
+				backdropFrame2:CreateFontString("II_CHAT_FONTSTRING" .. (k + 1), "OVERLAY", "GameFontNormal")
+			local bgTexture = chat_frame_texture[k + 1] or
+				backdropFrame2:CreateTexture("II_CHAT_FONTSTRING_TEXTURE" .. (k + 1), "BACKGROUND", nil, 1)
 
-		-- if msg and #msg > 0 then chat_h = chat_h + 1 end
-		local fontString = chat_frame[k + 1] or
-			backdropFrame2:CreateFontString("II_CHAT_FONTSTRING" .. (k + 1), "OVERLAY", "GameFontNormal")
-		fontString:SetText(msg)
-		fontString:SetJustifyH("LEFT")
-		fontString:SetWordWrap(true)
-		fontString:SetNonSpaceWrap(true)
-		fontString:SetWidth(backdropFrame2:GetWidth() - 20)
-		if k == 0 then
-			fontString:SetPoint("BOTTOMLEFT", backdropFrame2, "BOTTOMLEFT", 10, 3)
-		else
-			fontString:SetPoint("BOTTOMLEFT", chat_frame[k], "TOPLEFT", 0, 3)
+			bgTexture:SetColorTexture(r, g, b, 0.1)
+			bgTexture:SetPoint("TOPLEFT", fontString, "TOPLEFT", 0, 1)
+			bgTexture:SetPoint("BOTTOMRIGHT", fontString, "BOTTOMRIGHT", 0, -2)
+
+			fontString:SetText(msg)
+			fontString:SetJustifyH("LEFT")
+			fontString:SetWordWrap(true)
+			fontString:SetNonSpaceWrap(true)
+			fontString:SetWidth(backdropFrame2:GetWidth() - 20)
+			if k == 0 then
+				fontString:SetPoint("BOTTOMLEFT", backdropFrame2, "BOTTOMLEFT", 10, 3)
+			else
+				fontString:SetPoint("BOTTOMLEFT", chat_frame[k], "TOPLEFT", 0, 3)
+			end
+			local fontfile, _, flags = fontString:GetFont()
+			fontString:SetFont(fontfile, 16 * scale, flags)
+			local a = 1 - math.log(k + 1) + 2 / math.log(#msg_list)
+			if a < 0 then a = 0 end
+			if a > 1 then a = 1 end
+			fontString:SetAlpha(a)
+			bgTexture:SetAlpha(a)
+			fontString:Show()
+			if showbg then
+				bgTexture:Show()
+			end
+			chat_frame[k + 1] = fontString
+			chat_frame_texture[k + 1] = bgTexture
+			c_h = c_h + fontString:GetHeight() + 3
 		end
-		local fontfile, _, flags = fontString:GetFont()
-		fontString:SetFont(fontfile, 16 * scale, flags)
-		local a = 1 - math.log(k + 1) + 2 / math.log(#msg_list)
-		if a < 0 then a = 0 end
-		if a > 1 then a = 1 end
-		fontString:SetAlpha(a)
-		chat_frame[k + 1] = fontString
-		c_h = c_h + fontString:GetHeight() + 3
 	end
 	backdropFrame2:SetHeight(c_h)
 end
 
 function ChannelChange(editBox, bg, bg3, border, backdropFrame2, resizeBtnTexture, channel_name, II_LANG)
 	HideEuiBorder(editBox)
-	ChatFrame1EditBoxHeader:Hide()
+	for i = 1, #G.CHAT_FRAMES do
+		G['ChatFrame' .. i .. 'EditBoxHeader']:SetText("")
+	end
 	editBox:SetTextInsets(10, 10, 0, 0) -- 左, 右, 上, 下
 	local chatType = editBox:GetAttribute("chatType") or "SAY"
 	local info = ChatTypeInfo[chatType]
 	local r, g, b = info.r, info.g, info.b
 	bg:SetColorTexture(r, g, b, 0.15)
-	II_LANG:SetTextColor(r, g, b, 0.6) -- 设置颜色为白色
+	II_LANG:SetTextColor(r, g, b, 0.6)
 	-- local c_start = CreateColor(0, 0, 0, 0.3)
 	-- local c_end = CreateColor(r, g, b, 0.15)
 	-- bg3:SetGradient("VERTICAL", c_start, c_end)
@@ -584,6 +626,13 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 		if NDui then
 			editBox:HookScript("OnShow", function(self)
 				LoadPostion(self)
+				LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
+				local children = { editBox:GetChildren() }
+				for _, child in ipairs(children) do
+					if child.__bgTex then
+						child:Hide()
+					end
+				end
 			end)
 		end
 		editBox:SetScript("OnDragStart", function(...)
@@ -688,7 +737,7 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 				temp = messageHistory
 			end
 			messageHistory = temp
-			D:SaveDB('messageHistory', messageHistory)
+			D:SaveDB('messageHistory', messageHistory, true)
 
 			-- 重置历史索引
 			historyIndex = #messageHistory + 1
@@ -751,7 +800,7 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 				end
 			elseif key == "UP" then
 				-- 上滚历史消息
-				if not ElvUI and not NDui then
+				if not ElvUI then
 					if historyIndex > 1 then
 						historyIndex = historyIndex - 1
 						local h = messageHistory[historyIndex]
@@ -760,7 +809,7 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 					end
 				end
 			elseif key == "DOWN" then
-				if not ElvUI and not NDui then
+				if not ElvUI then
 					-- 下滚历史消息
 					if historyIndex < #messageHistory then
 						historyIndex = historyIndex + 1
@@ -820,7 +869,7 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 
 				U:SaveLog('msg_even_' .. event, { ... })
 
-				local type = strsub(event, 10) or 'SAY';
+				local chatType = strsub(event, 10) or 'SAY';
 
 				local filter = false
 				filter, msg, sender, language, channelString, target, flags, zoneChannelID, channelNumber,
@@ -832,20 +881,29 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 					return
 				end
 
-				if language and #language > 0 and sender and #sender > 0 then
-					if UnitFactionGroup('player') ~= UnitFactionGroup(sender) then
-						msg = '[' .. language .. ']' .. msg
-					end
-				end
+				-- if language and #language > 0 and sender and #sender > 0 then
+				-- 	if UnitFactionGroup('player') ~= UnitFactionGroup(sender) then
+				-- 		msg = '[' .. language .. ']' .. msg
+				-- 	end
+				-- end
 
-
-				local chatGroup = Chat_GetChatCategory(type);
+				local chatGroup = Chat_GetChatCategory(chatType);
 				if isMobile then
-					local info = ChatTypeInfo[type];
+					local info = ChatTypeInfo[chatType];
 					msg = ChatFrame_GetMobileEmbeddedTexture(info.r, info.g, info.b) .. msg;
 				end
 				-- msg = C_ChatInfo.ReplaceIconAndGroupExpressions(msg, supressRaidIcons,
 				-- 	not ChatFrame_CanChatGroupPerformExpressionExpansion(chatGroup))
+
+				if chatType == "SAY" or chatType == "YELL" then
+					local usingDifferentLanguage = (language ~= "") and
+						(language ~= ChatFrame1.alternativeDefaultLanguage)
+					if not ElvUI and usingDifferentLanguage then
+						local languageHeader = "[" .. language .. "] "
+						msg = languageHeader .. msg
+					end
+				end
+
 				if event == 'CHAT_MSG_CHANNEL' then
 					SaveMSG('CHANNEL' .. channelNumber, 'CHANNEL' .. channelNumber, guid or bnSenderID, msg,
 						true, sender)
@@ -863,5 +921,29 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 					end
 				end
 			end)
+
+
+		-- options 设置
+		function MAIN:HideChat(show)
+			if show then
+				backdropFrame2:Show()
+			else
+				backdropFrame2:Hide()
+			end
+		end
+
+		function MAIN:HideChannel(show)
+			showChannelName = show
+		end
+
+		function MAIN:HideTime(show)
+			showTime = show
+		end
+
+		function MAIN:Hidebg(show)
+			showbg = show
+		end
+
+		M.OPT:loadOPT()
 	end
 end)

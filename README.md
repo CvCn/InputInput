@@ -9,6 +9,9 @@
 - 最近消息 Recent chat messages
 - 聊天过滤器 Chat filter
 
+# 设置 Options：
+- /ii or /InputInput
+
 # 支持的游戏版本 Supported WOW Versions：
 - 地心之战（TWW） 110000, 110002
 - 大地的裂变（Cata） 40400

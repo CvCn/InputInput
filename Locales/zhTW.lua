@@ -73,3 +73,10 @@ L["Skull"] = "頭顱"
 
 -- 主界面 main frame
 L['unknown'] = "未知"
+L['TO'] = "密"
+
+-- 設置 options
+L['Show Chat'] = "顯示聊天"
+L['Show channel Name'] = '顯示頻道名稱'
+L['Show Timestamp'] = "顯示時間戳"
+L['Show bg'] = "顯示消息背景"
