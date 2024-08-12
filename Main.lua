@@ -148,7 +148,7 @@ function UpdateChannel(editBox)
 		tinsert(channels, 'PARTY')
 	end
 	if lastChannel and lastChannel ~= '' then
-		U:AddOrMoveToEnd(channels, lastChannel)
+		local has = U:AddOrMoveToEnd(channels, lastChannel)
 	end
 	currentChannelIndex = currentChannelIndex + 1
 	if currentChannelIndex > #channels then
@@ -468,6 +468,7 @@ function Chat(editBox, chatType, backdropFrame2, channel_name)
 	local info = ChatTypeInfo[chatType]
 	local r, g, b = info.r, info.g, info.b
 	local chatGroup = Chat_GetChatCategory(chatType);
+	-- lastChannel = editBox:GetAttribute("channelTarget") or 'SAY'
 	if chatType == "CHANNEL" then
 		local channelTarget = editBox:GetAttribute("channelTarget") or 'SAY'
 		local channelNumber, channelname = GetChannelName(channelTarget)
@@ -513,7 +514,7 @@ function Chat(editBox, chatType, backdropFrame2, channel_name)
 				backdropFrame2:CreateFontString("II_CHAT_FONTSTRING" .. (k + 1), "OVERLAY", "GameFontNormal")
 			local bgTexture = chat_frame_texture[k + 1] or
 				backdropFrame2:CreateTexture("II_CHAT_FONTSTRING_TEXTURE" .. (k + 1), "BACKGROUND", nil, 1)
-
+			bgTexture:Hide()
 			bgTexture:SetColorTexture(0, 0, 0, 0.3)
 			bgTexture:SetPoint("TOPLEFT", fontString, "TOPLEFT", -5, 1)
 			bgTexture:SetPoint("BOTTOMRIGHT", fontString, "BOTTOMRIGHT", 5, -2)
@@ -642,7 +643,9 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 		else
 			if not ElvUI then
 				editBox:HookScript("OnShow", function(self)
-					editBox:SetText("/" .. lastChannel .. " ")
+					if lastChannel ~= self:GetAttribute("channelTarget") then
+						editBox:SetText("/" .. lastChannel .. " ")
+					end
 				end)
 			end
 		end

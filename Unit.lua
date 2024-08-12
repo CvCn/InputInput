@@ -275,4 +275,5 @@ function U:AddOrMoveToEnd(array, element)
 
 	-- 将元素添加到数组的最后
 	table.insert(array, element)
+    return index
 end

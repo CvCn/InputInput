@@ -1,10 +1,12 @@
 ## Interface: 30403
 
-## Title: InputInput
-## Notes:
+## Title: |cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r
+## Notes: Input box enhancement
+## Notes-zhCN: 输入框增强
+## Notes-zhTW: 輸入框增強
 ## Author: York
 ## Version: 1.0.2
-## X-Date: 2024-08-09
+## X-Date: 2024-08-12
 
 ## X-Category: Interface Enhancements
 ## X-Curse-Project-ID: 1076615

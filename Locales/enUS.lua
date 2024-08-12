@@ -80,3 +80,4 @@ L['Show Chat'] = "Show Chat"
 L['Show channel Name'] = 'Show channel Name'
 L['Show Timestamp'] = "Show Timestamp"
 L['Show bg'] = "Show Message Background"
+L['Default Setting'] = "Default"
