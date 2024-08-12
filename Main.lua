@@ -866,7 +866,6 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			-- Hook点击标签的事件
 			chatFrameTab:HookScript("OnClick", function(self, button)
 				if button == "LeftButton" then
-					print('click')
 					local chatFrameEditBox = _G["ChatFrame" .. i .. "EditBox"]
 					chatFrameEditBox:Hide() -- 隐藏聊天输入框
 					ChatFrame1EditBox:SetFocus()
@@ -878,7 +877,6 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 		hooksecurefunc("ChatEdit_ActivateChat", function(editBox)
 			-- 如果当前焦点不是 ChatFrame1EditBox，切换焦点
 			if editBox ~= ChatFrame1EditBox then
-				print('ChatEdit_ActivateChat')
 				ChatFrame1EditBox:SetText(editBox:GetText()) -- 保留原输入框中的内容
 				ChatFrame1EditBox:Show()
 				ChatFrame1EditBox:SetFocus()
