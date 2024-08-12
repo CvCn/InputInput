@@ -868,7 +868,6 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 				if button == "LeftButton" then
 					local chatFrameEditBox = _G["ChatFrame" .. i .. "EditBox"]
 					chatFrameEditBox:Hide() -- 隐藏聊天输入框
-					ChatFrame1EditBox:SetFocus()
 				end
 			end)
 		end
