@@ -257,3 +257,22 @@ function U:SplitMSG(input)
 
     return result
 end
+
+function U:AddOrMoveToEnd(array, element)
+	-- 遍历数组检查元素是否已经存在
+	local index = nil
+	for i, v in ipairs(array) do
+		if v == element then
+			index = i
+			break
+		end
+	end
+
+	-- 如果元素已经存在，删除它
+	if index then
+		table.remove(array, index)
+	end
+
+	-- 将元素添加到数组的最后
+	table.insert(array, element)
+end

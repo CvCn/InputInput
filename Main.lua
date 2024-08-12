@@ -134,6 +134,8 @@ local function FindHis(his, patt)
 	return second
 end
 
+local lastChannel = ''
+
 local currentChannelIndex = 1
 function UpdateChannel(editBox)
 	local channels = { "SAY" }
@@ -144,6 +146,9 @@ function UpdateChannel(editBox)
 		tinsert(channels, 'RAID')
 	elseif IsInGroup() then
 		tinsert(channels, 'PARTY')
+	end
+	if lastChannel and lastChannel ~= '' then
+		U:AddOrMoveToEnd(channels, lastChannel)
 	end
 	currentChannelIndex = currentChannelIndex + 1
 	if currentChannelIndex > #channels then
@@ -572,7 +577,7 @@ end
 local function chatEventHandler(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12,
 								arg13, arg14, arg15, arg16, arg17)
 	local useFunc = {}
-	for _, chatFrame in ipairs(G.CHAT_FRAMES) do
+	for idx, chatFrame in ipairs(G.CHAT_FRAMES) do
 		if G[chatFrame] then
 			for _, messageType in pairs(G[chatFrame].messageTypeList) do
 				if gsub(strsub(event, 10), '_INFORM', '') == messageType and arg1 and not MessageIsProtected(arg1) then
@@ -610,26 +615,6 @@ local function chatEventHandler(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7,
 		arg17
 end
 
-local function addOrMoveToEnd(array, element)
-	-- 遍历数组检查元素是否已经存在
-	local index = nil
-	for i, v in ipairs(array) do
-		if v == element then
-			index = i
-			break
-		end
-	end
-
-	-- 如果元素已经存在，删除它
-	if index then
-		table.remove(array, index)
-	end
-
-	-- 将元素添加到数组的最后
-	table.insert(array, element)
-end
-
-
 local ChatChange = false
 ---@diagnostic disable-next-line: deprecated
 local IsAddOnLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or IsAddOnLoaded
@@ -654,7 +639,17 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 					end
 				end
 			end)
+		else
+			if not ElvUI then
+				editBox:HookScript("OnShow", function(self)
+					editBox:SetText("/" .. lastChannel .. " ")
+				end)
+			end
 		end
+		editBox:HookScript("OnHide", function(self)
+			lastChannel = self:GetAttribute("channelTarget") or 'SAY'
+		end)
+
 		editBox:HookScript("OnDragStart", function(...)
 			if IsShiftKeyDown() then
 				editBox.StartMoving(...)
@@ -742,7 +737,7 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			end
 			-- 检查输入框是否有内容
 			if message and message ~= "" then
-				addOrMoveToEnd(messageHistory, message)
+				U:AddOrMoveToEnd(messageHistory, message)
 			end
 			local temp = {}
 			if #messageHistory > 200 then
@@ -779,9 +774,10 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 				-- 		local frame1 = G[chatFrame]
 				-- 		frame1:Clear()
 				-- 	end
-			end
-			if orgOnEnterPressed then
-				orgOnEnterPressed(self, ...)
+			else
+				if orgOnEnterPressed then
+					orgOnEnterPressed(self, ...)
+				end
 			end
 		end)
 		editBox:HookScript("OnTextChanged", function(self, userInput)
