@@ -10,7 +10,7 @@
 - 聊天过滤器 Chat filter
 
 # 设置 Options：
-- /ii or /InputInput
+- /ii or /InputInput or Esc->选项->插件->InputInput
 
 # 支持的游戏版本 Supported WOW Versions：
 - 地心之战（TWW） 110000, 110002

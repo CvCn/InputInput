@@ -778,9 +778,10 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 				-- 		frame1:Clear()
 				-- 	end
 			else
-				if orgOnEnterPressed then
-					orgOnEnterPressed(self, ...)
-				end
+
+			end
+			if orgOnEnterPressed then
+				orgOnEnterPressed(self, ...)
 			end
 		end)
 		editBox:HookScript("OnTextChanged", function(self, userInput)
@@ -845,10 +846,12 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
 		end)
 
+
 		-- 设置焦点获得事件处理函数
 		editBox:HookScript("OnEditFocusGained", function(self)
 			HideEuiBorder(self)
 			ChatChange = true
+			self:SetText(lastText)
 		end)
 
 		editBox:HookScript("OnEditFocusLost", function(self)
@@ -856,6 +859,28 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			ChatChange = false
 			if not self:GetText() or #self:GetText() <= 0 then
 				M.HISTORY:clearHistory()
+			end
+		end)
+
+		for i = 1, NUM_CHAT_WINDOWS do
+			local chatFrameTab = _G["ChatFrame" .. i .. "Tab"]
+			-- Hook点击标签的事件
+			chatFrameTab:HookScript("OnClick", function(self, button)
+				if button == "LeftButton" then
+					local chatFrameEditBox = _G["ChatFrame" .. i .. "EditBox"]
+					chatFrameEditBox:Hide() -- 隐藏聊天输入框
+					ChatFrame1EditBox:SetFocus()
+				end
+			end)
+		end
+		-- 覆盖默认的聊天输入框打开行为
+		hooksecurefunc("ChatEdit_ActivateChat", function(editBox)
+			-- 如果当前焦点不是 ChatFrame1EditBox，切换焦点
+			if editBox ~= ChatFrame1EditBox then
+				ChatFrame1EditBox:SetText(editBox:GetText()) -- 保留原输入框中的内容
+				ChatFrame1EditBox:Show()
+				ChatFrame1EditBox:SetFocus()
+				editBox:Hide() -- 隐藏原输入框
 			end
 		end)
 
