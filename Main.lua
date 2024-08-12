@@ -409,11 +409,9 @@ function SaveMSG(saveKey, channel, senderGUID, msg, isChannel, sender, isPlayer)
 	local key = saveKey
 	local w = strfind(channel, 'BN_WHISPER')
 	local channelMsg = D:ReadDB(key, {}, w)
-	local time = ""
-	if showTime then
-		time = "|cffC0C4CC" .. U:GetFormattedTimestamp("%H:%M", true) .. " |r"
-	end
-	tinsert(channelMsg, time .. FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer))
+	local currtime = ""
+	currtime = "|TTag:" .. time() .. " |TTag"
+	tinsert(channelMsg, currtime .. FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer))
 	local temp = {}
 	if #channelMsg > 10 then
 		for k = #channelMsg - 10, #channelMsg do
@@ -503,6 +501,7 @@ function Chat(editBox, chatType, backdropFrame2, channel_name)
 		msg = M.ICON:EmojiFilter(msg)
 		msg = M.ICON:IconFilter(msg)
 		msg = U:BTagFilter(msg)
+		msg = U:TTagFilter(msg, showTime)
 		if msg and #msg > 0 then
 			-- if msg and #msg > 0 then chat_h = chat_h + 1 end
 			local fontString = chat_frame[k + 1] or
@@ -612,22 +611,22 @@ local function chatEventHandler(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7,
 end
 
 local function addOrMoveToEnd(array, element)
-    -- 遍历数组检查元素是否已经存在
-    local index = nil
-    for i, v in ipairs(array) do
-        if v == element then
-            index = i
-            break
-        end
-    end
-    
-    -- 如果元素已经存在，删除它
-    if index then
-        table.remove(array, index)
-    end
-    
-    -- 将元素添加到数组的最后
-    table.insert(array, element)
+	-- 遍历数组检查元素是否已经存在
+	local index = nil
+	for i, v in ipairs(array) do
+		if v == element then
+			index = i
+			break
+		end
+	end
+
+	-- 如果元素已经存在，删除它
+	if index then
+		table.remove(array, index)
+	end
+
+	-- 将元素添加到数组的最后
+	table.insert(array, element)
 end
 
 
@@ -725,8 +724,8 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 				resizeButton:Hide()
 			end
 		end)
-
-		editBox:HookScript("OnEnterPressed", function(self)
+		local orgOnEnterPressed = editBox:GetScript("OnEnterPressed")
+		editBox:SetScript("OnEnterPressed", function(self, ...)
 			local message = self:GetText()
 			if II_TIP:IsShown() and IsLeftControlKeyDown() then
 				local p = message .. tip
@@ -780,6 +779,9 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 				-- 		local frame1 = G[chatFrame]
 				-- 		frame1:Clear()
 				-- 	end
+			end
+			if orgOnEnterPressed then
+				orgOnEnterPressed(self, ...)
 			end
 		end)
 		editBox:HookScript("OnTextChanged", function(self, userInput)

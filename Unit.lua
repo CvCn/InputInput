@@ -1,21 +1,39 @@
 local W, M, U, D, G, L, E = unpack((select(2, ...)))
 GetAffixInfo = C_Item.GetAffixInfo or function(affixID) end
 
--- 获取当前时间戳和毫秒数
-function U:GetFormattedTimestamp(foramt, notMilli)
-    local currentTime = GetServerTime()                     -- 获取当前时间戳（秒）
-    local milliseconds = math.floor((GetTime() % 1) * 1000) -- 获取当前时间的毫秒数
-
+local function GetFormattedTimestamp(currentTime, milliseconds, foramt, notMilli)
     -- 格式化时间戳
     local formattedTime = date(foramt or "%y/%m/%d %H:%M:%S", currentTime)
-
     if not notMilli then
         -- 添加毫秒数
         formattedTime = formattedTime .. string.format(".%03d", milliseconds)
     end
-
-
     return formattedTime
+end
+
+local function sameYear(t1, t2)
+    return date("%y", t1) == date("%y", t2)
+end
+
+local function sameDate(t1, t2)
+    return date("%y/%m/%d", t1) == date("%y/%m/%d", t2)
+end
+
+function U:GetFormattedTimeOrDate(localTime)
+    if not sameYear(localTime, time()) then
+        return GetFormattedTimestamp(localTime, 0, "%y%m/%d %H:%M", true)
+    elseif not sameDate(localTime, time()) then
+        return GetFormattedTimestamp(localTime, 0, "%m/%d %H:%M", true)
+    else
+        return GetFormattedTimestamp(localTime, 0, "%H:%M", true)
+    end
+end
+
+-- 获取当前时间戳和毫秒数
+function U:GetFormattedTimestamp()
+    local currentTime = time()
+    local milliseconds = math.floor((time() % 1) * 1000) -- 获取当前时间的毫秒数
+    return GetFormattedTimestamp(currentTime, milliseconds)
 end
 
 -- RGB 转 16 进制颜色代码
@@ -132,6 +150,19 @@ local function lcoalClassToEnglishClass(localizedClass)
         end
     end
     return englishClass
+end
+
+function U:TTagFilter(text, showTime)
+    local patt = '%|TTag:.-%|TTag'
+    if text == nil or #text <= 0 or not text:find(patt) then return text end
+    return gsub(text, patt, function(str)
+        local TTag, _ = str:match('%|TTag:(.-)%|TTag')
+        if showTime then
+            return '|cffC0C4CC' .. U:GetFormattedTimeOrDate(tonumber(TTag)) .. ' |r'
+        else
+            return ''
+        end
+    end)
 end
 
 -- |BTag:沉沦血刃#5247|BTag|Kp61|k

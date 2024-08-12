@@ -6,7 +6,6 @@ M.OPT = OPT
 local options = CreateFrame("FRAME")
 options.name = N
 options:Hide()
-
 if Settings and Settings.RegisterCanvasLayoutCategory then
     local category, layout = Settings.RegisterCanvasLayoutCategory(options, N);
     Settings.RegisterAddOnCategory(category);
