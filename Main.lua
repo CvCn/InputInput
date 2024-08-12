@@ -1,4 +1,5 @@
-local W, M, U, D, G, L, E = unpack((select(2, ...)))
+local N, T = ...
+local W, M, U, D, G, L, E = unpack(T)
 local MAIN = {}
 M.MAIN = MAIN
 
@@ -254,7 +255,7 @@ function MAIN:Init()
 	end
 
 	-- 创建自定义背景和边框
-	local backdropFrame = CreateFrame("Frame", "II_BG_FRAME", editBox)
+	local backdropFrame = CreateFrame("Frame", "II_BG_FRAME", editBox, "BackdropTemplate")
 	backdropFrame:SetPoint("TOPLEFT", editBox, "TOPLEFT", -5, 5)
 	backdropFrame:SetPoint("BOTTOMRIGHT", editBox, "BOTTOMRIGHT", 5, -5)
 
@@ -292,7 +293,7 @@ function MAIN:Init()
 	editBox:RegisterForDrag("LeftButton")
 
 	-- 聊天窗口
-	local backdropFrame2 = CreateFrame("Frame", "II_CHAT_BG_FRAME", editBox)
+	local backdropFrame2 = CreateFrame("Frame", "II_CHAT_BG_FRAME", editBox, "BackdropTemplate")
 	backdropFrame2:SetPoint("BOTTOM", editBox, "TOP", 0, 15)
 	backdropFrame2:SetWidth(480)
 	backdropFrame2:SetHeight(180)
@@ -509,9 +510,9 @@ function Chat(editBox, chatType, backdropFrame2, channel_name)
 			local bgTexture = chat_frame_texture[k + 1] or
 				backdropFrame2:CreateTexture("II_CHAT_FONTSTRING_TEXTURE" .. (k + 1), "BACKGROUND", nil, 1)
 
-			bgTexture:SetColorTexture(r, g, b, 0.1)
-			bgTexture:SetPoint("TOPLEFT", fontString, "TOPLEFT", 0, 1)
-			bgTexture:SetPoint("BOTTOMRIGHT", fontString, "BOTTOMRIGHT", 0, -2)
+			bgTexture:SetColorTexture(0, 0, 0, 0.3)
+			bgTexture:SetPoint("TOPLEFT", fontString, "TOPLEFT", -5, 1)
+			bgTexture:SetPoint("BOTTOMRIGHT", fontString, "BOTTOMRIGHT", 5, -2)
 
 			fontString:SetText(msg)
 			fontString:SetJustifyH("LEFT")
@@ -610,12 +611,32 @@ local function chatEventHandler(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7,
 		arg17
 end
 
+local function addOrMoveToEnd(array, element)
+    -- 遍历数组检查元素是否已经存在
+    local index = nil
+    for i, v in ipairs(array) do
+        if v == element then
+            index = i
+            break
+        end
+    end
+    
+    -- 如果元素已经存在，删除它
+    if index then
+        table.remove(array, index)
+    end
+    
+    -- 将元素添加到数组的最后
+    table.insert(array, element)
+end
+
+
 local ChatChange = false
 ---@diagnostic disable-next-line: deprecated
 local IsAddOnLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or IsAddOnLoaded
 local frame = CreateFrame("Frame", "II_MAIN_FRAME")
 frame:RegisterEvent("PLAYER_LOGIN")
-frame:SetScript("OnEvent", function(self_f, event, ...)
+frame:HookScript("OnEvent", function(self_f, event, ...)
 	---@diagnostic disable-next-line: undefined-global
 	if (ElvUI ~= nil and IsAddOnLoaded("ElvUI") or ElvUI == nil) and
 		(NDui ~= nil and IsAddOnLoaded("NDui") or NDui == nil) then
@@ -666,20 +687,20 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 		local resize = false
 		local X_g = 0
 
-		resizeButton:SetScript("OnMouseDown", function(self, button)
+		resizeButton:HookScript("OnMouseDown", function(self, button)
 			if button == "LeftButton" and IsShiftKeyDown() then
 				resize = true
 				local x, y = GetCursorPosition()
 				X_g = x
 			end
 		end)
-		resizeButton:SetScript("OnMouseUp", function(self, button)
+		resizeButton:HookScript("OnMouseUp", function(self, button)
 			resize = false
 			scale = scale_temp
 			D:SaveDB('input_size', scale)
 		end)
 		local w = GetScreenWidth()
-		resizeButton:SetScript("OnUpdate", function(self, button)
+		resizeButton:HookScript("OnUpdate", function(self, button)
 			if not IsShiftKeyDown() then
 				resize = false
 			end
@@ -693,7 +714,7 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 			end
 		end)
 
-		UIParent:SetScript("OnUpdate", function(self, button)
+		UIParent:HookScript("OnUpdate", function(self, button)
 			if not InCombatLockdown() then
 				if IsShiftKeyDown() then
 					resizeButton:Show()
@@ -722,10 +743,7 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 			end
 			-- 检查输入框是否有内容
 			if message and message ~= "" then
-				if message ~= messageHistory[#messageHistory] then
-					-- 将消息添加到历史记录中
-					table.insert(messageHistory, message)
-				end
+				addOrMoveToEnd(messageHistory, message)
 			end
 			local temp = {}
 			if #messageHistory > 200 then
@@ -846,7 +864,7 @@ frame:SetScript("OnEvent", function(self_f, event, ...)
 		end
 		frame_E:RegisterEvent('CHAT_MSG_CHANNEL')
 
-		frame_E:SetScript("OnEvent",
+		frame_E:HookScript("OnEvent",
 			function(self, ...)
 				local event, msg, sender, language, channelString, target, flags, zoneChannelID, channelNumber,
 				channelName, languageID, _, guid, bnSenderID, isMobile, isSubtitle, supressRaidIcons = ...

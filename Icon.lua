@@ -2,11 +2,14 @@ local W, M, U, D, G, L = unpack((select(2, ...)))
 local ICON = {}
 M.ICON = ICON
 
-GetItemInfo = C_Item.GetItemInfo or GetItemInfo
-GetDetailedItemLevelInfo = C_Item.GetDetailedItemLevelInfo or GetDetailedItemLevelInfo
-GetSpellTexture = C_Spell.GetSpellTexture or GetSpellTexture
-GetSpecializationInfoByID = GetSpecializationInfoByID or function(id) end
-GetTalentInfoByID = function(talentID)
+---@diagnostic disable-next-line: deprecated
+local GetItemInfo = C_Item.GetItemInfo or GetItemInfo
+---@diagnostic disable-next-line: deprecated
+local GetDetailedItemLevelInfo = C_Item.GetDetailedItemLevelInfo or GetDetailedItemLevelInfo
+---@diagnostic disable-next-line: deprecated
+local GetSpellTexture = C_Spell.GetSpellTexture or GetSpellTexture
+local GetSpecializationInfoByID = GetSpecializationInfoByID or function(id) end
+local GetTalentInfoByID = function(talentID)
     ---@diagnostic disable-next-line: undefined-global
     for tabIndex = 1, GetNumTalentTabs() do
         ---@diagnostic disable-next-line: undefined-global
@@ -21,10 +24,9 @@ GetTalentInfoByID = function(talentID)
     end
     return nil
 end
-UnitTokenFromGUID = UnitTokenFromGUID or function(GUID) return GUID end
-UnitName = UnitName or function(unit) return '' end
-GetSpellTexture = C_Spell.GetSpellTexture or GetSpellTexture
-GetRecruitingClubInfoFromFinderGUID = C_ClubFinder.GetRecruitingClubInfoFromFinderGUID or function() return nil end
+local UnitTokenFromGUID = UnitTokenFromGUID or function(GUID) return GUID end
+local UnitName = UnitName or function(unit) return '' end
+local GetRecruitingClubInfoFromFinderGUID = C_ClubFinder.GetRecruitingClubInfoFromFinderGUID or function() return nil end
 
 local emotes = {
     { value = "angel",      key = L["angel"] },
