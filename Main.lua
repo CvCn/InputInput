@@ -851,6 +851,7 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 		editBox:HookScript("OnEditFocusGained", function(self)
 			HideEuiBorder(self)
 			ChatChange = true
+			self:SetText(lastText)
 		end)
 
 		editBox:HookScript("OnEditFocusLost", function(self)
