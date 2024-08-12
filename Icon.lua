@@ -26,7 +26,7 @@ local GetTalentInfoByID = function(talentID)
 end
 local UnitTokenFromGUID = UnitTokenFromGUID or function(GUID) return GUID end
 local UnitName = UnitName or function(unit) return '' end
-local GetRecruitingClubInfoFromFinderGUID = C_ClubFinder.GetRecruitingClubInfoFromFinderGUID or function() return nil end
+local GetRecruitingClubInfoFromFinderGUID = C_ClubFinder and C_ClubFinder.GetRecruitingClubInfoFromFinderGUID or function() return nil end
 
 local emotes = {
     { value = "angel",      key = L["angel"] },
