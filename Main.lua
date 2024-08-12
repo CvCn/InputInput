@@ -898,8 +898,8 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 				if chatType == "SAY" or chatType == "YELL" then
 					local usingDifferentLanguage = (language ~= "") and
 						(language ~= ChatFrame1.alternativeDefaultLanguage)
-					if not ElvUI and usingDifferentLanguage then
-						local languageHeader = "[" .. language .. "] "
+					local languageHeader = "[" .. language .. "] "
+					if (not ElvUI or not strfind(msg, languageHeader, 1, true)) and usingDifferentLanguage then
 						msg = languageHeader .. msg
 					end
 				end
