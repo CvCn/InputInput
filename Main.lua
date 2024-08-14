@@ -4,6 +4,10 @@ local MAIN = {}
 M.MAIN = MAIN
 
 local measureFontString = UIParent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+---@diagnostic disable-next-line: deprecated
+local IsAddOnLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or IsAddOnLoaded
+
+
 local tip = ''
 -- 更新显示 FontString 位置的函数
 local function UpdateFontStringPosition(editBox, displayFontString, msg)
@@ -136,19 +140,32 @@ end
 
 local lastChannel = ''
 
+function IsInChannel(channelName)
+	local id, name
+	-- 获取所有加入的频道列表
+	for i = 1, select("#", GetChannelList()), 3 do
+		id, name = select(i, GetChannelList())
+		-- 比较频道名
+		if name and name:lower() == channelName:lower() then
+			return true
+		end
+	end
+	return false
+end
+
 local currentChannelIndex = 1
 function UpdateChannel(editBox)
 	local channels = { "SAY" }
-	if IsInGuild() then
-		tinsert(channels, 'GUILD')
-	end
 	if IsInRaid() then
 		tinsert(channels, 'RAID')
 	elseif IsInGroup() then
 		tinsert(channels, 'PARTY')
 	end
-	if lastChannel and lastChannel ~= '' then
-		local has = U:AddOrMoveToEnd(channels, lastChannel)
+	if IsInGuild() then
+		tinsert(channels, 'GUILD')
+	end
+	if IsInChannel("大脚世界频道") then
+		tinsert(channels, '5')
 	end
 	currentChannelIndex = currentChannelIndex + 1
 	if currentChannelIndex > #channels then
@@ -216,6 +233,7 @@ function LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 	scale_temp = scale
 end
 
+local isInit = false
 function MAIN:Init()
 	scale = D:ReadDB('input_size', 1)
 	messageHistory = D:ReadDB('messageHistory', {}, true)
@@ -339,6 +357,7 @@ function MAIN:Init()
 
 	LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 
+	isInit = true
 	return editBox, bg, border, backdropFrame2, resizeButton, texture_btn, channel_name, II_TIP, II_LANG, bg3
 end
 
@@ -458,7 +477,9 @@ function HideEuiBorder(editBox)
 		local font, _, flags = editBox:GetFont()
 		editBox:SetFont(font, newFontSize * scale, flags)
 
-		editBox.characterCount:Hide()
+		if editBox.characterCount then
+			editBox.characterCount:Hide()
+		end
 	end
 end
 
@@ -468,7 +489,6 @@ function Chat(editBox, chatType, backdropFrame2, channel_name)
 	local info = ChatTypeInfo[chatType]
 	local r, g, b = info.r, info.g, info.b
 	local chatGroup = Chat_GetChatCategory(chatType);
-	-- lastChannel = editBox:GetAttribute("channelTarget") or 'SAY'
 	if chatType == "CHANNEL" then
 		local channelTarget = editBox:GetAttribute("channelTarget") or 'SAY'
 		local channelNumber, channelname = GetChannelName(channelTarget)
@@ -615,252 +635,352 @@ local function chatEventHandler(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7,
 	return false, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16,
 		arg17
 end
-
-local ChatChange = false
----@diagnostic disable-next-line: deprecated
-local IsAddOnLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or IsAddOnLoaded
-local frame = CreateFrame("Frame", "II_MAIN_FRAME")
-frame:RegisterEvent("PLAYER_LOGIN")
-frame:HookScript("OnEvent", function(self_f, event, ...)
-	---@diagnostic disable-next-line: undefined-global
-	if (ElvUI ~= nil and IsAddOnLoaded("ElvUI") or ElvUI == nil) and
-		(NDui ~= nil and IsAddOnLoaded("NDui") or NDui == nil) then
-		local editBox, bg, border, backdropFrame2, resizeButton, texture_btn, channel_name, II_TIP, II_LANG, bg3 = MAIN
-			:Init()
-		editBox:HookScript("OnEscapePressed", editBox.ClearFocus) -- 允许按下 Esc 清除焦点+
-		-- NDui
-		if NDui then
+local last_text = ''
+local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, texture_btn, channel_name, II_TIP, II_LANG,
+						  bg3)
+	editBox:HookScript("OnEscapePressed", editBox.ClearFocus) -- 允许按下 Esc 清除焦点+
+	-- NDui
+	if NDui then
+		editBox:HookScript("OnShow", function(self)
+			LoadPostion(self)
+			LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
+			local children = { editBox:GetChildren() }
+			for _, child in ipairs(children) do
+				if child.__bgTex then
+					child:Hide()
+				end
+			end
+		end)
+	else
+		if not ElvUI then
 			editBox:HookScript("OnShow", function(self)
-				LoadPostion(self)
-				LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
-				local children = { editBox:GetChildren() }
-				for _, child in ipairs(children) do
-					if child.__bgTex then
-						child:Hide()
-					end
+				if lastChannel ~= '' and lastChannel ~= self:GetAttribute("channelTarget") then
+					editBox:SetText("/" .. lastChannel .. " ")
 				end
 			end)
-		else
-			if not ElvUI then
-				editBox:HookScript("OnShow", function(self)
-					if lastChannel ~= self:GetAttribute("channelTarget") then
-						editBox:SetText("/" .. lastChannel .. " ")
-					end
-				end)
-			end
 		end
-		editBox:HookScript("OnHide", function(self)
-			lastChannel = self:GetAttribute("channelTarget") or 'SAY'
-		end)
-
-		editBox:HookScript("OnDragStart", function(...)
-			if IsShiftKeyDown() then
-				editBox.StartMoving(...)
-			end
-		end);
-		editBox:HookScript("OnDragStop", function()
-			editBox:StopMovingOrSizing()
+	end
+	editBox:HookScript("OnDragStart", function(...)
+		if IsShiftKeyDown() then
+			editBox.StartMoving(...)
+		end
+	end);
+	editBox:HookScript("OnDragStop", function()
+		editBox:StopMovingOrSizing()
+		local point, _, relativePoint, xOfs, yOfs = editBox:GetPoint(1)
+		D:SaveDB('editBoxPosition', {
+			point, relativePoint, xOfs, yOfs
+		})
+	end);
+	-- resize repoint
+	editBox:HookScript("OnMouseDown", function(self, button)
+		if IsShiftKeyDown() and button == "RightButton" then
+			editBox:ClearAllPoints()
+			editBox:SetPoint("CENTER", UIParent, "BOTTOM", 0, 330)
 			local point, _, relativePoint, xOfs, yOfs = editBox:GetPoint(1)
 			D:SaveDB('editBoxPosition', {
 				point, relativePoint, xOfs, yOfs
 			})
-		end);
-		-- resize repoint
-		editBox:HookScript("OnMouseDown", function(self, button)
-			if IsShiftKeyDown() and button == "RightButton" then
-				editBox:ClearAllPoints()
-				editBox:SetPoint("CENTER", UIParent, "BOTTOM", 0, 330)
-				local point, _, relativePoint, xOfs, yOfs = editBox:GetPoint(1)
-				D:SaveDB('editBoxPosition', {
-					point, relativePoint, xOfs, yOfs
-				})
-				scale = 1
-				scale_temp = 1
-				LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
-				D:SaveDB('input_size', 1)
-			end
-		end);
+			scale = 1
+			scale_temp = 1
+			LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
+			D:SaveDB('input_size', 1)
+		end
+	end);
 
-		local resize = false
-		local X_g = 0
+	local resize = false
+	local X_g = 0
 
-		resizeButton:HookScript("OnMouseDown", function(self, button)
-			if button == "LeftButton" and IsShiftKeyDown() then
-				resize = true
-				local x, y = GetCursorPosition()
-				X_g = x
-			end
-		end)
-		resizeButton:HookScript("OnMouseUp", function(self, button)
+	resizeButton:HookScript("OnMouseDown", function(self, button)
+		if button == "LeftButton" and IsShiftKeyDown() then
+			resize = true
+			local x, y = GetCursorPosition()
+			X_g = x
+		end
+	end)
+	resizeButton:HookScript("OnMouseUp", function(self, button)
+		resize = false
+		scale = scale_temp
+		D:SaveDB('input_size', scale)
+	end)
+	local w = GetScreenWidth()
+	resizeButton:HookScript("OnUpdate", function(self, button)
+		if not IsShiftKeyDown() then
 			resize = false
-			scale = scale_temp
-			D:SaveDB('input_size', scale)
-		end)
-		local w = GetScreenWidth()
-		resizeButton:HookScript("OnUpdate", function(self, button)
-			if not IsShiftKeyDown() then
-				resize = false
-			end
-			if resize then
-				self:SetAlpha(0.6)
-				local x, y = GetCursorPosition()
-				local _scale = scale + (x - X_g) / w * 4
-				LoadSize(_scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
-			else
-				self:SetAlpha(0.3)
-			end
-		end)
+		end
+		if resize then
+			self:SetAlpha(0.6)
+			local x, y = GetCursorPosition()
+			local _scale = scale + (x - X_g) / w * 4
+			LoadSize(_scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
+		else
+			self:SetAlpha(0.3)
+		end
+	end)
 
-		UIParent:HookScript("OnUpdate", function(self, button)
-			if not InCombatLockdown() then
-				if IsShiftKeyDown() then
-					resizeButton:Show()
-				else
-					resizeButton:Hide()
-				end
+	UIParent:HookScript("OnUpdate", function(self, button)
+		if not InCombatLockdown() then
+			if IsShiftKeyDown() then
+				resizeButton:Show()
 			else
 				resizeButton:Hide()
 			end
-		end)
-		local orgOnEnterPressed = editBox:GetScript("OnEnterPressed")
-		editBox:SetScript("OnEnterPressed", function(self, ...)
-			local message = self:GetText()
-			if II_TIP:IsShown() and IsLeftControlKeyDown() then
-				local p = message .. tip
-				local inp, count = p:gsub("(%|c.-%|H.-%|h(%[.-%])%|h|r)", function(a1, a2)
-					replace[a2] = a1
-					return a2
+		else
+			resizeButton:Hide()
+		end
+	end)
+	local orgOnEnterPressed = editBox:GetScript("OnEnterPressed")
+	editBox:SetScript("OnEnterPressed", function(self, ...)
+		local message = self:GetText()
+		if II_TIP:IsShown() and IsLeftControlKeyDown() then
+			local p = message .. tip
+			local inp, count = p:gsub("(%|c.-%|H.-%|h(%[.-%])%|h|r)", function(a1, a2)
+				replace[a2] = a1
+				return a2
+			end)
+			for k, v in pairs(replace) do
+				inp = U:ReplacePlainTextUsingFind(inp, k, v)
+			end
+			self:SetText(inp)
+			M.HISTORY:simulateInputChange(inp, self:GetInputLanguage())
+			return
+		end
+		-- 检查输入框是否有内容
+		if message and message ~= "" then
+			U:AddOrMoveToEnd(messageHistory, message)
+		end
+		local temp = {}
+		if #messageHistory > 200 then
+			for k = #messageHistory - 200, #messageHistory do
+				tinsert(temp, messageHistory[k])
+			end
+		else
+			temp = messageHistory
+		end
+		messageHistory = temp
+		D:SaveDB('messageHistory', messageHistory, true)
+
+		-- 重置历史索引
+		historyIndex = #messageHistory + 1
+
+		if message:sub(1, 4) == "/sp " then
+			message = string.gsub(message, "/sp ", "", 1)
+			message = '/script print(' .. message .. ')'
+			self:SetText(message)
+		elseif message:sub(1, 5) == "/sps " then
+			message = string.gsub(message, "/sps ", "", 1)
+			message = '/script print("' .. message .. '")'
+			self:SetText(message)
+		elseif message:sub(1, 5) == "/spa " then
+			message = string.gsub(message, "/spa ", "", 1)
+			message = '/script for _, v in ipairs(' .. message .. ') do print(v) end'
+			self:SetText(message)
+		elseif message:sub(1, 5) == "/spt " then
+			message = string.gsub(message, "/spt ", "", 1)
+			message = '/script for k, v in pairs(' .. message .. ') do print(k, v) end'
+			self:SetText(message)
+			-- elseif message:sub(1, 7) == "/iclear" then
+			-- 	for _, chatFrame in ipairs(G.CHAT_FRAMES) do
+			-- 		local frame1 = G[chatFrame]
+			-- 		frame1:Clear()
+			-- 	end
+		else
+
+		end
+		if orgOnEnterPressed then
+			orgOnEnterPressed(self, ...)
+		end
+		last_text = ''
+	end)
+	editBox:HookScript("OnTextChanged", function(self, userInput)
+		local text = self:GetText()
+		tip = FindHis(messageHistory, text)
+		UpdateFontStringPosition(self, II_TIP, tip)
+		if userInput then
+			M.HISTORY:simulateInputChange(text, self:GetInputLanguage())
+		end
+		last_text = text
+		lastChannel = self:GetAttribute("chatType")
+	end)
+	editBox:HookScript("OnInputLanguageChanged", function(self)
+		II_LANG:SetText(_G["INPUT_" .. self:GetInputLanguage()])
+	end)
+	editBox:HookScript("OnKeyDown", function(self, key, ...)
+		if key == "TAB" then
+			if not ElvUI and not NDui then
+				UpdateChannel(self)
+			end
+			if NDui then
+				hooksecurefunc("ChatEdit_CustomTabPressed", function(self)
+					ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
 				end)
-				for k, v in pairs(replace) do
-					inp = U:ReplacePlainTextUsingFind(inp, k, v)
+			end
+		elseif key == "UP" then
+			-- 上滚历史消息
+			if not ElvUI then
+				if historyIndex > 1 then
+					historyIndex = historyIndex - 1
+					local h = messageHistory[historyIndex]
+					self:SetText(h)
+					self:SetCursorPosition(#h)
 				end
-				self:SetText(inp)
-				M.HISTORY:simulateInputChange(inp, self:GetInputLanguage())
+			end
+		elseif key == "DOWN" then
+			if not ElvUI then
+				-- 下滚历史消息
+				if historyIndex < #messageHistory then
+					historyIndex = historyIndex + 1
+					local h = messageHistory[historyIndex]
+					self:SetText(h)
+					self:SetCursorPosition(#h)
+				elseif historyIndex == #messageHistory then
+					-- 如果是最新消息，清空输入框
+					historyIndex = #messageHistory + 1
+					self:SetText("")
+				end
+			end
+		elseif key == "Z" and IsLeftControlKeyDown() and IsLeftShiftKeyDown() then
+			local text = M.HISTORY:redo()
+			if text then
+				self:SetText(text)
+			end
+		elseif key == "Z" and IsLeftControlKeyDown() then
+			local text = M.HISTORY:undo()
+			if text then
+				self:SetText(text)
+			end
+		else
+		end
+	end)
+	hooksecurefunc("ChatEdit_UpdateHeader", function(self)
+		ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
+	end)
+
+	-- 设置焦点获得事件处理函数
+	editBox:HookScript("OnEditFocusGained", function(self)
+		HideEuiBorder(self)
+		ChatChange = true
+		self:SetText(last_text)
+	end)
+
+	editBox:HookScript("OnEditFocusLost", function(self)
+		self:Hide()
+		ChatChange = false
+		if not self:GetText() or #self:GetText() <= 0 then
+			M.HISTORY:clearHistory()
+		end
+	end)
+
+	local frame_E = CreateFrame("Frame", "II_EVENT_FRAME")
+	for k, v in pairs(ChatLabels) do
+		frame_E:RegisterEvent(v)
+	end
+	frame_E:RegisterEvent('CHAT_MSG_CHANNEL')
+
+	frame_E:HookScript("OnEvent",
+		function(self, ...)
+			local event, msg, sender, language, channelString, target, flags, zoneChannelID, channelNumber,
+			channelName, languageID, _, guid, bnSenderID, isMobile, isSubtitle, supressRaidIcons = ...
+
+			U:SaveLog('msg_even_' .. event, { ... })
+
+			local chatType = strsub(event, 10) or 'SAY';
+
+			local filter = false
+			filter, msg, sender, language, channelString, target, flags, zoneChannelID, channelNumber,
+			channelName, languageID, _, guid, bnSenderID, isMobile, isSubtitle, supressRaidIcons =
+				chatEventHandler(event, msg, sender, language, channelString, target, flags, zoneChannelID,
+					channelNumber,
+					channelName, languageID, _, guid, bnSenderID, isMobile, isSubtitle, supressRaidIcons)
+			if filter then
 				return
 			end
-			-- 检查输入框是否有内容
-			if message and message ~= "" then
-				U:AddOrMoveToEnd(messageHistory, message)
-			end
-			local temp = {}
-			if #messageHistory > 200 then
-				for k = #messageHistory - 200, #messageHistory do
-					tinsert(temp, messageHistory[k])
-				end
-			else
-				temp = messageHistory
-			end
-			messageHistory = temp
-			D:SaveDB('messageHistory', messageHistory, true)
 
-			-- 重置历史索引
-			historyIndex = #messageHistory + 1
+			-- if language and #language > 0 and sender and #sender > 0 then
+			-- 	if UnitFactionGroup('player') ~= UnitFactionGroup(sender) then
+			-- 		msg = '[' .. language .. ']' .. msg
+			-- 	end
+			-- end
 
-			if message:sub(1, 4) == "/sp " then
-				message = string.gsub(message, "/sp ", "", 1)
-				message = '/script print(' .. message .. ')'
-				self:SetText(message)
-			elseif message:sub(1, 5) == "/sps " then
-				message = string.gsub(message, "/sps ", "", 1)
-				message = '/script print("' .. message .. '")'
-				self:SetText(message)
-			elseif message:sub(1, 5) == "/spa " then
-				message = string.gsub(message, "/spa ", "", 1)
-				message = '/script for _, v in ipairs(' .. message .. ') do print(v) end'
-				self:SetText(message)
-			elseif message:sub(1, 5) == "/spt " then
-				message = string.gsub(message, "/spt ", "", 1)
-				message = '/script for k, v in pairs(' .. message .. ') do print(k, v) end'
-				self:SetText(message)
-				-- elseif message:sub(1, 7) == "/iclear" then
-				-- 	for _, chatFrame in ipairs(G.CHAT_FRAMES) do
-				-- 		local frame1 = G[chatFrame]
-				-- 		frame1:Clear()
-				-- 	end
-			else
+			local chatGroup = Chat_GetChatCategory(chatType);
+			if isMobile then
+				local info = ChatTypeInfo[chatType];
+				msg = ChatFrame_GetMobileEmbeddedTexture(info.r, info.g, info.b) .. msg;
+			end
+			-- msg = C_ChatInfo.ReplaceIconAndGroupExpressions(msg, supressRaidIcons,
+			-- 	not ChatFrame_CanChatGroupPerformExpressionExpansion(chatGroup))
 
-			end
-			if orgOnEnterPressed then
-				orgOnEnterPressed(self, ...)
-			end
-		end)
-		editBox:HookScript("OnTextChanged", function(self, userInput)
-			local text = self:GetText()
-			tip = FindHis(messageHistory, text)
-			UpdateFontStringPosition(self, II_TIP, tip)
-			if userInput then
-				M.HISTORY:simulateInputChange(text, self:GetInputLanguage())
-			end
-		end)
-		editBox:HookScript("OnInputLanguageChanged", function(self)
-			II_LANG:SetText(_G["INPUT_" .. self:GetInputLanguage()])
-		end)
-		editBox:HookScript("OnKeyDown", function(self, key, ...)
-			if key == "TAB" then
-				if not ElvUI and not NDui then
-					UpdateChannel(self)
+			if chatType == "SAY" or chatType == "YELL" then
+				local usingDifferentLanguage = (language ~= "") and
+					(language ~= ChatFrame1.alternativeDefaultLanguage)
+				local languageHeader = "[" .. language .. "] "
+				if (not ElvUI or not strfind(msg, languageHeader, 1, true)) and usingDifferentLanguage then
+					msg = languageHeader .. msg
 				end
-				if NDui then
-					hooksecurefunc("ChatEdit_CustomTabPressed", function(self)
-						ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
-					end)
+			end
+
+			if event == 'CHAT_MSG_CHANNEL' then
+				SaveMSG('CHANNEL' .. channelNumber, 'CHANNEL' .. channelNumber, guid or bnSenderID, msg,
+					true, sender)
+				if ChatChange then
+					ChannelChange(editBox, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
 				end
-			elseif key == "UP" then
-				-- 上滚历史消息
-				if not ElvUI then
-					if historyIndex > 1 then
-						historyIndex = historyIndex - 1
-						local h = messageHistory[historyIndex]
-						self:SetText(h)
-						self:SetCursorPosition(#h)
+			end
+			for k, v in pairs(ChatLabels) do
+				if event == v then
+					SaveMSG(chatGroup, k, guid or bnSenderID, msg, false, sender, event:find('_INFORM'))
+					if ChatChange then
+						ChannelChange(editBox, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
 					end
+					break
 				end
-			elseif key == "DOWN" then
-				if not ElvUI then
-					-- 下滚历史消息
-					if historyIndex < #messageHistory then
-						historyIndex = historyIndex + 1
-						local h = messageHistory[historyIndex]
-						self:SetText(h)
-						self:SetCursorPosition(#h)
-					elseif historyIndex == #messageHistory then
-						-- 如果是最新消息，清空输入框
-						historyIndex = #messageHistory + 1
-						self:SetText("")
-					end
-				end
-			elseif key == "Z" and IsLeftControlKeyDown() and IsLeftShiftKeyDown() then
-				local text = M.HISTORY:redo()
-				if text then
-					self:SetText(text)
-				end
-			elseif key == "Z" and IsLeftControlKeyDown() then
-				local text = M.HISTORY:undo()
-				if text then
-					self:SetText(text)
-				end
-			else
 			end
 		end)
-		hooksecurefunc("ChatEdit_UpdateHeader", function(self)
-			ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
-		end)
+end
 
+local function optionSetup(backdropFrame2)
+	-- options 设置
+	function MAIN:HideChat(show)
+		if show then
+			backdropFrame2:Show()
+		else
+			backdropFrame2:Hide()
+		end
+	end
 
-		-- 设置焦点获得事件处理函数
-		editBox:HookScript("OnEditFocusGained", function(self)
-			HideEuiBorder(self)
-			ChatChange = true
-		end)
+	function MAIN:HideChannel(show)
+		showChannelName = show
+	end
 
-		editBox:HookScript("OnEditFocusLost", function(self)
-			self:Hide()
-			ChatChange = false
-			if not self:GetText() or #self:GetText() <= 0 then
-				M.HISTORY:clearHistory()
-			end
-		end)
+	function MAIN:HideTime(show)
+		showTime = show
+	end
 
+	function MAIN:Hidebg(show)
+		showbg = show
+	end
+
+	M.OPT:loadOPT()
+end
+
+local ChatChange = false
+local frame = CreateFrame("Frame", "II_MAIN_FRAME")
+frame:RegisterEvent("PLAYER_LOGIN")
+frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+for _, event in pairs(ChatTypeGroup["BN_WHISPER"]) do
+	frame:RegisterEvent(event);
+end
+for _, event in pairs(ChatTypeGroup["WHISPER"]) do
+	frame:RegisterEvent(event);
+end
+local editBox, bg, border, backdropFrame2, resizeButton, resizeBtnTexture, channel_name, II_TIP, II_LANG, bg3
+
+frame:HookScript("OnEvent", function(self_f, event, ...)
+	if not isInit then
+		editBox, bg, border, backdropFrame2, resizeButton, resizeBtnTexture, channel_name, II_TIP, II_LANG, bg3 =
+			MAIN:Init()
+	end
+	if event ~= 'PLAYER_LOGIN' then
 		for i = 1, NUM_CHAT_WINDOWS do
 			local chatFrameTab = _G["ChatFrame" .. i .. "Tab"]
 			-- Hook点击标签的事件
@@ -874,104 +994,31 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			end)
 		end
 		-- 覆盖默认的聊天输入框打开行为
-		hooksecurefunc("ChatEdit_ActivateChat", function(editBox)
+		hooksecurefunc("ChatEdit_ActivateChat", function(self)
 			-- 如果当前焦点不是 ChatFrame1EditBox，切换焦点
-			if editBox ~= ChatFrame1EditBox then
+			if self ~= ChatFrame1EditBox then
 				ChatFrame1EditBox:SetText(editBox:GetText()) -- 保留原输入框中的内容
 				ChatFrame1EditBox:Show()
 				ChatFrame1EditBox:SetFocus()
-				editBox:Hide() -- 隐藏原输入框
+				self:Hide() -- 隐藏原输入框
+				-- 默认输入框失去焦点后重新设置输入框频道信息
+				local ct = ChatFrame1EditBox:GetAttribute("chatType")
+				local temp = self:GetText()
+				self:SetText("/" .. ct .. " ")
+				if temp:sub(1, 1) == '/' then
+					temp = ''
+				end
+				self:SetText(temp)
 			end
 		end)
+	else
+		---@diagnostic disable-next-line: undefined-global
+		if (ElvUI ~= nil and IsAddOnLoaded("ElvUI") or ElvUI == nil) and
+			(NDui ~= nil and IsAddOnLoaded("NDui") or NDui == nil) then
+			eventSetup(editBox, bg, border, backdropFrame2, resizeButton, resizeBtnTexture, channel_name, II_TIP, II_LANG,
+				bg3)
 
-		local frame_E = CreateFrame("Frame", "II_EVENT_FRAME")
-		for k, v in pairs(ChatLabels) do
-			frame_E:RegisterEvent(v)
+			optionSetup(backdropFrame2)
 		end
-		frame_E:RegisterEvent('CHAT_MSG_CHANNEL')
-
-		frame_E:HookScript("OnEvent",
-			function(self, ...)
-				local event, msg, sender, language, channelString, target, flags, zoneChannelID, channelNumber,
-				channelName, languageID, _, guid, bnSenderID, isMobile, isSubtitle, supressRaidIcons = ...
-
-				U:SaveLog('msg_even_' .. event, { ... })
-
-				local chatType = strsub(event, 10) or 'SAY';
-
-				local filter = false
-				filter, msg, sender, language, channelString, target, flags, zoneChannelID, channelNumber,
-				channelName, languageID, _, guid, bnSenderID, isMobile, isSubtitle, supressRaidIcons =
-					chatEventHandler(event, msg, sender, language, channelString, target, flags, zoneChannelID,
-						channelNumber,
-						channelName, languageID, _, guid, bnSenderID, isMobile, isSubtitle, supressRaidIcons)
-				if filter then
-					return
-				end
-
-				-- if language and #language > 0 and sender and #sender > 0 then
-				-- 	if UnitFactionGroup('player') ~= UnitFactionGroup(sender) then
-				-- 		msg = '[' .. language .. ']' .. msg
-				-- 	end
-				-- end
-
-				local chatGroup = Chat_GetChatCategory(chatType);
-				if isMobile then
-					local info = ChatTypeInfo[chatType];
-					msg = ChatFrame_GetMobileEmbeddedTexture(info.r, info.g, info.b) .. msg;
-				end
-				-- msg = C_ChatInfo.ReplaceIconAndGroupExpressions(msg, supressRaidIcons,
-				-- 	not ChatFrame_CanChatGroupPerformExpressionExpansion(chatGroup))
-
-				if chatType == "SAY" or chatType == "YELL" then
-					local usingDifferentLanguage = (language ~= "") and
-						(language ~= ChatFrame1.alternativeDefaultLanguage)
-					local languageHeader = "[" .. language .. "] "
-					if (not ElvUI or not strfind(msg, languageHeader, 1, true)) and usingDifferentLanguage then
-						msg = languageHeader .. msg
-					end
-				end
-
-				if event == 'CHAT_MSG_CHANNEL' then
-					SaveMSG('CHANNEL' .. channelNumber, 'CHANNEL' .. channelNumber, guid or bnSenderID, msg,
-						true, sender)
-					if ChatChange then
-						ChannelChange(editBox, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
-					end
-				end
-				for k, v in pairs(ChatLabels) do
-					if event == v then
-						SaveMSG(chatGroup, k, guid or bnSenderID, msg, false, sender, event:find('_INFORM'))
-						if ChatChange then
-							ChannelChange(editBox, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
-						end
-						break
-					end
-				end
-			end)
-
-
-		-- options 设置
-		function MAIN:HideChat(show)
-			if show then
-				backdropFrame2:Show()
-			else
-				backdropFrame2:Hide()
-			end
-		end
-
-		function MAIN:HideChannel(show)
-			showChannelName = show
-		end
-
-		function MAIN:HideTime(show)
-			showTime = show
-		end
-
-		function MAIN:Hidebg(show)
-			showbg = show
-		end
-
-		M.OPT:loadOPT()
 	end
 end)

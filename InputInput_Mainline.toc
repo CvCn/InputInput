@@ -6,8 +6,8 @@
 ## Notes-zhCN: 输入框增强
 ## Notes-zhTW: 輸入框增強
 ## Author: York
-## Version: 1.0.2
-## X-Date: 2024-08-12
+## Version: 1.0.3
+## X-Date: 2024-08-15
 
 ## X-Category: Interface Enhancements
 ## X-Curse-Project-ID: 1076615
