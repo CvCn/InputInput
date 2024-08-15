@@ -292,10 +292,10 @@ function MAIN:Init()
 
 	local channel_name = backdropFrame:CreateFontString("II_CHANNEL_NAME", "OVERLAY", "GameFontNormal")
 	channel_name:SetPoint('TOP', backdropFrame, 'BOTTOM', 0, -20)
-	if channel_name then
-		local font, _, flags = channel_name:GetFont()
-		channel_name:SetFont(font, newFontSize, flags)
-	end
+	channel_name:SetFont(font, newFontSize, flags)
+	-- 添加阴影
+	channel_name:SetShadowOffset(2, -2)  -- 阴影偏移（右下角）
+	channel_name:SetShadowColor(0, 0, 0, 1)  -- 阴影颜色为黑色，透明度为50%
 
 	local border = CreateFrame("Frame", "II_BG_FRAME_BORDER", backdropFrame, "BackdropTemplate")
 	border:SetPoint("TOPLEFT", -25, 25)
@@ -859,6 +859,11 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 	-- 设置焦点获得事件处理函数
 	editBox:HookScript("OnEditFocusGained", function(self)
 		HideEuiBorder(self)
+		-- Elvui 会重置输入框的位置大小
+		if ElvUI then
+			LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
+			LoadPostion(editBox)
+		end
 		ChatChange = true
 		self:SetText(last_text)
 	end)
@@ -967,6 +972,7 @@ local ChatChange = false
 local frame = CreateFrame("Frame", "II_MAIN_FRAME")
 frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+frame:RegisterEvent("CVAR_UPDATE")
 for _, event in pairs(ChatTypeGroup["BN_WHISPER"]) do
 	frame:RegisterEvent(event);
 end
@@ -980,13 +986,13 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 		editBox, bg, border, backdropFrame2, resizeButton, resizeBtnTexture, channel_name, II_TIP, II_LANG, bg3 =
 			MAIN:Init()
 	end
-	if event ~= 'PLAYER_LOGIN' then
-		for i = 1, NUM_CHAT_WINDOWS do
-			local chatFrameTab = _G["ChatFrame" .. i .. "Tab"]
+	if event == 'PLAYER_ENTERING_WORLD' or strfind(event, "WHISPER", 0, true) then
+		for _, chatFrameName in pairs(CHAT_FRAMES) do
+			local chatFrameTab = _G[chatFrameName .. "Tab"]
 			-- Hook点击标签的事件
 			chatFrameTab:HookScript("OnClick", function(self, button)
 				if button == "LeftButton" then
-					local chatFrameEditBox = _G["ChatFrame" .. i .. "EditBox"]
+					local chatFrameEditBox = _G[chatFrameName .. "EditBox"]
 					chatFrameEditBox:Hide() -- 隐藏聊天输入框
 					ChatFrame1EditBox:SetFocus()
 					ChatFrame1EditBox:Hide()
@@ -1011,6 +1017,12 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 				self:SetText(temp)
 			end
 		end)
+	elseif event == 'CVAR_UPDATE' then
+		local cvarName, value = ...
+		if cvarName == 'chatStyle' or cvarName == 'whisperMode' then
+			LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
+			LoadPostion(editBox)
+		end
 	else
 		---@diagnostic disable-next-line: undefined-global
 		if (ElvUI ~= nil and IsAddOnLoaded("ElvUI") or ElvUI == nil) and
