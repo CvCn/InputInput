@@ -1,5 +1,6 @@
 local W, M, U, D, G, L, E = unpack((select(2, ...)))
-GetAffixInfo = C_Item.GetAffixInfo or function(affixID) end
+local C_Item_GetAffixInfo = C_Item.GetAffixInfo or function(affixID) end
+local C_BattleNet_GetFriendAccountInfo = C_BattleNet.GetFriendAccountInfo or function(idx) end
 
 local function GetFormattedTimestamp(currentTime, milliseconds, foramt, notMilli)
     -- 格式化时间戳
@@ -62,7 +63,7 @@ function U:GetAffixName(...)
     local name = {}
     for _, v in ipairs({ ... }) do
         if v then
-            local affixName, affixDesc, affixIcon = GetAffixInfo(v)
+            local affixName, affixDesc, affixIcon = C_Item_GetAffixInfo(v)
             tinsert(name, affixName)
         end
     end
@@ -176,6 +177,7 @@ function U:BTagFilter(text)
             local gameFriend = accountInfo.gameAccountInfo
             if gameFriend and gameFriend.className then
                 local classColor = RAID_CLASS_COLORS[lcoalClassToEnglishClass(gameFriend.className)]
+                self:UnitColor(accountInfo.accountName, classColor.colorStr)
                 return '|c' .. classColor.colorStr .. accountInfo.accountName .. '|r'
             end
             return accountInfo.accountName
@@ -209,7 +211,7 @@ function U:SaveLog(key, value)
         t = U:GetFormattedTimestamp(),
         v = value
     })
-    if #thisKey >= 200 then
+    if #thisKey > 200 then
         tremove(thisKey, 1)
     end
     log[key] = thisKey
@@ -259,21 +261,65 @@ function U:SplitMSG(input)
 end
 
 function U:AddOrMoveToEnd(array, element)
-	-- 遍历数组检查元素是否已经存在
-	local index = nil
-	for i, v in ipairs(array) do
-		if v == element then
-			index = i
-			break
-		end
-	end
+    -- 遍历数组检查元素是否已经存在
+    local index = nil
+    for i, v in ipairs(array) do
+        if v == element then
+            index = i
+            break
+        end
+    end
 
-	-- 如果元素已经存在，删除它
-	if index then
-		table.remove(array, index)
-	end
+    -- 如果元素已经存在，删除它
+    if index then
+        table.remove(array, index)
+    end
 
-	-- 将元素添加到数组的最后
-	table.insert(array, element)
+    -- 将元素添加到数组的最后
+    table.insert(array, element)
     return index
+end
+
+local function getTableSize(t)
+    local count = 0
+    for _ in pairs(t) do
+        count = count + 1
+    end
+    return count
+end
+
+function U:UnitColor(unitName, color)
+    local UNIT_COLOR_CACHE = D:ReadDB('UNIT_COLOR_CACHE', {}, true)
+    -- 如果表的大小超过 200，删除第一个元素
+    if getTableSize(UNIT_COLOR_CACHE) >= 200 then
+        -- 找到第一个键并删除
+        for k in pairs(UNIT_COLOR_CACHE) do
+            UNIT_COLOR_CACHE[k] = nil
+            break
+        end
+    end
+    UNIT_COLOR_CACHE[unitName] = color or UNIT_COLOR_CACHE[unitName]
+    if UNIT_COLOR_CACHE[unitName] == nil then
+        local accountInfo = BNet_GetAccountInfoFromAccountName(unitName)
+        if accountInfo and accountInfo.gameAccountInfo and accountInfo.gameAccountInfo.className then
+            UNIT_COLOR_CACHE[unitName] = RAID_CLASS_COLORS
+                [lcoalClassToEnglishClass(accountInfo.gameAccountInfo.className)].colorStr
+        end
+    end
+    D:SaveDB('UNIT_COLOR_CACHE', UNIT_COLOR_CACHE, true)
+    return UNIT_COLOR_CACHE[unitName]
+end
+
+function BNet_GetAccountInfoFromAccountName(name)
+    local n, r = strsplit("-", name)
+    local _, numBNetOnline = BNGetNumFriends();
+    for i = 1, numBNetOnline do
+        local accountInfo = C_BattleNet_GetFriendAccountInfo(i);
+        if accountInfo and accountInfo.accountName and name == accountInfo.accountName then
+            return accountInfo
+        end
+        if accountInfo and accountInfo.gameAccountInfo and n == accountInfo.gameAccountInfo.characterName then
+            return accountInfo
+        end
+    end
 end

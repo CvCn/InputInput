@@ -33,6 +33,15 @@ function D:ReadDB(key, defaultValue, AccountUniversal)
     return InputInput_DB[accountID][key]
 end
 
+function D:AddArray(key, addvalue, AccountUniversal, limit)
+    local date = self:ReadDB(key, {}, AccountUniversal)
+    table.insert(date, addvalue)
+    if #date > limit then
+        tremove(date, 1)
+    end
+    self:SaveDB(key, date, AccountUniversal)
+end
+
 function D:HasInKey(key, AccountUniversal)
     local accountID
     if not AccountUniversal then

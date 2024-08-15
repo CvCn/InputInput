@@ -3,13 +3,13 @@ local ICON = {}
 M.ICON = ICON
 
 ---@diagnostic disable-next-line: deprecated
-local GetItemInfo = C_Item.GetItemInfo or GetItemInfo
+local C_Item_GetItemInfo = C_Item.GetItemInfo or GetItemInfo
 ---@diagnostic disable-next-line: deprecated
-local GetDetailedItemLevelInfo = C_Item.GetDetailedItemLevelInfo or GetDetailedItemLevelInfo
+local C_Item_GetDetailedItemLevelInfo = C_Item.GetDetailedItemLevelInfo or GetDetailedItemLevelInfo
 ---@diagnostic disable-next-line: deprecated
-local GetSpellTexture = C_Spell.GetSpellTexture or GetSpellTexture
+local C_Spell_GetSpellTexture = C_Spell.GetSpellTexture or GetSpellTexture
 local GetSpecializationInfoByID = GetSpecializationInfoByID or function(id) end
-local GetTalentInfoByID = function(talentID)
+local GetTalentInfoByID = GetTalentInfoByID or function(talentID)
     ---@diagnostic disable-next-line: undefined-global
     for tabIndex = 1, GetNumTalentTabs() do
         ---@diagnostic disable-next-line: undefined-global
@@ -26,7 +26,7 @@ local GetTalentInfoByID = function(talentID)
 end
 local UnitTokenFromGUID = UnitTokenFromGUID or function(GUID) return GUID end
 local UnitName = UnitName or function(unit) return '' end
-local GetRecruitingClubInfoFromFinderGUID = C_ClubFinder and C_ClubFinder.GetRecruitingClubInfoFromFinderGUID or function() return nil end
+local C_ClubFinder_GetRecruitingClubInfoFromFinderGUID = C_ClubFinder and C_ClubFinder.GetRecruitingClubInfoFromFinderGUID or function() return nil end
 
 local emotes = {
     { value = "angel",      key = L["angel"] },
@@ -134,16 +134,16 @@ ReplaceIconString(text)
             if ElvUI == nil then
                 local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount,
                 itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType, expansionID, setID, isCraftingReagent =
-                    GetItemInfo(id)
+                C_Item_GetItemInfo(id)
                 icon = itemTexture
                 if U:HasKey(itemshowLevel, classID) then
-                    local effectiveILvl, isPreview, baseILvl = GetDetailedItemLevelInfo(text:match("%|H(.-)|h"))
+                    local effectiveILvl, isPreview, baseILvl = C_Item_GetDetailedItemLevelInfo(text:match("%|H(.-)|h"))
                     suffix = tostring(effectiveILvl)
                 end
             end
         elseif H_type == 'spell' then
             if ElvUI == nil then
-                local spellPath = GetSpellTexture(id)
+                local spellPath = C_Spell_GetSpellTexture(id)
                 icon = spellPath
             end
         elseif H_type == 'achievement' then
@@ -157,7 +157,7 @@ ReplaceIconString(text)
             end
         elseif H_type == 'talent' then -- |cff4e96f7|Htalent:1898:4|h[双生戒律]|h|r
             -- local id, level = text:match("talentbuild:(.+):(%d+):")
-            local _, _, path = GetTalentInfoByID(tonumber(id))
+            local _, _, path = GetTalentInfoByID(tonumber(id), nil)
             icon = path
             -- suffix = level
         elseif H_type:match("trade:(.+)") then
@@ -174,7 +174,7 @@ ReplaceIconString(text)
                 suffix = string.format('|c%s%s|r', classColor.colorStr, UnitName(unit))
             end
 
-            icon = GetSpellTexture(spellID)
+            icon = C_Spell_GetSpellTexture(spellID)
         elseif H_type == 'quest' then
             -- local questId, questLevel = text:match("quest:(%d+):(%d+)")
             -- suffix = questLevel
@@ -197,13 +197,13 @@ ReplaceIconString(text)
                 "keystone:(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):(%d+)")
             suffix = U:GetAffixName(a1, a2, a3, a4)
         elseif H_type == 'mount' then
-            icon = GetSpellTexture(id)
+            icon = C_Spell_GetSpellTexture(id)
         end
     else
         H_type, id = text:match("%|H(.-):(.+)|h%[.-%]")
         if H_type then
             if H_type == 'clubFinder' then
-                local clubInfo = GetRecruitingClubInfoFromFinderGUID(id)
+                local clubInfo = C_ClubFinder_GetRecruitingClubInfoFromFinderGUID(id)
                 if clubInfo and clubInfo.numActiveMembers > 0 then
                     suffix = '|Tinterface\\friendsframe\\ui-toast-chatinviteicon:15|t' .. clubInfo.numActiveMembers
                 end

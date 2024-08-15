@@ -3,10 +3,10 @@ local W, M, U, D, G, L, E = unpack(T)
 local MAIN = {}
 M.MAIN = MAIN
 
-local measureFontString = UIParent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 ---@diagnostic disable-next-line: deprecated
-local IsAddOnLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or IsAddOnLoaded
+local C_AddOns_IsAddOnLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or IsAddOnLoaded
 
+local measureFontString = UIParent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 
 local tip = ''
 -- 更新显示 FontString 位置的函数
@@ -147,7 +147,7 @@ function IsInChannel(channelName)
 		id, name = select(i, GetChannelList())
 		-- 比较频道名
 		if name and name:lower() == channelName:lower() then
-			return true
+			return true, id
 		end
 	end
 	return false
@@ -164,8 +164,9 @@ function UpdateChannel(editBox)
 	if IsInGuild() then
 		tinsert(channels, 'GUILD')
 	end
-	if IsInChannel("大脚世界频道") then
-		tinsert(channels, '5')
+	local dajiao, id = IsInChannel("大脚世界频道")
+	if dajiao then
+		tinsert(channels, id)
 	end
 	currentChannelIndex = currentChannelIndex + 1
 	if currentChannelIndex > #channels then
@@ -295,7 +296,7 @@ function MAIN:Init()
 	channel_name:SetFont(font, newFontSize, flags)
 	-- 添加阴影
 	channel_name:SetShadowOffset(2, -2)  -- 阴影偏移（右下角）
-	channel_name:SetShadowColor(0, 0, 0, 1)  -- 阴影颜色为黑色，透明度为50%
+	channel_name:SetShadowColor(0, 0, 0, 1) -- 阴影颜色为黑色，透明度为50%
 
 	local border = CreateFrame("Frame", "II_BG_FRAME_BORDER", backdropFrame, "BackdropTemplate")
 	border:SetPoint("TOPLEFT", -25, 25)
@@ -407,6 +408,8 @@ function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
 		classColor = {
 			colorStr = 'FF' .. channelColor
 		}
+	else
+		U:UnitColor(name_realm, classColor.colorStr)
 	end
 
 	local TO = ''
@@ -499,8 +502,22 @@ function Chat(editBox, chatType, backdropFrame2, channel_name)
 		channel_name:SetText(channelText)
 		msg_list = D:ReadDB('CHANNEL' .. channelNumber)
 	else
+		local classColor
 		local target = (editBox:GetAttribute("tellTarget") or '')
-		if not chatType:find('WHISPER') then target = '' end
+		if target and target ~= '' then
+			local name, realm = strsplit('-', target)
+			if realm == GetRealmName() then
+				target = name
+			end
+		end
+		if not chatType:find('WHISPER') then
+			target = ''
+		else
+			classColor = U:UnitColor(target)
+			if classColor then
+				target = '|c' .. classColor .. target .. '|r'
+			end
+		end
 		local channelText = ""
 		if showChannelName then
 			channelText = '|cFF' .. U:RGBToHex(r, g, b) .. U:join(' : ', G[chatType], target) .. '|r'
@@ -654,9 +671,9 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 	else
 		if not ElvUI then
 			editBox:HookScript("OnShow", function(self)
-				if lastChannel ~= '' and lastChannel ~= self:GetAttribute("channelTarget") then
-					editBox:SetText("/" .. lastChannel .. " ")
-				end
+				-- if lastChannel ~= '' and lastChannel ~= self:GetAttribute("channelTarget") then
+				-- 	editBox:SetText("/" .. lastChannel .. " ")
+				-- end
 			end)
 		end
 	end
@@ -1025,8 +1042,8 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 		end
 	else
 		---@diagnostic disable-next-line: undefined-global
-		if (ElvUI ~= nil and IsAddOnLoaded("ElvUI") or ElvUI == nil) and
-			(NDui ~= nil and IsAddOnLoaded("NDui") or NDui == nil) then
+		if (ElvUI ~= nil and C_AddOns_IsAddOnLoaded("ElvUI") or ElvUI == nil) and
+			(NDui ~= nil and C_AddOns_IsAddOnLoaded("NDui") or NDui == nil) then
 			eventSetup(editBox, bg, border, backdropFrame2, resizeButton, resizeBtnTexture, channel_name, II_TIP, II_LANG,
 				bg3)
 
