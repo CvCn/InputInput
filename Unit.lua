@@ -183,6 +183,8 @@ function U:BTagFilter(text)
                 return '|c' .. classColor.colorStr .. accountInfo.accountName .. '|r'
             end
             return accountInfo.accountName
+        else
+            return BTag
         end
     end)
 end

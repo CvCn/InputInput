@@ -2,10 +2,15 @@ local W, M, U, D, G, L, E, API = unpack((select(2, ...)))
 
 local version, buildVersion, buildDate, uiVersion = GetBuildInfo()
 
-do
-    local expansion, majorPatch, minorPatch = (version or "5.0.0"):match("^(%d+)%.(%d+)%.(%d+)")
-    local clientVersion = (expansion or 0) * 10000 + (majorPatch or 0) * 100 + (minorPatch or 0)
 
+local function getVersion(v)
+    local expansion, majorPatch, minorPatch = (v or "5.0.0"):match("^(%d+)%.(%d+)%.(%d+)")
+    return (expansion or 0) * 10000 + (majorPatch or 0) * 100 + (minorPatch or 0)
+end
+
+local clientVersion = getVersion(version)
+
+do
     local currVersion
     local v = {
         Classic = 'Classic',
@@ -34,7 +39,7 @@ end
 local function Fun(funTable)
     if not funTable then return end
     for k, v in pairs(funTable) do
-        if version >= k then
+        if clientVersion >= getVersion(k) then
             return v
         end
     end
@@ -84,7 +89,7 @@ API.GetTalentInfoByID = Fun({
             ---@diagnostic disable-next-line: undefined-global
             for talentIndex = 1, GetNumTalents(tabIndex) do
                 local talentName, iconTexture, tier, column, rank, maxRank, meetsPrereq, previewRank, meetsPreviewPrereq, isExceptional, goldBorder, id =
-                GetTalentInfo(tabIndex, talentIndex)
+                    GetTalentInfo(tabIndex, talentIndex)
                 if id == talentID then
                     return id, talentName, iconTexture, previewRank > 1, previewRank == 0, nil, nil, tier, column,
                         previewRank > 1,
@@ -107,7 +112,7 @@ API.UnitName = Fun({
         end
         return name, realm
     end
-    
+
 })
 API.C_ClubFinder_GetRecruitingClubInfoFromFinderGUID = Fun({
     ['4.0.0'] = C_ClubFinder and C_ClubFinder.GetRecruitingClubInfoFromFinderGUID
