@@ -1,6 +1,8 @@
-local W, M, U, D, G, L, E = unpack((select(2, ...)))
-local C_Item_GetAffixInfo = C_Item.GetAffixInfo or function(affixID) end
-local C_BattleNet_GetFriendAccountInfo = C_BattleNet.GetFriendAccountInfo or function(idx) end
+local W, M, U, D, G, L, E, API = unpack((select(2, ...)))
+
+local C_ChallengeMode_GetAffixInfo = API.C_ChallengeMode_GetAffixInfo
+local C_BattleNet_GetFriendAccountInfo = API.C_BattleNet_GetFriendAccountInfo
+local BNGetNumFriends = API.BNGetNumFriends
 
 local function GetFormattedTimestamp(currentTime, milliseconds, foramt, notMilli)
     -- 格式化时间戳
@@ -63,7 +65,7 @@ function U:GetAffixName(...)
     local name = {}
     for _, v in ipairs({ ... }) do
         if v then
-            local affixName, affixDesc, affixIcon = C_Item_GetAffixInfo(v)
+            local affixName, affixDesc, affixIcon = C_ChallengeMode_GetAffixInfo(v)
             tinsert(name, affixName)
         end
     end
@@ -113,7 +115,7 @@ end
 function U:GetAccountInfoByBattleTag(battleTag)
     local numFriends = BNGetNumFriends()
     for i = 1, numFriends do
-        local accountInfo = C_BattleNet.GetFriendAccountInfo(i)
+        local accountInfo = C_BattleNet_GetFriendAccountInfo(i)
         if accountInfo and accountInfo.battleTag == battleTag then
             return accountInfo
         end

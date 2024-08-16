@@ -1,32 +1,18 @@
-local W, M, U, D, G, L = unpack((select(2, ...)))
+local W, M, U, D, G, L, E, API = unpack((select(2, ...)))
 local ICON = {}
 M.ICON = ICON
 
----@diagnostic disable-next-line: deprecated
-local C_Item_GetItemInfo = C_Item.GetItemInfo or GetItemInfo
----@diagnostic disable-next-line: deprecated
-local C_Item_GetDetailedItemLevelInfo = C_Item.GetDetailedItemLevelInfo or GetDetailedItemLevelInfo
----@diagnostic disable-next-line: deprecated
-local C_Spell_GetSpellTexture = C_Spell.GetSpellTexture or GetSpellTexture
-local GetSpecializationInfoByID = GetSpecializationInfoByID or function(id) end
-local GetTalentInfoByID = GetTalentInfoByID or function(talentID)
-    ---@diagnostic disable-next-line: undefined-global
-    for tabIndex = 1, GetNumTalentTabs() do
-        ---@diagnostic disable-next-line: undefined-global
-        for talentIndex = 1, GetNumTalents(tabIndex) do
-            local name, iconTexture, tier, column, rank, maxRank,
-            isExceptional, available, previewRank, previewAvailable, id = GetTalentInfo(tabIndex, talentIndex)
-            if id == talentID then
-                return id, name, iconTexture, available == 1, available ~= 1, nil, nil, tier, column, available == 1,
-                    false
-            end
-        end
-    end
-    return nil
-end
-local UnitTokenFromGUID = UnitTokenFromGUID or function(GUID) return GUID end
-local UnitName = UnitName or function(unit) return '' end
-local C_ClubFinder_GetRecruitingClubInfoFromFinderGUID = C_ClubFinder and C_ClubFinder.GetRecruitingClubInfoFromFinderGUID or function() return nil end
+local C_Item_GetItemInfo = API.C_Item_GetItemInfo
+local C_Item_GetDetailedItemLevelInfo = API.C_Item_GetDetailedItemLevelInfo
+local C_Spell_GetSpellTexture = API.C_Spell_GetSpellTexture
+local GetSpecializationInfoByID = API.GetSpecializationInfoByID
+local GetTalentInfoByID = API.GetTalentInfoByID
+local UnitTokenFromGUID = API.UnitTokenFromGUID
+local UnitName = API.UnitName
+local C_ClubFinder_GetRecruitingClubInfoFromFinderGUID = API.C_ClubFinder_GetRecruitingClubInfoFromFinderGUID
+local GetAchievementInfo = API.GetAchievementInfo
+local UnitClass = API.UnitClass
+local C_CurrencyInfo_GetCurrencyInfo = API.C_CurrencyInfo_GetCurrencyInfo
 
 local emotes = {
     { value = "angel",      key = L["angel"] },
@@ -134,7 +120,7 @@ ReplaceIconString(text)
             if ElvUI == nil then
                 local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount,
                 itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType, expansionID, setID, isCraftingReagent =
-                C_Item_GetItemInfo(id)
+                    C_Item_GetItemInfo(id)
                 icon = itemTexture
                 if U:HasKey(itemshowLevel, classID) then
                     local effectiveILvl, isPreview, baseILvl = C_Item_GetDetailedItemLevelInfo(text:match("%|H(.-)|h"))
@@ -143,6 +129,7 @@ ReplaceIconString(text)
             end
         elseif H_type == 'spell' then
             if ElvUI == nil then
+                print(id)
                 local spellPath = C_Spell_GetSpellTexture(id)
                 icon = spellPath
             end
@@ -181,7 +168,7 @@ ReplaceIconString(text)
             -- local tagID, tagName, worldQuestType, rarity, isElite, tradeskillLineIndex, displayTitle, isDaily, isStory = C_QuestLog.GetQuestTagInfo(questId)
         elseif H_type == 'currency' then
             if ElvUI == nil then
-                local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(id)
+                local currencyInfo = C_CurrencyInfo_GetCurrencyInfo(id)
                 icon = currencyInfo.iconFileID
             end
             local id, amount = text:match(
@@ -198,6 +185,10 @@ ReplaceIconString(text)
             suffix = U:GetAffixName(a1, a2, a3, a4)
         elseif H_type == 'mount' then
             icon = C_Spell_GetSpellTexture(id)
+        elseif H_type == 'enchant' then
+            if not ElvUI then
+                icon = C_Spell_GetSpellTexture(id)
+            end
         end
     else
         H_type, id = text:match("%|H(.-):(.+)|h%[.-%]")

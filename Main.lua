@@ -1,10 +1,26 @@
 local N, T = ...
-local W, M, U, D, G, L, E = unpack(T)
+local W, M, U, D, G, L, E, API = unpack(T)
 local MAIN = {}
 M.MAIN = MAIN
 
----@diagnostic disable-next-line: deprecated
-local C_AddOns_IsAddOnLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or IsAddOnLoaded
+local C_AddOns_IsAddOnLoaded = API.C_AddOns_IsAddOnLoaded
+local GetChannelList = API.GetChannelList
+local IsInRaid = API.IsInRaid
+local IsInGroup = API.IsInGroup
+local IsInGuild = API.IsInGuild
+local GetMaxPlayerLevel = API.GetMaxPlayerLevel
+local UnitLevel = API.UnitLevel
+local GetRealmName = API.GetRealmName
+local C_BattleNet_GetAccountInfoByID = API.C_BattleNet_GetAccountInfoByID
+local GetPlayerInfoByGUID = API.GetPlayerInfoByGUID
+local UnitClass = API.UnitClass
+local GetChannelName = API.GetChannelName
+local IsShiftKeyDown = API.IsShiftKeyDown
+local GetCursorPosition = API.GetCursorPosition
+local InCombatLockdown = API.InCombatLockdown
+local IsLeftControlKeyDown = API.IsLeftControlKeyDown
+local IsLeftShiftKeyDown = API.IsLeftShiftKeyDown
+
 
 local measureFontString = UIParent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 
@@ -382,7 +398,7 @@ function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
 	local class
 	if senderGUID then
 		if tonumber(senderGUID) ~= nil then
-			local accountInfo = C_BattleNet.GetAccountInfoByID(senderGUID)
+			local accountInfo = C_BattleNet_GetAccountInfoByID(senderGUID)
 			if accountInfo then
 				name_realm = accountInfo.accountName
 				if name_realm:find('%|K.-%|k') then
@@ -437,7 +453,7 @@ function SaveMSG(saveKey, channel, senderGUID, msg, isChannel, sender, isPlayer)
 	local w = strfind(channel, 'BN_WHISPER')
 	local channelMsg = D:ReadDB(key, {}, w)
 	local currtime = ""
-	currtime = "|TTag:" .. time() .. " |TTag"
+	currtime = "|TTag:" .. time() .. "|TTag"
 	tinsert(channelMsg, currtime .. FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer))
 	local temp = {}
 	if #channelMsg > 10 then
