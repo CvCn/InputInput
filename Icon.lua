@@ -108,9 +108,8 @@ end
 local itemshowLevel = {
     2, 4, 8, 9, 13, 17
 }
---|Hspell:64901:0|h[希望象征]|h
-local function
-ReplaceIconString(text)
+
+local function ReplaceIconString(text)
     if not text or text == '' then return '' end
     local H_type, id = text:match("%|H(.-):(%d+)")
     local icon
@@ -129,7 +128,6 @@ ReplaceIconString(text)
             end
         elseif H_type == 'spell' then
             if ElvUI == nil then
-                print(id)
                 local spellPath = C_Spell_GetSpellTexture(id)
                 icon = spellPath
             end

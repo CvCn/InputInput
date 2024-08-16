@@ -10,205 +10,167 @@ end
 
 local clientVersion = getVersion(version)
 
-do
-    local currVersion
-    local v = {
-        Classic = 'Classic',
-        TBC = 'TBC',
-        WotLK = 'WotLK',
-        Cataclysm = 'Cataclysm',
-        MoP = 'MoP',
-        TWW = 'TWW'
-    }
-
-    if clientVersion < 20000 then
-        currVersion = v.Classic
-    elseif clientVersion < 30000 then
-        currVersion = v.TBC
-    elseif clientVersion < 40000 then
-        currVersion = v.WotLK
-    elseif clientVersion < 50000 then
-        currVersion = v.Cataclysm
-    elseif clientVersion < 60000 then
-        currVersion = v.MoP
-    elseif clientVersion >= 110000 then
-        currVersion = v.TWW
-    end
-end
-
 local function Fun(funTable)
-    if not funTable then return end
-    for k, v in pairs(funTable) do
-        if clientVersion >= getVersion(k) then
-            return v
+    for name, t in pairs(funTable) do
+        if t then
+            for v, f in pairs(t) do
+                if clientVersion >= getVersion(v) then
+                    API[name] = f
+                    break
+                end
+            end
+            if not API[name] then
+                API[name] = function() end
+            end
         end
     end
-    return function() end
 end
 
-API.C_Item_GetItemInfo = Fun({
-    ['10.2.6'] = C_Item and C_Item.GetItemInfo,
-    ---@diagnostic disable-next-line: deprecated
-    ['1.15.0'] = GetItemInfo
-})
-
-API.C_Item_GetDetailedItemLevelInfo = Fun({
-    ['10.2.6'] = C_Item and C_Item.GetDetailedItemLevelInfo,
-    ---@diagnostic disable-next-line: deprecated
-    ['1.0.0'] = GetDetailedItemLevelInfo
-})
-
-API.C_Spell_GetSpellTexture = Fun({
-    ['10.2.6'] = C_Spell and C_Spell.GetSpellTexture,
-    ---@diagnostic disable-next-line: deprecated
-    ['1.0.0'] = GetSpellTexture
-})
-API.GetSpecializationInfoByID = Fun({
-    ['5.0.4'] = GetSpecializationInfoByID
-})
-API.GetTalentInfoByID = Fun({
-    ['6.0.2'] = GetTalentInfoByID,
-    ['3.4.3'] = function(talentID)
-        ---@diagnostic disable-next-line: undefined-global
-        for tabIndex = 1, GetNumTalentTabs() do
+Fun({
+    C_Item_GetItemInfo = {
+        ['10.2.6'] = C_Item and C_Item.GetItemInfo,
+        ---@diagnostic disable-next-line: deprecated
+        ['1.15.0'] = GetItemInfo
+    },
+    C_Item_GetDetailedItemLevelInfo = {
+        ['10.2.6'] = C_Item and C_Item.GetDetailedItemLevelInfo,
+        ---@diagnostic disable-next-line: deprecated
+        ['1.0.0'] = GetDetailedItemLevelInfo
+    },
+    C_Spell_GetSpellTexture = {
+        ['10.2.6'] = C_Spell and C_Spell.GetSpellTexture,
+        ---@diagnostic disable-next-line: deprecated
+        ['1.0.0'] = GetSpellTexture
+    },
+    GetSpecializationInfoByID = {
+        ['5.0.4'] = GetSpecializationInfoByID
+    },
+    GetTalentInfoByID = {
+        ['6.0.2'] = GetTalentInfoByID,
+        ['3.4.3'] = function(talentID)
             ---@diagnostic disable-next-line: undefined-global
-            for talentIndex = 1, GetNumTalents(tabIndex) do
-                local name, iconTexture, tier, column, rank, maxRank,
-                isExceptional, available, previewRank, previewAvailable, id = GetTalentInfo(tabIndex, talentIndex)
-                if id == talentID then
-                    return id, name, iconTexture, available == 1, available ~= 1, nil, nil, tier, column, available == 1,
-                        false
+            for tabIndex = 1, GetNumTalentTabs() do
+                ---@diagnostic disable-next-line: undefined-global
+                for talentIndex = 1, GetNumTalents(tabIndex) do
+                    local name, iconTexture, tier, column, rank, maxRank,
+                    isExceptional, available, previewRank, previewAvailable, id = GetTalentInfo(tabIndex, talentIndex)
+                    if id == talentID then
+                        return id, name, iconTexture, available == 1, available ~= 1, nil, nil, tier, column,
+                            available == 1,
+                            false
+                    end
                 end
             end
-        end
-        return nil
-    end,
-    ['1.0.0'] = function(talentID)
-        ---@diagnostic disable-next-line: undefined-global
-        for tabIndex = 1, GetNumTalentTabs() do
+            return nil
+        end,
+        ['1.0.0'] = function(talentID)
             ---@diagnostic disable-next-line: undefined-global
-            for talentIndex = 1, GetNumTalents(tabIndex) do
-                local talentName, iconTexture, tier, column, rank, maxRank, meetsPrereq, previewRank, meetsPreviewPrereq, isExceptional, goldBorder, id =
-                    GetTalentInfo(tabIndex, talentIndex)
-                if id == talentID then
-                    return id, talentName, iconTexture, previewRank > 1, previewRank == 0, nil, nil, tier, column,
-                        previewRank > 1,
-                        false
+            for tabIndex = 1, GetNumTalentTabs() do
+                ---@diagnostic disable-next-line: undefined-global
+                for talentIndex = 1, GetNumTalents(tabIndex) do
+                    local talentName, iconTexture, tier, column, rank, maxRank, meetsPrereq, previewRank, meetsPreviewPrereq, isExceptional, goldBorder, id =
+                        GetTalentInfo(tabIndex, talentIndex)
+                    if id == talentID then
+                        return id, talentName, iconTexture, previewRank > 1, previewRank == 0, nil, nil, tier, column,
+                            previewRank > 1,
+                            false
+                    end
                 end
             end
+            return nil
         end
-        return nil
-    end
-})
-
-API.UnitTokenFromGUID = Fun({
-    ['10.0.2'] = UnitTokenFromGUID
-})
-API.UnitName = Fun({
-    ['1.0.0'] = function(unit)
-        local name, realm = UnitName(unit)
-        if not realm then
-            realm = GetRealmName()
+    },
+    UnitTokenFromGUID = {
+        ['10.0.2'] = UnitTokenFromGUID
+    },
+    UnitName = {
+        ['1.0.0'] = function(unit)
+            local name, realm = UnitName(unit)
+            if not realm then
+                realm = GetRealmName()
+            end
+            return name, realm
         end
-        return name, realm
-    end
+    },
+    C_ClubFinder_GetRecruitingClubInfoFromFinderGUID = {
+        ['4.0.0'] = C_ClubFinder and C_ClubFinder.GetRecruitingClubInfoFromFinderGUID
 
-})
-API.C_ClubFinder_GetRecruitingClubInfoFromFinderGUID = Fun({
-    ['4.0.0'] = C_ClubFinder and C_ClubFinder.GetRecruitingClubInfoFromFinderGUID
-})
+    },
+    GetAchievementInfo = {
+        ['1.0.0'] = GetAchievementInfo
 
-API.GetAchievementInfo = Fun({
-    ['1.0.0'] = GetAchievementInfo
-})
-API.UnitClass = Fun({
-    ['1.0.0'] = UnitClass
-})
-API.C_CurrencyInfo_GetCurrencyInfo = Fun({
-    ['1.0.0'] = C_CurrencyInfo.GetCurrencyInfo
-})
+    },
+    C_CurrencyInfo_GetCurrencyInfo = {
+        ['1.0.0'] = C_CurrencyInfo.GetCurrencyInfo
 
-API.C_AddOns_IsAddOnLoaded = Fun({
-    ['10.2.0'] = C_AddOns and C_AddOns.IsAddOnLoaded,
-    ---@diagnostic disable-next-line: deprecated
-    ['1.0.0'] = IsAddOnLoaded
-})
+    },
+    C_AddOns_IsAddOnLoaded = {
+        ['10.2.0'] = C_AddOns and C_AddOns.IsAddOnLoaded,
+        ---@diagnostic disable-next-line: deprecated
+        ['1.0.0'] = IsAddOnLoaded
+    },
+    GetChannelList = {
+        ['1.0.0'] = GetChannelList
 
-API.GetChannelList = Fun({
-    ['1.0.0'] = GetChannelList
-})
-
-API.IsInRaid = Fun({
-    ['1.0.0'] = IsInRaid
-})
-API.IsInGroup = Fun({
-    ['1.0.0'] = IsInGroup
-})
-
-API.IsInGuild = Fun({
-    ['1.0.0'] = IsInGuild
-})
-
-API.GetMaxPlayerLevel = Fun({
-    ['1.0.0'] = GetMaxPlayerLevel
-})
-API.UnitLevel = Fun({
-    ['1.0.0'] = UnitLevel
-})
-
-API.GetRealmName = Fun({
-    ['1.0.0'] = GetRealmName
-})
-
-API.C_BattleNet_GetAccountInfoByID = Fun({
-    ['1.0.0'] = C_BattleNet and C_BattleNet.GetAccountInfoByID,
-})
-
-API.GetPlayerInfoByGUID = Fun({
-    ['1.0.0'] = GetPlayerInfoByGUID,
-})
-
-API.UnitClass = Fun({
-    ['1.0.0'] = GetAchievementInfo
-})
-
-API.GetChannelName = Fun({
-    ['1.0.0'] = GetChannelName
-})
-
-API.IsShiftKeyDown = Fun({
-    ['1.0.0'] = IsShiftKeyDown
-})
-
-API.GetCursorPosition = Fun({
-    ['1.0.0'] = GetCursorPosition
-})
-
-API.InCombatLockdown = Fun({
-    ['1.0.0'] = InCombatLockdown
-})
-
-API.IsLeftControlKeyDown = Fun({
-    ['1.0.0'] = IsLeftControlKeyDown
-})
-
-API.IsLeftShiftKeyDown = Fun({
-    ['1.0.0'] = IsLeftShiftKeyDown
-})
-
-API.UnitGUID = Fun({
-    ['1.0.0'] = UnitGUID
-})
-API.BNGetInfo = Fun({
-    ['1.0.0'] = BNGetInfo
-})
-API.C_ChallengeMode_GetAffixInfo = Fun({
-    ['7.0.3'] = C_ChallengeMode and C_ChallengeMode.GetAffixInfo
-})
-API.C_BattleNet_GetFriendAccountInfo = Fun({
-    ['3.3.5'] = C_BattleNet and C_BattleNet.GetFriendAccountInfo
-})
-
-API.BNGetNumFriends = Fun({
-    ['1.0.0'] = BNGetNumFriends
+    },
+    IsInRaid = {
+        ['1.0.0'] = IsInRaid
+    },
+    IsInGroup = {
+        ['1.0.0'] = IsInGroup
+    },
+    IsInGuild = {
+        ['1.0.0'] = IsInGuild
+    },
+    GetMaxPlayerLevel = {
+        ['1.0.0'] = GetMaxPlayerLevel
+    },
+    UnitLevel = {
+        ['1.0.0'] = UnitLevel
+    },
+    GetRealmName = {
+        ['1.0.0'] = GetRealmName
+    },
+    C_BattleNet_GetAccountInfoByID = {
+        ['1.0.0'] = C_BattleNet and C_BattleNet.GetAccountInfoByID,
+    },
+    GetPlayerInfoByGUID = {
+        ['1.0.0'] = GetPlayerInfoByGUID,
+    },
+    UnitClass = {
+        ['1.0.0'] = GetAchievementInfo
+    },
+    GetChannelName = {
+        ['1.0.0'] = GetChannelName
+    },
+    IsShiftKeyDown = {
+        ['1.0.0'] = IsShiftKeyDown
+    },
+    GetCursorPosition = {
+        ['1.0.0'] = GetCursorPosition
+    },
+    InCombatLockdown = {
+        ['1.0.0'] = InCombatLockdown
+    },
+    IsLeftControlKeyDown = {
+        ['1.0.0'] = IsLeftControlKeyDown
+    },
+    IsLeftShiftKeyDown = {
+        ['1.0.0'] = IsLeftShiftKeyDown
+    },
+    UnitGUID = {
+        ['1.0.0'] = UnitGUID
+    },
+    BNGetInfo = {
+        ['1.0.0'] = BNGetInfo
+    },
+    C_ChallengeMode_GetAffixInfo = {
+        ['7.0.3'] = C_ChallengeMode and C_ChallengeMode.GetAffixInfo
+    },
+    C_BattleNet_GetFriendAccountInfo = {
+        ['3.3.5'] = C_BattleNet and C_BattleNet.GetFriendAccountInfo
+    },
+    BNGetNumFriends = {
+        ['1.0.0'] = BNGetNumFriends
+    }
 })

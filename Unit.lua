@@ -124,14 +124,16 @@ function U:GetAccountInfoByBattleTag(battleTag)
 end
 
 function U:Print(...)
-    local ps = {}
-    for _, v in ipairs({ ... }) do
-        if v then
-            local m, c = gsub(v, '%|', "||")
-            tinsert(ps, m)
+    if E == 'DEV' then
+        local ps = {}
+        for _, v in ipairs({ ... }) do
+            if v then
+                local m, c = gsub(v, '%|', "||")
+                tinsert(ps, m)
+            end
         end
+        print(unpack(ps))
     end
-    print(unpack(ps))
 end
 
 local function lcoalClassToEnglishClass(localizedClass)
