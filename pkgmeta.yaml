@@ -7,3 +7,7 @@ ignore:
   - .gitignore
   - .github
   - README.md
+
+move-folders:
+  InputInput/InputInput: InputInput
+  InputInput/InputInput_Libraries_zh: InputInput_Libraries_zh
