@@ -6,3 +6,4 @@ ignore:
   - pkgmeta.yaml
   - .gitignore
   - .github
+  - README.md
