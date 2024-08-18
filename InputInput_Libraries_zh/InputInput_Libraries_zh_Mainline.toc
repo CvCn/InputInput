@@ -1,0 +1,24 @@
+## Interface: 110000, 110002
+## IconTexture: Interface\AddOns\InputInput\Media\pet_type_dragon
+
+## Title: |cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r_Libraries_zh
+## Notes: InputInput Libraries ZH
+## Notes-zhCN: InputInput插件中文模块-可以使输入提示更智能
+## Notes-zhTW: InputInput插件中文模塊-可以使輸入提示更智能
+## Author: York
+## Version: 1.0.1
+## X-Date: 2024-08-18
+
+## X-Category: Interface Libraries
+## X-Curse-Project-ID: 
+## X-Wago-ID: 
+
+## SavedVariables: InputInput_DB
+
+Libraries\LibStub.lua
+dict1.lua
+dict2.lua
+dict3.lua
+dict4.lua
+dict5.lua
+dict6.lua

@@ -1,4 +1,4 @@
-local W, M, U, D, G, L, E, API = unpack((select(2, ...)))
+local W, M, U, D, G, L, E, API, LOG = unpack((select(2, ...)))
 
 local version, buildVersion, buildDate, uiVersion = GetBuildInfo()
 
@@ -29,17 +29,17 @@ end
 Fun({
     C_Item_GetItemInfo = {
         ['10.2.6'] = C_Item and C_Item.GetItemInfo,
-        ---@diagnostic disable-next-line: deprecated
+---@diagnostic disable-next-line: deprecated
         ['1.15.0'] = GetItemInfo
     },
     C_Item_GetDetailedItemLevelInfo = {
         ['10.2.6'] = C_Item and C_Item.GetDetailedItemLevelInfo,
-        ---@diagnostic disable-next-line: deprecated
+---@diagnostic disable-next-line: deprecated
         ['1.0.0'] = GetDetailedItemLevelInfo
     },
     C_Spell_GetSpellTexture = {
         ['10.2.6'] = C_Spell and C_Spell.GetSpellTexture,
-        ---@diagnostic disable-next-line: deprecated
+---@diagnostic disable-next-line: deprecated
         ['1.0.0'] = GetSpellTexture
     },
     GetSpecializationInfoByID = {
@@ -48,9 +48,7 @@ Fun({
     GetTalentInfoByID = {
         ['6.0.2'] = GetTalentInfoByID,
         ['3.4.3'] = function(talentID)
-            ---@diagnostic disable-next-line: undefined-global
             for tabIndex = 1, GetNumTalentTabs() do
-                ---@diagnostic disable-next-line: undefined-global
                 for talentIndex = 1, GetNumTalents(tabIndex) do
                     local name, iconTexture, tier, column, rank, maxRank,
                     isExceptional, available, previewRank, previewAvailable, id = GetTalentInfo(tabIndex, talentIndex)
@@ -64,9 +62,7 @@ Fun({
             return nil
         end,
         ['1.0.0'] = function(talentID)
-            ---@diagnostic disable-next-line: undefined-global
             for tabIndex = 1, GetNumTalentTabs() do
-                ---@diagnostic disable-next-line: undefined-global
                 for talentIndex = 1, GetNumTalents(tabIndex) do
                     local talentName, iconTexture, tier, column, rank, maxRank, meetsPrereq, previewRank, meetsPreviewPrereq, isExceptional, goldBorder, id =
                         GetTalentInfo(tabIndex, talentIndex)
@@ -94,24 +90,20 @@ Fun({
     },
     C_ClubFinder_GetRecruitingClubInfoFromFinderGUID = {
         ['4.0.0'] = C_ClubFinder and C_ClubFinder.GetRecruitingClubInfoFromFinderGUID
-
     },
     GetAchievementInfo = {
         ['1.0.0'] = GetAchievementInfo
-
     },
     C_CurrencyInfo_GetCurrencyInfo = {
         ['1.0.0'] = C_CurrencyInfo.GetCurrencyInfo
-
     },
     C_AddOns_IsAddOnLoaded = {
         ['10.2.0'] = C_AddOns and C_AddOns.IsAddOnLoaded,
-        ---@diagnostic disable-next-line: deprecated
+---@diagnostic disable-next-line: deprecated
         ['1.0.0'] = IsAddOnLoaded
     },
     GetChannelList = {
         ['1.0.0'] = GetChannelList
-
     },
     IsInRaid = {
         ['1.0.0'] = IsInRaid

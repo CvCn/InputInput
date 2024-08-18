@@ -1,4 +1,4 @@
-local W, M, U, D, G, L, E, API = unpack((select(2, ...)))
+local W, M, U, D, G, L, E, API, LOG = unpack((select(2, ...)))
 
 local UnitGUID = API.UnitGUID
 local BNGetInfo = API.BNGetInfo

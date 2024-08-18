@@ -81,3 +81,8 @@ L['Show channel Name'] = 'Show channel Name'
 L['Show Timestamp'] = "Show Timestamp"
 L['Show bg'] = "Show Message Background"
 L['Default Setting'] = "Default"
+
+
+-- Login Information
+L['Login Information 1'] = "You are using the %s Input Enhancement addon. If you encounter any issues during use, you can provide feedback via %s or on the addon website %s"
+L['Login Information 2'] = "Enter %s or %s to open the settings panel"

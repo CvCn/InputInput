@@ -1,5 +1,5 @@
 ## Interface: 110000, 110002
-## IconTexture: Interface\ICONS\pet_type_dragon
+## IconTexture: Interface\AddOns\InputInput\Media\pet_type_dragon
 
 ## Title: |cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r
 ## Notes: Input box enhancement

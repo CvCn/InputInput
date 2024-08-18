@@ -1,5 +1,4 @@
-local N, T = ...
-local W, M, U, D, G, L, E, API = unpack(T)
+local W, M, U, D, G, L, E, API, LOG = unpack((select(2, ...)))
 local MAIN = {}
 M.MAIN = MAIN
 
@@ -117,41 +116,42 @@ local function UpdateFontStringPosition(editBox, displayFontString, msg)
 	displayFontString:Show()
 end
 
-local replace = {}
 
 local function FindHis(his, patt)
 	if not his or #his <= 0 or not patt or #patt <= 0 then return '' end
-	local second = ''
+	patt = patt:gsub("%|c.-(%[.-%]).-%|r", function(a1)
+		return a1
+	end)
 	for i = #his, 1, -1 do
 		local h = his[i]
 		if h and #h > 0 then
-			-- |cff0070dd|Hitem:38613::::::::80:::::::::|h[火热珠串]|h|r
-			h = h:gsub("(%|c.-%|H.-%|h(%[.-%])%|h|r)", function(a1, a2)
-				replace[a2] = a1
-				return a2
+			h = h:gsub("%|c.-(%[.-%]).-%|r", function(a1)
+				-- LOG:Debug(a1)
+				return a1
 			end)
-			local hisp = U:MergeMultipleArrays({ h }, U:SplitMSG(h))
+			-- LOG:Debug(h)
+			local hisp = U:CutWord(h)
+			local pattp = U:CutWord(patt)
 			for h_index, h2 in ipairs(hisp) do
-				local ha = U:MergeMultipleArrays({ patt }, U:SplitMSG(patt))
-				for p_index, patt2 in ipairs(ha) do
-					if not (p_index == 1 and h_index == 1) then
-						local start, _end = strfind(h2, patt2, 1, true)
-						if start and start > 0 and _end ~= #h2 then
-							local p = strsub(h2, _end + 1)
-							if start == 1 then
-								return p
-							else
-								if second == '' then
-									second = p
-								end
-							end
+				local patt2 = pattp[#pattp]
+				-- LOG:Debug(patt2)
+				local start, _end = strfind(h2, patt2, 1, true)
+				if start and start > 0 then
+					-- LOG:Debug(h)
+					local p = strsub(h2, _end + 1)
+					if p and #p > 0 then
+						return p
+					else
+						local pnex = hisp[h_index + 1]
+						if pnex and #pnex > 0 then
+							return p .. pnex
 						end
 					end
 				end
 			end
 		end
 	end
-	return second
+	return ''
 end
 
 local lastChannel = ''
@@ -254,6 +254,7 @@ local isInit = false
 function MAIN:Init()
 	scale = D:ReadDB('input_size', 1)
 	messageHistory = D:ReadDB('messageHistory', {}, true)
+	U:InitWordCache(messageHistory)
 	historyIndex = #messageHistory + 1
 	-- 获取默认的聊天输入框
 	local editBox = ChatFrame1EditBox
@@ -301,11 +302,11 @@ function MAIN:Init()
 
 	local bg2 = backdropFrame:CreateTexture("II_BG_FRAME_TEXTURE2", "BACKGROUND")
 	bg2:SetColorTexture(0, 0, 0, 0.5) -- 半透明黑色背景
-	bg2:SetAllPoints(backdropFrame)
+	bg2:SetAllPoints()
 
 	local bg = backdropFrame:CreateTexture("II_BG_FRAME_TEXTURE", "BACKGROUND")
 	-- bg:SetColorTexture(0, 0, 0, 0.5) -- 半透明黑色背景
-	bg:SetAllPoints(backdropFrame)
+	bg:SetAllPoints()
 
 	local channel_name = backdropFrame:CreateFontString("II_CHANNEL_NAME", "OVERLAY", "GameFontNormal")
 	channel_name:SetPoint('TOP', backdropFrame, 'BOTTOM', 0, -20)
@@ -485,7 +486,6 @@ local ChatLabels = {
 }
 
 function HideEuiBorder(editBox)
-	---@diagnostic disable-next-line: undefined-global
 	if ElvUI then
 		editBox:SetBackdropBorderColor(0, 0, 0, 0)
 		editBox:SetBackdropColor(0, 0, 0, 0)
@@ -767,15 +767,8 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 		local message = self:GetText()
 		if II_TIP:IsShown() and IsLeftControlKeyDown() then
 			local p = message .. tip
-			local inp, count = p:gsub("(%|c.-%|H.-%|h(%[.-%])%|h|r)", function(a1, a2)
-				replace[a2] = a1
-				return a2
-			end)
-			for k, v in pairs(replace) do
-				inp = U:ReplacePlainTextUsingFind(inp, k, v)
-			end
-			self:SetText(inp)
-			M.HISTORY:simulateInputChange(inp, self:GetInputLanguage())
+			self:SetText(p)
+			M.HISTORY:simulateInputChange(p, self:GetInputLanguage())
 			return
 		end
 		-- 检查输入框是否有内容
@@ -783,8 +776,8 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 			U:AddOrMoveToEnd(messageHistory, message)
 		end
 		local temp = {}
-		if #messageHistory > 200 then
-			for k = #messageHistory - 200, #messageHistory do
+		if #messageHistory > 100 then
+			for k = #messageHistory - 100, #messageHistory do
 				tinsert(temp, messageHistory[k])
 			end
 		else
@@ -825,9 +818,13 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 		end
 		last_text = ''
 	end)
+	local cacheTxt = ''
 	editBox:HookScript("OnTextChanged", function(self, userInput)
 		local text = self:GetText()
-		tip = FindHis(messageHistory, text)
+		if text ~= cacheTxt then
+			tip = FindHis(messageHistory, text)
+			cacheTxt = text
+		end
 		UpdateFontStringPosition(self, II_TIP, tip)
 		if userInput then
 			M.HISTORY:simulateInputChange(text, self:GetInputLanguage())
@@ -919,8 +916,7 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 		function(self, ...)
 			local event, msg, sender, language, channelString, target, flags, zoneChannelID, channelNumber,
 			channelName, languageID, _, guid, bnSenderID, isMobile, isSubtitle, supressRaidIcons = ...
-
-			U:SaveLog('msg_even_' .. event, { ... })
+			LOG:SaveLog('msg_even_' .. event, { ... })
 
 			local chatType = strsub(event, 10) or 'SAY';
 
@@ -952,7 +948,7 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 				local usingDifferentLanguage = (language ~= "") and
 					(language ~= ChatFrame1.alternativeDefaultLanguage)
 				local languageHeader = "[" .. language .. "] "
-				if (not ElvUI or not strfind(msg, languageHeader, 1, true)) and usingDifferentLanguage then
+				if msg and type(msg) == 'string' and (not ElvUI or not strfind(msg, languageHeader, 1, true)) and usingDifferentLanguage then
 					msg = languageHeader .. msg
 				end
 			end
@@ -1006,6 +1002,7 @@ local frame = CreateFrame("Frame", "II_MAIN_FRAME")
 frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("CVAR_UPDATE")
+frame:RegisterEvent("ADDON_LOADED")
 for _, event in pairs(ChatTypeGroup["BN_WHISPER"]) do
 	frame:RegisterEvent(event);
 end
@@ -1056,14 +1053,55 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 			LoadPostion(editBox)
 		end
+	elseif event == 'ADDON_LOADED' then
+		local addOnName, containsBindings = ...
+		if addOnName == "InputInput_Libraries_zh" then
+			W.dict1 = LibStub("inputinput-dict1").dict
+			W.dict2 = LibStub("inputinput-dict2").dict
+			W.dict3 = LibStub("inputinput-dict3").dict
+			W.dict4 = LibStub("inputinput-dict4").dict
+			W.dict5 = LibStub("inputinput-dict5").dict
+			W.dict6 = LibStub("inputinput-dict6").dict
+
+			local total = 60101967
+
+			local logtotal = math.log(total)
+
+			for i, v in pairs(W.dict1) do
+				W.dict1[i] = math.log(v) - logtotal
+			end
+			for i, v in pairs(W.dict2) do
+				W.dict2[i] = math.log(v) - logtotal
+			end
+			for i, v in pairs(W.dict3) do
+				W.dict3[i] = math.log(v) - logtotal
+			end
+			for i, v in pairs(W.dict4) do
+				W.dict4[i] = math.log(v) - logtotal
+			end
+			for i, v in pairs(W.dict5) do
+				W.dict5[i] = math.log(v) - logtotal
+			end
+			for i, v in pairs(W.dict6) do
+				W.dict6[i] = math.log(v) - logtotal
+			end
+			U:InitWordCache(messageHistory)
+		end
 	else
-		---@diagnostic disable-next-line: undefined-global
-		if (ElvUI ~= nil and C_AddOns_IsAddOnLoaded("ElvUI") or ElvUI == nil) and
-			(NDui ~= nil and C_AddOns_IsAddOnLoaded("NDui") or NDui == nil) then
+		if (C_AddOns_IsAddOnLoaded("ElvUI") or ElvUI == nil) and
+			(C_AddOns_IsAddOnLoaded("NDui") or NDui == nil) then
 			eventSetup(editBox, bg, border, backdropFrame2, resizeButton, resizeBtnTexture, channel_name, II_TIP, II_LANG,
 				bg3)
 
 			optionSetup(backdropFrame2)
+
+			C_Timer.After(5, function(cb)
+				LOG:Info(string.format(L['Login Information 1'],
+					W.colorName,
+					"|cff409EFFDiscord|r |cFFFFFFFF[https://discord.gg/qC9RAdXN]|r",
+					"|cff409EFFCurseForge|r |cFFFFFFFF[https://www.curseforge.com/wow/addons/inputinput/comments]|r"))
+				LOG:Info(string.format(L['Login Information 2'], "|cff409EFF/ii|r", "|cff409EFF/inputinput|r"))
+			end)
 		end
 	end
 end)

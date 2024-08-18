@@ -1,0 +1,9 @@
+<Ui xmlns='http://www.blizzard.com/wow/ui/'>
+	<Script file="utf8.lua"/>
+	<Script file="utils.lua"/>
+	<Script file="prob_start.lua"/>
+	<Script file="prob_emit.lua"/>
+	<Script file="prob_trans.lua"/>
+	<Script file="hmm.lua"/>
+	<Script file="init.lua"/>
+</Ui>

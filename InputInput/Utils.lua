@@ -1,4 +1,4 @@
-local W, M, U, D, G, L, E, API = unpack((select(2, ...)))
+local W, M, U, D, G, L, E, API, LOG = unpack((select(2, ...)))
 
 local C_ChallengeMode_GetAffixInfo = API.C_ChallengeMode_GetAffixInfo
 local C_BattleNet_GetFriendAccountInfo = API.C_BattleNet_GetFriendAccountInfo
@@ -123,19 +123,6 @@ function U:GetAccountInfoByBattleTag(battleTag)
     return nil
 end
 
-function U:Print(...)
-    if E == 'DEV' then
-        local ps = {}
-        for _, v in ipairs({ ... }) do
-            if v then
-                local m, c = gsub(v, '%|', "||")
-                tinsert(ps, m)
-            end
-        end
-        print(unpack(ps))
-    end
-end
-
 local function lcoalClassToEnglishClass(localizedClass)
     -- 尝试在男性职业表中查找
     local englishClass = nil
@@ -158,9 +145,13 @@ local function lcoalClassToEnglishClass(localizedClass)
 end
 
 function U:TTagFilter(text, showTime)
-    local patt = '%|TTag:.-%|TTag'
+    local patt = '%|?%|TTag:.-%|?%|TTag'
+    local notpatt = '%|%|TTag:.-%|%|TTag'
     if text == nil or #text <= 0 or not text:find(patt) then return text end
     return gsub(text, patt, function(str)
+        if str:find(notpatt) then
+            return str
+        end
         local TTag, _ = str:match('%|TTag:(.-)%|TTag')
         if showTime then
             return '|cffC0C4CC' .. U:GetFormattedTimeOrDate(tonumber(TTag)) .. ' |r'
@@ -172,9 +163,13 @@ end
 
 -- |BTag:沉沦血刃#5247|BTag|Kp61|k
 function U:BTagFilter(text)
-    local patt = '%|BTag:.-%|BTag'
+    local patt = '%|?%|BTag:.-%|?%|BTag'
+    local notpatt = '%|%|BTag:.-%|%|BTag'
     if text == nil or #text <= 0 or not text:find(patt) then return text end
     return gsub(text, patt, function(str)
+        if str:find(notpatt) then
+            return str
+        end
         local BTag, _ = str:match('%|BTag:(.-)%|BTag')
         local accountInfo = U:GetAccountInfoByBattleTag(BTag)
         if accountInfo then
@@ -207,33 +202,6 @@ function U:ReplacePlainTextUsingFind(text, pattern, replacement)
     -- 拼接最后一部分
     result = result .. text:sub(searchFrom)
     return result
-end
-
-function U:SaveLog(key, value)
-    if E ~= 'DEV' then return end
-    local log = D:ReadDB('LOG__', {})
-    local thisKey = log[key] or {}
-    tinsert(thisKey, {
-        t = U:GetFormattedTimestamp(),
-        v = value
-    })
-    if #thisKey > 200 then
-        tremove(thisKey, 1)
-    end
-    log[key] = thisKey
-    D:SaveDB('LOG__', log)
-end
-
-function U:PrintLog(key)
-    local log = D:ReadDB('LOG__', {})
-    if not log[key] then return end
-    for _, v in ipairs(log[key]) do
-        U:Print('[' .. v.t .. ']', v.v)
-    end
-end
-
-function U:ClearLog()
-    D:SaveDB('LOG__', {})
 end
 
 function U:MergeMultipleArrays(...)
@@ -328,4 +296,38 @@ function BNet_GetAccountInfoFromAccountName(name)
             return accountInfo
         end
     end
+end
+
+local function isAllWhitespace(str)
+    -- 使用 Lua 的模式匹配，^%s*$ 表示字符串从头到尾都必须是空白字符
+    return str:match("^%s*$") ~= nil
+end
+
+local jieba = LibStub("jieba")
+local wordCache = {}
+
+function U:InitWordCache(history)
+    for _, v in ipairs(history) do
+        local re = {}
+        for _, i in ipairs(jieba.lcut(v, false, true)) do
+            if not isAllWhitespace(i) then
+                tinsert(re, i)
+            end
+        end
+        wordCache[v] = re
+    end
+end
+
+function U:CutWord(str)
+    if not str or str == '' then return str end
+    local cache = wordCache[str]
+    if cache then return cache end
+    local re = {}
+    for _, i in ipairs(jieba.lcut(str, false, true)) do
+        if not isAllWhitespace(i) then
+            tinsert(re, i)
+        end
+    end
+    wordCache[str] = re
+    return re
 end

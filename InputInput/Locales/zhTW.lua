@@ -78,6 +78,11 @@ L['TO'] = "密"
 -- 設置 options
 L['Show Chat'] = "顯示聊天"
 L['Show channel Name'] = '顯示頻道名稱'
-L['Show Timestamp'] = "顯示時間戳"
-L['Show bg'] = "顯示消息背景"
-L['Default Setting'] = "默認設置"
+L['Show Timestamp'] = "顯示時間戳記"
+L['Show bg'] = "顯示訊息背景"
+L['Default Setting'] = "預設設定"
+
+
+-- Login Information
+L['Login Information 1'] = "您正在使用%s輸入框增強插件，使用過程中的任何問題都可以透過 %s 或到插件網站 %s 進行反饋"
+L['Login Information 2'] = "輸入 %s 或 %s 打開設定面板"
