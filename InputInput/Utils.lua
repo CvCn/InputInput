@@ -3,6 +3,14 @@ local W, M, U, D, G, L, E, API, LOG = unpack((select(2, ...)))
 local C_ChallengeMode_GetAffixInfo = API.C_ChallengeMode_GetAffixInfo
 local C_BattleNet_GetFriendAccountInfo = API.C_BattleNet_GetFriendAccountInfo
 local BNGetNumFriends = API.BNGetNumFriends
+local GetNumGuildMembers = API.GetNumGuildMembers
+local GetGuildRosterInfo = API.GetGuildRosterInfo
+local GetRealmName = API.GetRealmName
+local UnitName = API.UnitName
+local IsInRaid = API.IsInRaid
+local GetNumGroupMembers = API.GetNumGroupMembers
+local GetZoneText = API.GetZoneText
+local GetSubZoneText = API.GetSubZoneText
 
 local function GetFormattedTimestamp(currentTime, milliseconds, foramt, notMilli)
     -- 格式化时间戳
@@ -235,6 +243,7 @@ function U:SplitMSG(input)
 end
 
 function U:AddOrMoveToEnd(array, element)
+    if element == nil or #element <= 0 then return end
     -- 遍历数组检查元素是否已经存在
     local index = nil
     for i, v in ipairs(array) do
@@ -330,4 +339,124 @@ function U:CutWord(str)
     end
     wordCache[str] = re
     return re
+end
+
+local friendName = {}
+function U:InitFriends()
+    local numBNetTotal, numBNetOnline, numBNetFavorite, numBNetFavoriteOnline = BNGetNumFriends()
+    for i = 1, numBNetOnline do
+        local accountInfo = C_BattleNet_GetFriendAccountInfo(i)
+        if accountInfo then
+            local gameAccountInfo = accountInfo.gameAccountInfo
+            if gameAccountInfo and gameAccountInfo.characterName and gameAccountInfo.isOnline then
+                -- LOG:Debug(gameAccountInfo.characterName)
+                U:AddOrMoveToEnd(friendName,
+                    U:join('-', gameAccountInfo.characterName, gameAccountInfo.realmName))
+                -- U:AddOrMoveToEnd(friendName, gameAccountInfo.characterName)
+                -- U:AddOrMoveToEnd(friendName, gameAccountInfo.realmName)
+            end
+        end
+    end
+end
+
+local guildName = {}
+function U:InitGuilds()
+    -- 获取公会成员总数
+    local numTotalGuildMembers, numOnlineGuildMembers, numOnlineAndMobileMembers = GetNumGuildMembers()
+    -- 遍历公会成员
+    for i = 1, numOnlineAndMobileMembers do
+        -- 获取公会成员信息
+        local name, rank, rankIndex, level, class, zone, note, officerNote, online = GetGuildRosterInfo(i)
+        -- 检查是否在线
+        if online then
+            -- LOG:Debug('公会', name)
+            U:AddOrMoveToEnd(guildName, name)
+            local name, realm = strsplit('-', name)
+            realm = realm or GetRealmName()
+            -- U:AddOrMoveToEnd(guildName, name)
+            -- U:AddOrMoveToEnd(guildName, realm)
+        end
+    end
+end
+
+local zoneName = {}
+local zoneInit = false
+function U:InitZones()
+    if not zoneInit then
+        zoneInit = true
+        zoneName = D:ReadDB('zoneName', {}, true)
+    end
+    U:AddOrMoveToEnd(zoneName, GetZoneText())
+    U:AddOrMoveToEnd(zoneName, GetSubZoneText())
+    D:SaveDB('zoneName', zoneName, true)
+end
+
+local groupMembers = {}
+function U:InitGroupMembers()
+    local numGroupMembers = GetNumGroupMembers()
+    for i = 1, numGroupMembers do
+        local unitID = "party" .. i -- 对于小队成员
+        if IsInRaid() then
+            unitID = "raid" .. i    -- 对于团队成员
+        elseif i == numGroupMembers and not IsInRaid() then
+            unitID = "player"       -- 自己作为小队成员的最后一个
+        end
+
+        -- 获取成员的名字和服务器
+        local name, realm = UnitName(unitID)
+        if realm == "" or not realm then
+            realm = GetRealmName() -- 如果服务器名为空，则为当前服务器
+        end
+
+        -- 将名字和服务器存储在表中
+        U:AddOrMoveToEnd(groupMembers, U:join('-', name, realm))
+        -- U:AddOrMoveToEnd(groupMembers, name)
+        -- U:AddOrMoveToEnd(groupMembers, realm)
+    end
+end
+
+function U:PlayerTip(inpall, inp)
+    if inpall == nil or #inpall <= 0 then return end
+    if inp == nil or #inp <= 0 then return end
+    for i = #friendName, 1, -1 do
+        local v = friendName[i]
+        local start, _end = strfind(v, inp, 1, true)
+        if start and start > 0 and _end ~= #v then
+            -- LOG:Debug(v)
+            local p = strsub(v, _end + 1)
+            if p and #p > 0 then
+                return p
+            end
+        end
+    end
+    for i = #guildName, 1, -1 do
+        local v = guildName[i]
+        local start, _end = strfind(v, inp, 1, true)
+        if start and start > 0 and _end ~= #v then
+            local p = strsub(v, _end + 1)
+            if p and #p > 0 then
+                return p
+            end
+        end
+    end
+    for i = #zoneName, 1, -1 do
+        local v = zoneName[i]
+        local start, _end = strfind(v, inp, 1, true)
+        if start and start > 0 and _end ~= #v then
+            local p = strsub(v, _end + 1)
+            if p and #p > 0 then
+                return p
+            end
+        end
+    end
+    for i = #groupMembers, 1, -1 do
+        local v = groupMembers[i]
+        local start, _end = strfind(v, inp, 1, true)
+        if start and start > 0 and _end ~= #v then
+            local p = strsub(v, _end + 1)
+            if p and #p > 0 then
+                return p
+            end
+        end
+    end
 end

@@ -117,6 +117,7 @@ local function UpdateFontStringPosition(editBox, displayFontString, msg)
 end
 
 local function getLastUTF8Char(s)
+	if not s or #s <= 0 then return '' end
 	-- 初始化起始位置
 	local lastCharStart = nil
 
@@ -150,6 +151,8 @@ local function FindHis(his, patt)
 	patt = patt:gsub("%|c.-(%[.-%]).-%|r", function(a1)
 		return a1
 	end)
+	local pattp = U:CutWord(patt)
+	if not pattp or #pattp <= 0 then return '' end
 	for i = #his, 1, -1 do
 		local h = his[i]
 		if h and #h > 0 then
@@ -159,12 +162,12 @@ local function FindHis(his, patt)
 			end)
 			-- LOG:Debug(h)
 			local hisp = U:CutWord(h)
-			local pattp = U:CutWord(patt)
+
 			for h_index, h2 in ipairs(hisp) do
 				local patt2 = pattp[#pattp]
 				-- LOG:Debug(patt2)
 				local start, _end = strfind(h2, patt2, 1, true)
-				if start and start > 0 then
+				if start and start > 0 and _end ~= # h2 then
 					-- LOG:Debug(h)
 					local p = strsub(h2, _end + 1)
 					if p and #p > 0 then
@@ -178,9 +181,15 @@ local function FindHis(his, patt)
 				end
 			end
 			-- 如果分词匹配不到，使用输入的最后一个字符匹配
-			local start, _end = strfind(h, getLastUTF8Char(patt), 1, true)
-			if start and start > 0 then
+			local lastChat = getLastUTF8Char(patt)
+			local start, _end = strfind(h, lastChat, 1, true)
+			if start and start > 0 and _end ~= #h then
 				return strsub(h, _end + 1)
+			end
+			-- LOG:Debug(lastChat)
+			local playerTip = U:PlayerTip(patt, lastChat)
+			if playerTip then
+				return playerTip
 			end
 		end
 	end
@@ -240,6 +249,8 @@ function LoadPostion(editBox)
 			D:ReadDB('editBoxPosition'))
 		editBox:ClearAllPoints()
 		editBox:SetPoint(point, UIParent, relativePoint, xOfs, yOfs)
+	else
+		editBox:SetPoint("CENTER", UIParent, "BOTTOM", 0, 330)
 	end
 end
 
@@ -300,7 +311,7 @@ function MAIN:Init()
 	editBox:SetAltArrowKeyMode(false)
 	-- editBox:SetAutoFocus(true)  -- 自动获得焦点
 
-	LoadPostion(editBox)
+	-- LoadPostion(editBox)
 
 	-- 设置聊天输入框的字体大小
 	local font, _, flags = editBox:GetFont()
@@ -406,7 +417,7 @@ function MAIN:Init()
 	II_LANG:SetFont(font, fontsize * 0.4, flags)
 	II_LANG:SetText(_G["INPUT_" .. editBox:GetInputLanguage()])
 
-	LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
+	-- LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 
 	isInit = true
 	return editBox, bg, border, backdropFrame2, resizeButton, texture_btn, channel_name, II_TIP, II_LANG, bg3
@@ -1036,6 +1047,14 @@ frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("CVAR_UPDATE")
 frame:RegisterEvent("ADDON_LOADED")
+
+frame:RegisterEvent("ZONE_CHANGED")
+frame:RegisterEvent("ZONE_CHANGED_INDOORS")
+frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+
+frame:RegisterEvent("GROUP_ROSTER_UPDATE")
+frame:RegisterEvent("RAID_ROSTER_UPDATE")
+
 for _, event in pairs(ChatTypeGroup["BN_WHISPER"]) do
 	frame:RegisterEvent(event);
 end
@@ -1080,12 +1099,17 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 				self:SetText(temp)
 			end
 		end)
+		U:InitZones()
 	elseif event == 'CVAR_UPDATE' then
 		local cvarName, value = ...
 		if cvarName == 'chatStyle' or cvarName == 'whisperMode' then
 			LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 			LoadPostion(editBox)
 		end
+	elseif event == 'FRIENDLIST_UPDATE' then
+		U:InitFriends()
+	elseif event == 'GUILD_ROSTER_UPDATE' then
+		U:InitGuilds()
 	elseif event == 'ADDON_LOADED' then
 		local addOnName, containsBindings = ...
 		if addOnName == "InputInput_Libraries_zh" then
@@ -1121,8 +1145,11 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			end
 			LOG:Debug("---加载词库100%---")
 			U:InitWordCache(messageHistory)
-			
 		end
+	elseif event == 'ZONE_CHANGED' or event == 'ZONE_CHANGED_INDOORS' or event == 'ZONE_CHANGED_NEW_AREA' then
+		U:InitZones()
+	elseif event == 'GROUP_ROSTER_UPDATE' or event == 'RAID_ROSTER_UPDATE' then
+		U:InitGroupMembers()
 	else
 		if (C_AddOns_IsAddOnLoaded("ElvUI") or ElvUI == nil) and
 			(C_AddOns_IsAddOnLoaded("NDui") or NDui == nil) then
@@ -1138,6 +1165,11 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 					"|cff409EFFCurseForge|r |cFFFFFFFF[https://www.curseforge.com/wow/addons/inputinput/comments]|r"))
 				LOG:Info(string.format(L['Login Information 2'], "|cff409EFF/ii|r", "|cff409EFF/inputinput|r"))
 			end)
+			U:InitFriends()
+			U:InitGuilds()
+			U:InitGroupMembers()
+			LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
+			LoadPostion(editBox)
 		end
 	end
 end)

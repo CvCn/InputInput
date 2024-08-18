@@ -160,9 +160,24 @@ Fun({
         ['7.0.3'] = C_ChallengeMode and C_ChallengeMode.GetAffixInfo
     },
     C_BattleNet_GetFriendAccountInfo = {
-        ['3.3.5'] = C_BattleNet and C_BattleNet.GetFriendAccountInfo
+        ['1.1.0'] = C_BattleNet and C_BattleNet.GetFriendAccountInfo
     },
     BNGetNumFriends = {
         ['1.0.0'] = BNGetNumFriends
+    },
+    GetNumGuildMembers = {
+        ['1.0.0'] = GetNumGuildMembers
+    },
+    GetGuildRosterInfo = {
+        ['1.0.0'] = GetGuildRosterInfo
+    },
+    GetNumGroupMembers = {
+        ['1.0.0'] = GetNumGroupMembers
+    },
+    GetZoneText = {
+        ['1.0.0'] = GetZoneText
+    },
+    GetSubZoneText = {
+        ['1.0.0'] = GetSubZoneText
     }
 })
