@@ -15,7 +15,7 @@
 
 ## SavedVariables: InputInput_DB
 
-Libraries\LibStub.lua
+Libs\LibStub.lua
 dict1.lua
 dict2.lua
 dict3.lua

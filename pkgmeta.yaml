@@ -7,6 +7,7 @@ ignore:
   - .gitignore
   - .github
   - README.md
+  - */README.md
 
 move-folders:
   InputInput/InputInput: InputInput

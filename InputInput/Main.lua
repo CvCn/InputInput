@@ -116,6 +116,34 @@ local function UpdateFontStringPosition(editBox, displayFontString, msg)
 	displayFontString:Show()
 end
 
+local function getLastUTF8Char(s)
+	-- 初始化起始位置
+	local lastCharStart = nil
+
+	-- 遍历字符串，找到最后一个字符的起始位置
+	for i = 1, #s do
+		local c = string.byte(s, i)
+		if c >= 128 then
+			-- 多字节字符的处理
+			if c >= 240 then
+				lastCharStart = i
+				i = i + 3
+			elseif c >= 224 then
+				lastCharStart = i
+				i = i + 2
+			elseif c >= 192 then
+				lastCharStart = i
+				i = i + 1
+			end
+		else
+			-- 单字节字符的处理
+			lastCharStart = i
+		end
+	end
+
+	-- 返回最后一个字符
+	return s:sub(lastCharStart)
+end
 
 local function FindHis(his, patt)
 	if not his or #his <= 0 or not patt or #patt <= 0 then return '' end
@@ -148,6 +176,11 @@ local function FindHis(his, patt)
 						end
 					end
 				end
+			end
+			-- 如果分词匹配不到，使用输入的最后一个字符匹配
+			local start, _end = strfind(h, getLastUTF8Char(patt), 1, true)
+			if start and start > 0 then
+				return strsub(h, _end + 1)
 			end
 		end
 	end
@@ -1056,6 +1089,7 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 	elseif event == 'ADDON_LOADED' then
 		local addOnName, containsBindings = ...
 		if addOnName == "InputInput_Libraries_zh" then
+			LOG:Debug("---加载词库0%---")
 			W.dict1 = LibStub("inputinput-dict1").dict
 			W.dict2 = LibStub("inputinput-dict2").dict
 			W.dict3 = LibStub("inputinput-dict3").dict
@@ -1085,7 +1119,9 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			for i, v in pairs(W.dict6) do
 				W.dict6[i] = math.log(v) - logtotal
 			end
+			LOG:Debug("---加载词库100%---")
 			U:InitWordCache(messageHistory)
+			
 		end
 	else
 		if (C_AddOns_IsAddOnLoaded("ElvUI") or ElvUI == nil) and
