@@ -460,3 +460,17 @@ function U:PlayerTip(inpall, inp)
         end
     end
 end
+
+-- 定义提示框
+StaticPopupDialogs["InputInput_RELOAD_UI_CONFIRMATION"] = {
+    text = L['Do you want to reload the addOnes'],
+    button1 = L['Yes'],
+    button2 = L['No'],
+    OnAccept = function()
+        ReloadUI() -- 用户点击“确定”后重载界面
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3, -- 避免与其他静态弹窗冲突
+}

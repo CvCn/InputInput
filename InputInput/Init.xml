@@ -2,8 +2,8 @@
 	<Script file='Init.lua'/>
     <Script file='Log4WOW.lua'/>
     <Include file ='Libs\libs.xml'/>
-    <Include file ='Locales\Load_Locales.xml'/>
     <Script file='API.lua'/>
+    <Include file ='Locales\Load_Locales.xml'/>
     <Script file='Save.lua'/>
     <Script file='Icon.lua'/>
     <Script file='Utils.lua'/>

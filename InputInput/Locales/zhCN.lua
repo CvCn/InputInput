@@ -81,7 +81,18 @@ L['Show channel Name'] = '显示频道名称'
 L['Show Timestamp'] = "显示时间戳"
 L['Show bg'] = "显示消息背景"
 L['Default Setting'] = "默认设置"
+L['Enable InputInput_Libraries_zh'] = '启用 %s'
+L['Need To Reload'] = '需要重载'
+
+L['Do you want to reload the addOnes'] = '是否重载界面'
+L['Yes'] = '确定'
+L['No'] = '取消'
+
+L['Chinese word processing module can make input prompts more intelligent'] = '中文词语处理模块，可以使输入提示更智能'
+
 
 -- Login Information
 L['Login Information 1'] = "您正在使用%s输入框增强插件, 使用过程中的任何问题都可以通过 %s 或者 到插件网站 %s 进行反馈"
 L['Login Information 2'] = "输入 %s 或者 %s 打开设置面板"
+
+L['Not enabled, enter/ii to enable'] = '未启用，输入%s启用'

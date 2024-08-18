@@ -29,17 +29,17 @@ end
 Fun({
     C_Item_GetItemInfo = {
         ['10.2.6'] = C_Item and C_Item.GetItemInfo,
----@diagnostic disable-next-line: deprecated
+        ---@diagnostic disable-next-line: deprecated
         ['1.15.0'] = GetItemInfo
     },
     C_Item_GetDetailedItemLevelInfo = {
         ['10.2.6'] = C_Item and C_Item.GetDetailedItemLevelInfo,
----@diagnostic disable-next-line: deprecated
+        ---@diagnostic disable-next-line: deprecated
         ['1.0.0'] = GetDetailedItemLevelInfo
     },
     C_Spell_GetSpellTexture = {
         ['10.2.6'] = C_Spell and C_Spell.GetSpellTexture,
----@diagnostic disable-next-line: deprecated
+        ---@diagnostic disable-next-line: deprecated
         ['1.0.0'] = GetSpellTexture
     },
     GetSpecializationInfoByID = {
@@ -99,7 +99,7 @@ Fun({
     },
     C_AddOns_IsAddOnLoaded = {
         ['10.2.0'] = C_AddOns and C_AddOns.IsAddOnLoaded,
----@diagnostic disable-next-line: deprecated
+        ---@diagnostic disable-next-line: deprecated
         ['1.0.0'] = IsAddOnLoaded
     },
     GetChannelList = {
@@ -179,5 +179,26 @@ Fun({
     },
     GetSubZoneText = {
         ['1.0.0'] = GetSubZoneText
+    },
+    C_AddOns_GetAddOnEnableState = {
+        ['10.2.0'] = C_AddOns.GetAddOnEnableState,
+        ---@diagnostic disable-next-line: deprecated
+        ['1.0.0'] = GetAddOnEnableState
+    },
+    C_AddOns_EnableAddOn = {
+        ['10.2.0'] = C_AddOns.EnableAddOn,
+        ---@diagnostic disable-next-line: deprecated
+        ['1.0.0'] = EnableAddOn
+    },
+    C_AddOns_DisableAddOn = {
+        ['10.2.0'] = C_AddOns.DisableAddOn,
+        ---@diagnostic disable-next-line: deprecated
+        ['1.0.0'] = DisableAddOn
+    },
+    GetAddOnMemoryUsage = {
+        ['1.0.0'] = GetAddOnMemoryUsage
+    },
+    GetLocale = {
+        ['1.0.0'] = GetLocale
     }
 })

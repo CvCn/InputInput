@@ -19,7 +19,9 @@ local GetCursorPosition = API.GetCursorPosition
 local InCombatLockdown = API.InCombatLockdown
 local IsLeftControlKeyDown = API.IsLeftControlKeyDown
 local IsLeftShiftKeyDown = API.IsLeftShiftKeyDown
-
+local C_AddOns_GetAddOnEnableState = API.C_AddOns_GetAddOnEnableState
+local C_AddOns_EnableAddOn = API.C_AddOns_EnableAddOn
+local C_AddOns_DisableAddOn = API.C_AddOns_DisableAddOn
 
 local measureFontString = UIParent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 
@@ -167,15 +169,14 @@ local function FindHis(his, patt)
 				local patt2 = pattp[#pattp]
 				-- LOG:Debug(patt2)
 				local start, _end = strfind(h2, patt2, 1, true)
-				if start and start > 0 and _end ~= # h2 then
-					-- LOG:Debug(h)
-					local p = strsub(h2, _end + 1)
-					if p and #p > 0 then
-						return p
+				if start and start > 0 then
+					-- LOG:Debug(h2)
+					if _end ~= # h2 then
+						return strsub(h2, _end + 1)
 					else
 						local pnex = hisp[h_index + 1]
 						if pnex and #pnex > 0 then
-							return p .. pnex
+							return pnex
 						end
 					end
 				end
@@ -1038,6 +1039,18 @@ local function optionSetup(backdropFrame2)
 		showbg = show
 	end
 
+	function M.MAIN:EnableIL_zh(show)
+		local isLoad = C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2
+		if (isLoad and not show) or (not isLoad and show) then
+			StaticPopup_Show("InputInput_RELOAD_UI_CONFIRMATION")
+		end
+		if show then
+			C_AddOns_EnableAddOn('InputInput_Libraries_zh')
+		else
+			C_AddOns_DisableAddOn('InputInput_Libraries_zh')
+		end
+	end
+
 	M.OPT:loadOPT()
 end
 
@@ -1163,7 +1176,18 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 					W.colorName,
 					"|cff409EFFDiscord|r |cFFFFFFFF[https://discord.gg/qC9RAdXN]|r",
 					"|cff409EFFCurseForge|r |cFFFFFFFF[https://www.curseforge.com/wow/addons/inputinput/comments]|r"))
+			end)
+			C_Timer.After(6, function(cb)
 				LOG:Info(string.format(L['Login Information 2'], "|cff409EFF/ii|r", "|cff409EFF/inputinput|r"))
+			end)
+			C_Timer.After(7, function(cb)
+				local isLoad = C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2
+				if GetLocale() == 'zhCN' or GetLocale() == 'zhTW' then
+					if not (C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2) then
+						LOG:Warn('|cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r_Libraries_|cffff0000zh|r' ..
+							format(L['Not enabled, enter/ii to enable'], "|cff409EFF/ii|r"))
+					end
+				end
 			end)
 			U:InitFriends()
 			U:InitGuilds()

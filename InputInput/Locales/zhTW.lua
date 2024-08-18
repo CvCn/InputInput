@@ -76,13 +76,21 @@ L['unknown'] = "未知"
 L['TO'] = "密"
 
 -- 設置 options
-L['Show Chat'] = "顯示聊天"
+L['Show Chat'] = "顯示訊息"
 L['Show channel Name'] = '顯示頻道名稱'
 L['Show Timestamp'] = "顯示時間戳記"
 L['Show bg'] = "顯示訊息背景"
 L['Default Setting'] = "預設設定"
+L['Enable InputInput_Libraries_zh'] = '開啟 %s'
+L['Do you want to reload the addOnes'] = '是否重新載入介面'
 
+L['Yes'] = '確定'
+L['No'] = '取消'
+
+L['Chinese word processing module can make input prompts more intelligent'] = '中文詞語處理模組，可以使輸入提示更智能'
 
 -- Login Information
 L['Login Information 1'] = "您正在使用%s輸入框增強插件，使用過程中的任何問題都可以透過 %s 或到插件網站 %s 進行反饋"
 L['Login Information 2'] = "輸入 %s 或 %s 打開設定面板"
+
+L['Not enabled, enter/ii to enable'] = '未開啟，輸入%s開啟'

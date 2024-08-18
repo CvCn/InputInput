@@ -6,7 +6,7 @@ local Level = {
     DEBUG = '|cFF909399',
     INFO = '|cFFFFFF00'
 }
-local prnSuffix = "|TInterface/AddOns/InputInput/Media/pet_type_dragon:20|t: "
+local prnSuffix = "|cff409EFFII|r : "
 
 local function Uprint(level, ...)
     local color = Level[level]

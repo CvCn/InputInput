@@ -81,8 +81,16 @@ L['Show channel Name'] = 'Show channel Name'
 L['Show Timestamp'] = "Show Timestamp"
 L['Show bg'] = "Show Message Background"
 L['Default Setting'] = "Default"
+L['Enable InputInput_Libraries_zh'] = 'Enable %s'
+L['Need To Reload'] = 'Need To Reload'
+L['Do you want to reload the addOnes'] = 'Do you want to reload the addOnes'
+L['Yes'] = 'Yes'
+L['No'] = 'No'
+L['Chinese word processing module can make input prompts more intelligent'] = 'Chinese word processing module can make input prompts more intelligent'
 
 
 -- Login Information
 L['Login Information 1'] = "You are using the %s Input Enhancement addon. If you encounter any issues during use, you can provide feedback via %s or on the addon website %s"
 L['Login Information 2'] = "Enter %s or %s to open the settings panel"
+
+L['Not enabled, enter/ii to enable'] = 'Not enabled, enter%s to enable'
