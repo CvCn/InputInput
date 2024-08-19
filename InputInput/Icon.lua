@@ -132,6 +132,7 @@ local function ReplaceIconString(text)
                 icon = spellPath
             end
         elseif H_type == 'achievement' then
+            -- LOG:Debug(id)
             icon = select(10, GetAchievementInfo(id))
         elseif H_type == 'talentbuild' then
             if ElvUI == nil then

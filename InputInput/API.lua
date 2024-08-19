@@ -154,7 +154,7 @@ Fun({
         ['1.0.0'] = GetPlayerInfoByGUID,
     },
     UnitClass = {
-        ['1.0.0'] = GetAchievementInfo
+        ['1.0.0'] = UnitClass
     },
     GetChannelName = {
         ['1.0.0'] = GetChannelName
