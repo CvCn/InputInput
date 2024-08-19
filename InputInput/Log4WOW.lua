@@ -8,6 +8,8 @@ local Level = {
 }
 local prnSuffix = "|cff409EFFII|r : "
 
+---@param level string
+---@param ... string
 local function Uprint(level, ...)
     local color = Level[level]
     if E == 'DEV' then
@@ -15,7 +17,7 @@ local function Uprint(level, ...)
             local ps = ""
             for _, v in ipairs({ ... }) do
                 if v then
-                    local m, c = gsub(tostring(v), '%|', "||")
+                    local m, c = gsub(v, '%|', "||")
                     ps = ps .. m .. ' '
                 end
             end
@@ -29,24 +31,25 @@ local function Uprint(level, ...)
         end
     end
 end
-
+---@param ... string
 function LOG:Debug(...)
     Uprint("DEBUG", ...)
 end
-
+---@param ... string
 function LOG:Info(...)
     Uprint("INFO", ...)
 end
-
+---@param ... string
 function LOG:Error(...)
     Uprint("ERROR", ...)
     error(...)
 end
-
+---@param ... string
 function LOG:Warn(...)
     Uprint("WARN", ...)
 end
-
+---@param key string
+---@param value any
 function LOG:SaveLog(key, value)
     if E ~= 'DEV' then return end
     local log = D:ReadDB('LOG__', {})

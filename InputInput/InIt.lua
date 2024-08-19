@@ -8,7 +8,7 @@ local Locale = {}
 local API = {}
 local LOG = {}
 local Environment = 'DEV'
-
+Widget.defaultFontName = GameFontHighlightSmall:GetFont()
 AddOnesTable[1] = Widget
 Widget.N = Name
 Widget.colorName = '|cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r'

@@ -51,24 +51,29 @@ local function Fun(funTable)
 end
 
 Fun({
+    -- Returns info for an item.
     C_Item_GetItemInfo = {
         ['10.2.6'] = C_Item and C_Item.GetItemInfo,
         ---@diagnostic disable-next-line: deprecated
         ['1.15.0'] = GetItemInfo
     },
+    -- Returns detailed item level info.
     C_Item_GetDetailedItemLevelInfo = {
         ['10.2.6'] = C_Item and C_Item.GetDetailedItemLevelInfo,
         ---@diagnostic disable-next-line: deprecated
         ['1.0.0'] = GetDetailedItemLevelInfo
     },
+    -- Returns the icon texture of a spell.
     C_Spell_GetSpellTexture = {
         ['10.2.6'] = C_Spell and C_Spell.GetSpellTexture,
         ---@diagnostic disable-next-line: deprecated
         ['1.0.0'] = GetSpellTexture
     },
+    --  Returns information about the specified specialization.
     GetSpecializationInfoByID = {
         ['5.0.4'] = GetSpecializationInfoByID
     },
+    -- Returns information about a talent.
     GetTalentInfoByID = {
         ['6.0.2'] = GetTalentInfoByID,
         ['3.4.3'] = function(talentID)
@@ -112,20 +117,25 @@ Fun({
             return name, realm
         end
     },
+    -- clubInfo
     C_ClubFinder_GetRecruitingClubInfoFromFinderGUID = {
         ['4.0.0'] = C_ClubFinder and C_ClubFinder.GetRecruitingClubInfoFromFinderGUID
     },
+    -- Returns info for an achievement.
     GetAchievementInfo = {
         ['1.0.0'] = GetAchievementInfo
     },
+    -- Returns info for a currency by ID.
     C_CurrencyInfo_GetCurrencyInfo = {
         ['1.0.0'] = C_CurrencyInfo.GetCurrencyInfo
     },
+    -- Returns true if the specified addon is loaded.
     C_AddOns_IsAddOnLoaded = {
         ['10.2.0'] = C_AddOns and C_AddOns.IsAddOnLoaded,
         ---@diagnostic disable-next-line: deprecated
         ['1.0.0'] = IsAddOnLoaded
     },
+    --  Returns the list of joined chat channels.
     GetChannelList = {
         ['1.0.0'] = GetChannelList
     },
@@ -165,6 +175,7 @@ Fun({
     GetCursorPosition = {
         ['1.0.0'] = GetCursorPosition
     },
+    -- Returns true if the combat lockdown restrictions are active.
     InCombatLockdown = {
         ['1.0.0'] = InCombatLockdown
     },
@@ -204,6 +215,7 @@ Fun({
     GetSubZoneText = {
         ['1.0.0'] = GetSubZoneText
     },
+    -- Queries the enabled state of an addon, optionally for a specific character.
     C_AddOns_GetAddOnEnableState = {
         ['10.2.0'] = C_AddOns and C_AddOns.GetAddOnEnableState,
         ['1.0.0'] = function(name, character)
@@ -221,9 +233,11 @@ Fun({
         ---@diagnostic disable-next-line: deprecated
         ['1.0.0'] = DisableAddOn
     },
+    --  Returns the memory used for an addon.
     GetAddOnMemoryUsage = {
         ['1.0.0'] = GetAddOnMemoryUsage
     },
+    --  Returns the game client locale.
     GetLocale = {
         ['1.0.0'] = GetLocale
     }

@@ -68,6 +68,8 @@ local function changeSetting()
     M.MAIN:EnableIL_zh(settings.enableIL_zh)
 end
 
+---@param addonName string
+---@return string
 local function GetAddonMemory(addonName)
     -- 获取插件的内存占用（以 KB 为单位）
     local memoryUsage = GetAddOnMemoryUsage(addonName)

@@ -27,6 +27,9 @@ local measureFontString = UIParent:CreateFontString(nil, "ARTWORK", "GameFontNor
 
 local tip = ''
 -- 更新显示 FontString 位置的函数
+---@param editBox EditBox
+---@param displayFontString FontString
+---@param msg string
 local function UpdateFontStringPosition(editBox, displayFontString, msg)
 	if not msg or #msg <= 0 then
 		displayFontString:Hide()
@@ -278,6 +281,13 @@ local chat_frame = {}
 local chat_frame_texture = {}
 local scale_temp = scale
 local chat_h = 1
+
+---@param scale number
+---@param editBox EditBox
+---@param backdropFrame2 table|BackdropTemplate|Frame
+---@param channel_name FontString
+---@param II_TIP FontString
+---@param II_LANG FontString
 function LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 	editBox:SetWidth(480 * scale)
 	local font, _, flags = editBox:GetFont()
@@ -289,7 +299,7 @@ function LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 
 	backdropFrame2:SetWidth(480 * scale)
 	local fontfile, _, flags = channel_name:GetFont()
-	channel_name:SetFont(fontfile, newFontSize * scale, flags)
+	channel_name:SetFont(fontfile or W.defaultFontName, newFontSize * scale, flags)
 
 	local c_h = 0
 	for idx, v in ipairs(chat_frame) do
@@ -442,6 +452,9 @@ function MAIN:Init()
 	return editBox, bg, border, backdropFrame2, resizeButton, texture_btn, channel_name, II_TIP, II_LANG, bg3
 end
 
+---@param name string
+---@param realm string
+---@return string
 local function addLevel(name, realm)
 	local maxLevel = GetMaxPlayerLevel()
 	local level = UnitLevel(name)
@@ -455,6 +468,13 @@ local function addLevel(name, realm)
 	return name_realm
 end
 
+---@param channel string
+---@param senderGUID string|nil
+---@param msg string
+---@param isChannel boolean
+---@param sender string|nil
+---@param isPlayer boolean|nil
+---@return string
 function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
 	local info = ChatTypeInfo[channel]
 	local channelColor = U:RGBToHex(info.r, info.g, info.b)
@@ -477,7 +497,7 @@ function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
 		end
 	end
 	if #name_realm <= 0 then
-		name_realm = sender
+		name_realm = sender or ''
 		local name, realm = strsplit('-', name_realm)
 		class = UnitClass(name)
 		name_realm = addLevel(name, realm)
@@ -512,6 +532,14 @@ end
 
 local showTime = false
 local showbg = false
+
+---@param saveKey string
+---@param channel string
+---@param senderGUID string|nil
+---@param msg string
+---@param isChannel boolean
+---@param sender string|nil
+---@param isPlayer boolean|nil
 function SaveMSG(saveKey, channel, senderGUID, msg, isChannel, sender, isPlayer)
 	local key = saveKey
 	local w = strfind(channel, 'BN_WHISPER')
@@ -548,24 +576,35 @@ local ChatLabels = {
 	["BN_WHISPER_INFORM"]    = 'CHAT_MSG_BN_WHISPER_INFORM',
 }
 
+---@param editBox EditBox
 function HideEuiBorder(editBox)
 	if ElvUI then
+		---@diagnostic disable-next-line: undefined-field
 		editBox:SetBackdropBorderColor(0, 0, 0, 0)
+		---@diagnostic disable-next-line: undefined-field
 		editBox:SetBackdropColor(0, 0, 0, 0)
 		-- editBox:StripTextures()
+		---@diagnostic disable-next-line: undefined-field
 		if editBox.shadow then
+			---@diagnostic disable-next-line: undefined-field
 			editBox.shadow:Hide()
 		end
 		local font, _, flags = editBox:GetFont()
 		editBox:SetFont(font, newFontSize * scale, flags)
-
+		---@diagnostic disable-next-line: undefined-field
 		if editBox.characterCount then
+			---@diagnostic disable-next-line: undefined-field
 			editBox.characterCount:Hide()
 		end
 	end
 end
 
 local showChannelName = true
+
+---@param editBox EditBox
+---@param chatType string
+---@param backdropFrame2 table|BackdropTemplate|Frame
+---@param channel_name FontString
 function Chat(editBox, chatType, backdropFrame2, channel_name)
 	local msg_list
 	local info = ChatTypeInfo[chatType]
@@ -646,7 +685,7 @@ function Chat(editBox, chatType, backdropFrame2, channel_name)
 				fontString:SetPoint("BOTTOMLEFT", chat_frame[k], "TOPLEFT", 0, 3)
 			end
 			local fontfile, _, flags = fontString:GetFont()
-			fontString:SetFont(fontfile, 16 * scale, flags)
+			fontString:SetFont(fontfile or W.defaultFontName, 16 * scale, flags)
 			local a = 1 - math.log(k + 1) + 2 / math.log(#msg_list)
 			if a < 0 then a = 0 end
 			if a > 1 then a = 1 end
@@ -664,6 +703,14 @@ function Chat(editBox, chatType, backdropFrame2, channel_name)
 	backdropFrame2:SetHeight(c_h)
 end
 
+---@param editBox EditBox
+---@param bg Texture
+---@param bg3 Texture
+---@param border table|BackdropTemplate|Frame
+---@param backdropFrame2 table|BackdropTemplate|Frame
+---@param resizeBtnTexture Texture
+---@param channel_name FontString
+---@param II_LANG FontString
 function ChannelChange(editBox, bg, bg3, border, backdropFrame2, resizeBtnTexture, channel_name, II_LANG)
 	HideEuiBorder(editBox)
 	for i = 1, #G.CHAT_FRAMES do
@@ -732,6 +779,16 @@ local function chatEventHandler(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7,
 		arg17
 end
 local last_text = ''
+
+---@param editBox EditBox
+---@param bg Texture
+---@param border table|BackdropTemplate|Frame
+---@param backdropFrame2 table|BackdropTemplate|Frame
+---@param resizeButton table|Button
+---@param texture_btn Texture
+---@param channel_name FontString
+---@param II_TIP FontString
+---@param II_LANG FontString
 local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, texture_btn, channel_name, II_TIP, II_LANG,
 						  bg3)
 	editBox:HookScript("OnEscapePressed", editBox.ClearFocus) -- 允许按下 Esc 清除焦点+
@@ -742,7 +799,9 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 			LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 			local children = { editBox:GetChildren() }
 			for _, child in ipairs(children) do
+				---@diagnostic disable-next-line: undefined-field
 				if child.__bgTex then
+					---@diagnostic disable-next-line: undefined-field
 					child:Hide()
 				end
 			end
@@ -1017,7 +1076,7 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 			end
 
 			if event == 'CHAT_MSG_CHANNEL' then
-				SaveMSG('CHANNEL' .. channelNumber, 'CHANNEL' .. channelNumber, guid or bnSenderID, msg,
+				SaveMSG('CHANNEL' .. channelNumber, 'CHANNEL' .. channelNumber, guid or bnSenderID, msg or '',
 					true, sender)
 				if ChatChange then
 					ChannelChange(editBox, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
@@ -1025,7 +1084,8 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 			end
 			for k, v in pairs(ChatLabels) do
 				if event == v then
-					SaveMSG(chatGroup, k, guid or bnSenderID, msg, false, sender, event:find('_INFORM'))
+					local start, _end = event:find('_INFORM')
+					SaveMSG(chatGroup, k, guid or bnSenderID, msg or '', false, sender, start and start > 0)
 					if ChatChange then
 						ChannelChange(editBox, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
 					end
@@ -1034,7 +1094,7 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 			end
 		end)
 end
-
+---@param backdropFrame2 table|BackdropTemplate|Frame
 local function optionSetup(backdropFrame2)
 	-- options 设置
 	function MAIN:HideChat(show)
@@ -1214,7 +1274,7 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			LoadPostion(editBox)
 
 			-- local jieba = LibStub("inputinput-jieba")
-			-- for _, i in ipairs(jieba.lcut('汽车站长说只有按照', false, true)) do
+			-- for _, i in ipairs(jieba.lcut('地精', false, true)) do
 			-- 	LOG:Debug(i)
 			-- end
 		end

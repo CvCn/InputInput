@@ -93,40 +93,65 @@ local emotes = {
     { value = "rt8",        key = "rt8",          texture = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8" },
 }
 
+-- ReplaceEmote函数：将传入的字符串中的表情符号替换为游戏内的表情图标
+---@param value string|nil 待处理的字符串
+---@return string 替换后的字符串，如果传入的字符串为空或只包含表情符号，则返回空字符串
 local function ReplaceEmote(value)
+    -- 检查传入的字符串是否为空或只包含表情符号，如果是，则直接返回空字符串
     if not value or value == '' then return '' end
+
+    -- 移除字符串中的所有表情符号，以获取纯文本部分
     local emote = gsub(value, "[%{%}]", "")
+
+    -- 遍历预定义的表情符号列表
     for _, v in ipairs(emotes) do
+        -- 检查移除表情符号后的文本是否与列表中的某个表情符号键匹配
         if emote == v.key then
+            -- 如果匹配，则返回对应的游戏内表情图标代码
             return "|T" ..
                 (v.texture or ("Interface\\AddOns\\InputInput\\Media\\Emotes\\" .. v.value)) ..
                 ":" .. 15 .. "|t"
         end
     end
+
+    -- 如果没有找到匹配的表情符号，则直接返回原始字符串
     return value
 end
 local itemshowLevel = {
     2, 4, 8, 9, 13, 17
 }
 
+---@param text string 输入的字符串，可能包含各种类型的编码
+---@return string 返回替换后的字符串，其中编码被替换为相应的图标和后缀
+-- 该函数的主要作用是解析输入字符串中的特殊编码，并将其替换为游戏内的图标和后缀信息
 local function ReplaceIconString(text)
+    -- 如果输入为空，直接返回空字符串
     if not text or text == '' then return '' end
+    
+    -- 通过正则表达式匹配出字符串中的编码类型和ID
     local H_type, id = text:match("%|H(.-):(%d+)")
     local icon
     local suffix = ''
+    
+    -- 根据不同的编码类型，执行相应的处理逻辑
     if H_type then
         if H_type == 'item' then
+            -- 如果ElvUI不存在，则通过C_Item_GetItemInfo接口获取物品信息
             if ElvUI == nil then
                 local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount,
                 itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType, expansionID, setID, isCraftingReagent =
                     C_Item_GetItemInfo(id)
+                -- 设置物品的图标
                 icon = itemTexture
+                
+                -- 如果物品显示级别设置中包含该物品的类别ID，则获取并设置物品的有效等级作为后缀
                 if U:HasKey(itemshowLevel, classID) then
                     local effectiveILvl, isPreview, baseILvl = C_Item_GetDetailedItemLevelInfo(text:match("%|H(.-)|h"))
                     suffix = tostring(effectiveILvl)
                 end
             end
         elseif H_type == 'spell' then
+            -- 如果ElvUI不存在，则通过C_Spell_GetSpellTexture接口获取法术图标
             if ElvUI == nil then
                 local spellPath = C_Spell_GetSpellTexture(id)
                 icon = spellPath
@@ -135,6 +160,7 @@ local function ReplaceIconString(text)
             -- LOG:Debug(id)
             icon = select(10, GetAchievementInfo(id))
         elseif H_type == 'talentbuild' then
+            -- 如果ElvUI不存在，则通过GetSpecializationInfoByID接口获取专精信息，并设置专精的图标
             if ElvUI == nil then
                 -- local id, level = text:match("talentbuild:(.+):(%d+):")
                 local _, _, _, path = GetSpecializationInfoByID(id)
@@ -147,6 +173,7 @@ local function ReplaceIconString(text)
             icon = path
             -- suffix = level
         elseif H_type:match("trade:(.+)") then
+            -- 解析交易技能编码，并设置相应的图标和后缀
             local guid, spellID, tradeSkillLineID = text:match("trade:(.+):(%d+):(%d+)")
             -- trade_level = level
             local unit = UnitTokenFromGUID(guid)
@@ -157,42 +184,53 @@ local function ReplaceIconString(text)
                         colorStr = 'ffffffff'
                     }
                 end
+                -- 设置交易技能的后缀为单位名称，带职业颜色编码
                 suffix = string.format('|c%s%s|r', classColor.colorStr, UnitName(unit))
             end
-
+            
+            -- 设置交易技能的图标为法术图标
             icon = C_Spell_GetSpellTexture(spellID)
         elseif H_type == 'quest' then
+            -- 解析任务编码，并设置任务的图标和后缀
             -- local questId, questLevel = text:match("quest:(%d+):(%d+)")
             -- suffix = questLevel
             -- local tagID, tagName, worldQuestType, rarity, isElite, tradeskillLineIndex, displayTitle, isDaily, isStory = C_QuestLog.GetQuestTagInfo(questId)
         elseif H_type == 'currency' then
+            -- 如果ElvUI不存在，则通过C_CurrencyInfo_GetCurrencyInfo接口获取货币信息，并设置货币的图标
             if ElvUI == nil then
                 local currencyInfo = C_CurrencyInfo_GetCurrencyInfo(id)
                 icon = currencyInfo.iconFileID
             end
+            -- 解析货币数量，并设置为后缀
             local id, amount = text:match(
                 "currency:(%d+):(%d+)")
             if amount and tonumber(amount) ~= nil and tonumber(amount) > 0 then
                 suffix = amount
             end
         elseif H_type == 'dungeonScore' then
+            -- 设置地下城评分的图标和后缀
             icon = 'Interface\\Icons\\inv_relics_hourglass'
             suffix = id
         elseif H_type == 'keystone' then
+            -- 解析钥石编码，并设置相应的后缀
             local id, challengeModeID, level, a1, a2, a3, a4 = text:match(
                 "keystone:(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):(%d+)")
             suffix = U:GetAffixName(a1, a2, a3, a4)
         elseif H_type == 'mount' then
+            -- 设置坐骑的图标为法术图标
             icon = C_Spell_GetSpellTexture(id)
         elseif H_type == 'enchant' then
+            -- 如果ElvUI不存在，则通过C_Spell_GetSpellTexture接口获取附魔的图标
             if not ElvUI then
                 icon = C_Spell_GetSpellTexture(id)
             end
         end
     else
+        -- 处理不含H_type的编码
         H_type, id = text:match("%|H(.-):(.+)|h%[.-%]")
         if H_type then
             if H_type == 'clubFinder' then
+                -- 解析公会查找器编码，并设置相应的后缀
                 local clubInfo = C_ClubFinder_GetRecruitingClubInfoFromFinderGUID(id)
                 if clubInfo and clubInfo.numActiveMembers > 0 then
                     suffix = '|Tinterface\\friendsframe\\ui-toast-chatinviteicon:15|t' .. clubInfo.numActiveMembers
@@ -200,6 +238,8 @@ local function ReplaceIconString(text)
             end
         end
     end
+    
+    -- 将解析得到的图标和后缀拼接到原始字符串上，并返回结果
     local itemSrtr = ''
     if icon then
         itemSrtr = '|T' .. icon .. ':15|t'

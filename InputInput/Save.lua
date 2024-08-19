@@ -4,6 +4,10 @@ local UnitGUID = API.UnitGUID
 local BNGetInfo = API.BNGetInfo
 
 InputInput_DB = InputInput_DB or {}
+
+---@param key string
+---@param value any
+---@param AccountUniversal boolean|nil
 function D:SaveDB(key, value, AccountUniversal)
     local accountID
     if not AccountUniversal then
@@ -20,6 +24,9 @@ function D:SaveDB(key, value, AccountUniversal)
     InputInput_DB[accountID][key] = value
 end
 
+---@param key string
+---@param defaultValue any
+---@param AccountUniversal boolean|nil
 function D:ReadDB(key, defaultValue, AccountUniversal)
     local accountID
     if not AccountUniversal then
@@ -36,6 +43,10 @@ function D:ReadDB(key, defaultValue, AccountUniversal)
     return InputInput_DB[accountID][key]
 end
 
+---@param key string
+---@param addvalue any
+---@param AccountUniversal boolean|nil
+---@param limit number
 function D:AddArray(key, addvalue, AccountUniversal, limit)
     local date = self:ReadDB(key, {}, AccountUniversal)
     table.insert(date, addvalue)
@@ -45,6 +56,8 @@ function D:AddArray(key, addvalue, AccountUniversal, limit)
     self:SaveDB(key, date, AccountUniversal)
 end
 
+---@param key string
+---@param AccountUniversal boolean|nil
 function D:HasInKey(key, AccountUniversal)
     local accountID
     if not AccountUniversal then
