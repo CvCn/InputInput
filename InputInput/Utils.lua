@@ -539,7 +539,7 @@ function U:InitFriends()
     -- 记录好友初始化开始的日志
     LOG:Debug('---好友初始化---')
     -- 从在线好友列表的末尾开始遍历，以便于处理离线的好友
-    for i = numBNetOnline, 1, -1 do
+    for i = 1, numBNetOnline do
         -- 获取第i个好友的账户信息
         local accountInfo = C_BattleNet_GetFriendAccountInfo(i)
         -- 检查账户信息是否存在
@@ -561,7 +561,6 @@ function U:InitFriends()
                         realm = strtrim(realmName)
                     end
                 end
-                -- 添加或移动好友名称和服务器名称到列表末尾，确保列表的顺序
                 U:AddOrMoveToEnd(friendName,
                     U:join('-', gameAccountInfo.characterName, realm))
                 U:AddOrMoveToEnd(friendName, gameAccountInfo.characterName)
@@ -582,7 +581,7 @@ function U:InitGuilds()
     local numTotalGuildMembers, numOnlineGuildMembers, numOnlineAndMobileMembers = GetNumGuildMembers()
     -- 遍历公会成员
     LOG:Debug('---公会成员初始化---')
-    for i = numTotalGuildMembers, 1, -1 do
+    for i = 1, numTotalGuildMembers do
         -- 获取公会成员的详细信息
         local name, rank, rankIndex, level, class, zone, note, officerNote, online = GetGuildRosterInfo(i)
         -- 如果成员名称存在，则进行处理
@@ -594,6 +593,7 @@ function U:InitGuilds()
             -- 获取或设置服务器名称
             realm = realm or GetRealmName()
             -- 添加或移动服务器到列表末尾
+            U:AddOrMoveToEnd(guildName, name)
             U:AddOrMoveToEnd(guildName, realm)
         end
     end
