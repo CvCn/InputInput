@@ -344,7 +344,8 @@ end
 local friendName = {}
 function U:InitFriends()
     local numBNetTotal, numBNetOnline, numBNetFavorite, numBNetFavoriteOnline = BNGetNumFriends()
-    for i = 1, numBNetOnline do
+    LOG:Debug('---好友初始化---')
+    for i = numBNetOnline, 1, -1 do
         local accountInfo = C_BattleNet_GetFriendAccountInfo(i)
         if accountInfo then
             local gameAccountInfo = accountInfo.gameAccountInfo
@@ -366,6 +367,7 @@ function U:InitFriends()
             end
         end
     end
+    LOG:Debug('---好友初始化结束---')
 end
 
 local guildName = {}
@@ -373,12 +375,12 @@ function U:InitGuilds()
     -- 获取公会成员总数
     local numTotalGuildMembers, numOnlineGuildMembers, numOnlineAndMobileMembers = GetNumGuildMembers()
     -- 遍历公会成员
-    for i = 1, numOnlineAndMobileMembers do
+    LOG:Debug('---公会成员初始化---')
+    for i = 1, numTotalGuildMembers do
         -- 获取公会成员信息
         local name, rank, rankIndex, level, class, zone, note, officerNote, online = GetGuildRosterInfo(i)
-        -- 检查是否在线
-        if online then
-            -- LOG:Debug('公会', name)
+        -- LOG:Debug('公会', name)
+        if name then
             U:AddOrMoveToEnd(guildName, name)
             local name, realm = strsplit('-', name)
             realm = realm or GetRealmName()
@@ -386,6 +388,7 @@ function U:InitGuilds()
             U:AddOrMoveToEnd(guildName, realm)
         end
     end
+    LOG:Debug('---公会成员初始化结束---')
 end
 
 local zoneName = {}
@@ -407,6 +410,7 @@ end
 local groupMembers = {}
 function U:InitGroupMembers()
     local numGroupMembers = GetNumGroupMembers()
+    LOG:Debug('---队伍成员初始化---')
     for i = 1, numGroupMembers do
         local unitID = "party" .. i -- 对于小队成员
         if IsInRaid() then
@@ -426,6 +430,7 @@ function U:InitGroupMembers()
         U:AddOrMoveToEnd(groupMembers, name)
         U:AddOrMoveToEnd(groupMembers, realm)
     end
+    LOG:Debug('---队伍成员初始化结束---')
 end
 
 function U:PlayerTip(inpall, inp)
@@ -474,7 +479,7 @@ function U:PlayerTip(inpall, inp)
     end
 end
 
--- 定义提示框
+-- 重载提示框
 StaticPopupDialogs["InputInput_RELOAD_UI_CONFIRMATION"] = {
     text = L['Do you want to reload the addOnes'],
     button1 = L['Yes'],

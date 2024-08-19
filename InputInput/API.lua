@@ -37,7 +37,7 @@ local function Fun(funTable)
                 return getVersion(a1) < getVersion(a2)
             end)
             for v, f in pairs(t) do
-                LOG:Debug(name, clientVersion, getVersion(v))
+                -- LOG:Debug(name, clientVersion, getVersion(v))
                 if clientVersion >= getVersion(v) then
                     API[name] = f
                     break

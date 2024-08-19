@@ -265,14 +265,12 @@ local newFontSize = 32 -- 新的字体大小
 
 function LoadPostion(editBox)
 	-- load point
-	if D:HasInKey('editBoxPosition') then
-		local point, relativePoint, xOfs, yOfs = unpack(
-			D:ReadDB('editBoxPosition'))
-		editBox:ClearAllPoints()
-		editBox:SetPoint(point, UIParent, relativePoint, xOfs, yOfs)
-	else
-		editBox:SetPoint("CENTER", UIParent, "BOTTOM", 0, 330)
-	end
+	local point, relativePoint, xOfs, yOfs =
+		unpack(D:ReadDB('editBoxPosition', { "CENTER", "BOTTOM", 0, 330 }, false))
+	editBox:ClearAllPoints()
+	-- LOG:Debug(point, relativePoint, xOfs, yOfs)
+	editBox:SetPoint(point, UIParent, relativePoint, xOfs, yOfs)
+	-- LOG:Debug(editBox:GetPoint())
 end
 
 local scale = 1
@@ -956,8 +954,8 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 		HideEuiBorder(self)
 		-- Elvui 会重置输入框的位置大小
 		if ElvUI then
-			LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
-			LoadPostion(editBox)
+			LoadSize(scale, self, backdropFrame2, channel_name, II_TIP, II_LANG)
+			LoadPostion(self)
 		end
 		ChatChange = true
 		self:SetText(last_text)
@@ -1215,10 +1213,10 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 			LoadPostion(editBox)
 
-			local jieba = LibStub("inputinput-jieba")
-			for _, i in ipairs(jieba.lcut('汽车站长说只有按照', false, true)) do
-				LOG:Debug(i)
-			end
+			-- local jieba = LibStub("inputinput-jieba")
+			-- for _, i in ipairs(jieba.lcut('汽车站长说只有按照', false, true)) do
+			-- 	LOG:Debug(i)
+			-- end
 		end
 	end
 end)
