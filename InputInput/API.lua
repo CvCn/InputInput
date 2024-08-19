@@ -8,12 +8,36 @@ local function getVersion(v)
     return (expansion or 0) * 10000 + (majorPatch or 0) * 100 + (minorPatch or 0)
 end
 
+local function sortTableByKey(t, comp)
+    -- 创建一个键的数组
+    local keys = {}
+    for k in pairs(t) do
+        table.insert(keys, k)
+    end
+
+    -- 对键进行排序，支持自定义比较函数
+    table.sort(keys, comp)
+
+    -- 创建一个新的表来存储排序后的键值对
+    local sortedTable = {}
+    for _, k in ipairs(keys) do
+        sortedTable[k] = t[k]
+    end
+
+    return sortedTable
+end
+
 local clientVersion = getVersion(version)
 
 local function Fun(funTable)
     for name, t in pairs(funTable) do
         if t then
+            t = sortTableByKey(t, function (a1, a2)
+                -- LOG:Debug(a1)
+                return getVersion(a1) < getVersion(a2)
+            end)
             for v, f in pairs(t) do
+                LOG:Debug(name, clientVersion, getVersion(v))
                 if clientVersion >= getVersion(v) then
                     API[name] = f
                     break
@@ -181,19 +205,19 @@ Fun({
         ['1.0.0'] = GetSubZoneText
     },
     C_AddOns_GetAddOnEnableState = {
-        ['10.2.0'] = C_AddOns.GetAddOnEnableState,
+        ['10.2.0'] = C_AddOns and C_AddOns.GetAddOnEnableState,
         ['1.0.0'] = function(name, character)
             ---@diagnostic disable-next-line: deprecated
             return GetAddOnEnableState(character, name)
         end
     },
     C_AddOns_EnableAddOn = {
-        ['10.2.0'] = C_AddOns.EnableAddOn,
+        ['10.2.0'] = C_AddOns and C_AddOns.EnableAddOn,
         ---@diagnostic disable-next-line: deprecated
         ['1.0.0'] = EnableAddOn
     },
     C_AddOns_DisableAddOn = {
-        ['10.2.0'] = C_AddOns.DisableAddOn,
+        ['10.2.0'] = C_AddOns and C_AddOns.DisableAddOn,
         ---@diagnostic disable-next-line: deprecated
         ['1.0.0'] = DisableAddOn
     },
