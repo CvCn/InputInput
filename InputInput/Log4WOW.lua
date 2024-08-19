@@ -40,6 +40,7 @@ end
 
 function LOG:Error(...)
     Uprint("ERROR", ...)
+    error(...)
 end
 
 function LOG:Warn(...)

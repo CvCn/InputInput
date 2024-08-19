@@ -111,7 +111,7 @@ function OPT:loadOPT()
     showChannel.Text:SetText(L['Show channel Name'])
     showChannel:SetChecked(settings.showChannel)
 
-    -- 启用|cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r_Libraries_|cffff0000zh|r
+    -- 启用|cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r_Libraries_|cffF56C6Czh|r
     local enableIL_zh = CreateFrame("CheckButton", W.N .. "enableIL_zh", options,
         "InterfaceOptionsCheckButtonTemplate")
     enableIL_zh:SetPoint("TOPLEFT", 16, -206)
@@ -134,7 +134,7 @@ function OPT:loadOPT()
     options:SetScript("OnShow", function(self)
         UpdateAddOnMemoryUsage()
         enableIL_zh.Text:SetText(format(L['Enable InputInput_Libraries_zh'],
-                '|cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r_Libraries_|cffff0000zh|r') ..
+                '|cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r_Libraries_|cffF56C6Czh|r') ..
             ' |cFF909399' .. GetAddonMemory('InputInput_Libraries_zh') .. ' (' .. L['Need To Reload'] .. ')|r')
         settings.enableIL_zh = C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2
         enableIL_zh:SetChecked(settings.enableIL_zh)

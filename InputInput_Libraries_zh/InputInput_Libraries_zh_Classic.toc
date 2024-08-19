@@ -1,6 +1,6 @@
 ## Interface: 11503
 
-## Title: |cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r_Libraries_|cffff0000zh|r
+## Title: |cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r_Libraries_|cffF56C6Czh|r
 ## Notes: InputInput Libraries ZH
 ## Notes-zhCN: InputInput插件中文词语处理模块-可以使输入提示更智能
 ## Notes-zhTW: InputInput插件中文詞語處理模組-可以使輸入提示更智能

@@ -312,7 +312,7 @@ local function isAllWhitespace(str)
     return str:match("^%s*$") ~= nil
 end
 
-local jieba = LibStub("jieba")
+local jieba = LibStub("inputinput-jieba")
 local wordCache = {}
 
 function U:InitWordCache(history)
@@ -349,11 +349,20 @@ function U:InitFriends()
         if accountInfo then
             local gameAccountInfo = accountInfo.gameAccountInfo
             if gameAccountInfo and gameAccountInfo.characterName and gameAccountInfo.isOnline then
-                -- LOG:Debug(gameAccountInfo.characterName)
+                local realm = gameAccountInfo.realmName
+                if not realm or realm == '' then
+                    -- LOG:Debug(gameAccountInfo.richPresence)
+                    local zoneName, realmName = strsplit('-', gameAccountInfo.richPresence)
+                    -- LOG:Debug(realmName)
+
+                    if realmName and realmName ~= '' then
+                        realm = strtrim(realmName)
+                    end
+                end
                 U:AddOrMoveToEnd(friendName,
-                    U:join('-', gameAccountInfo.characterName, gameAccountInfo.realmName))
-                -- U:AddOrMoveToEnd(friendName, gameAccountInfo.characterName)
-                -- U:AddOrMoveToEnd(friendName, gameAccountInfo.realmName)
+                    U:join('-', gameAccountInfo.characterName, realm))
+                U:AddOrMoveToEnd(friendName, gameAccountInfo.characterName)
+                U:AddOrMoveToEnd(friendName, realm)
             end
         end
     end
@@ -373,8 +382,8 @@ function U:InitGuilds()
             U:AddOrMoveToEnd(guildName, name)
             local name, realm = strsplit('-', name)
             realm = realm or GetRealmName()
-            -- U:AddOrMoveToEnd(guildName, name)
-            -- U:AddOrMoveToEnd(guildName, realm)
+            U:AddOrMoveToEnd(guildName, name)
+            U:AddOrMoveToEnd(guildName, realm)
         end
     end
 end
@@ -388,6 +397,10 @@ function U:InitZones()
     end
     U:AddOrMoveToEnd(zoneName, GetZoneText())
     U:AddOrMoveToEnd(zoneName, GetSubZoneText())
+    if #zoneName >= 200 then
+        table.remove(zoneName, 1)
+        table.remove(zoneName, 1)
+    end
     D:SaveDB('zoneName', zoneName, true)
 end
 
@@ -410,8 +423,8 @@ function U:InitGroupMembers()
 
         -- 将名字和服务器存储在表中
         U:AddOrMoveToEnd(groupMembers, U:join('-', name, realm))
-        -- U:AddOrMoveToEnd(groupMembers, name)
-        -- U:AddOrMoveToEnd(groupMembers, realm)
+        U:AddOrMoveToEnd(groupMembers, name)
+        U:AddOrMoveToEnd(groupMembers, realm)
     end
 end
 

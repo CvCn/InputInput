@@ -153,6 +153,7 @@ local function FindHis(his, patt)
 	patt = patt:gsub("%|c.-(%[.-%]).-%|r", function(a1)
 		return a1
 	end)
+	local lastChat = getLastUTF8Char(patt)
 	local pattp = U:CutWord(patt)
 	if not pattp or #pattp <= 0 then return '' end
 	for i = #his, 1, -1 do
@@ -166,11 +167,26 @@ local function FindHis(his, patt)
 			local hisp = U:CutWord(h)
 
 			for h_index, h2 in ipairs(hisp) do
+				-- 先按分词匹配
 				local patt2 = pattp[#pattp]
 				-- LOG:Debug(patt2)
 				local start, _end = strfind(h2, patt2, 1, true)
 				if start and start > 0 then
-					-- LOG:Debug(h2)
+					-- LOG:Debug(patt2)
+					if _end ~= # h2 then
+						return strsub(h2, _end + 1)
+					else
+						local pnex = hisp[h_index + 1]
+						if pnex and #pnex > 0 then
+							return pnex
+						end
+					end
+				end
+				-- 再使用最后一个字符匹配
+				patt2 = lastChat
+				start, _end = strfind(h2, patt2, 1, true)
+				if start and start > 0 then
+					-- LOG:Debug(patt2)
 					if _end ~= # h2 then
 						return strsub(h2, _end + 1)
 					else
@@ -182,15 +198,19 @@ local function FindHis(his, patt)
 				end
 			end
 			-- 如果分词匹配不到，使用输入的最后一个字符匹配
-			local lastChat = getLastUTF8Char(patt)
 			local start, _end = strfind(h, lastChat, 1, true)
 			if start and start > 0 and _end ~= #h then
 				return strsub(h, _end + 1)
 			end
 			-- LOG:Debug(lastChat)
-			local playerTip = U:PlayerTip(patt, lastChat)
+			local playerTip = U:PlayerTip(patt, pattp[#pattp])
 			if playerTip then
 				return playerTip
+			else
+				playerTip = U:PlayerTip(patt, lastChat)
+				if playerTip then
+					return playerTip
+				end
 			end
 		end
 	end
@@ -1184,7 +1204,7 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 				local isLoad = C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2
 				if GetLocale() == 'zhCN' or GetLocale() == 'zhTW' then
 					if not (C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2) then
-						LOG:Warn('|cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r_Libraries_|cffff0000zh|r' ..
+						LOG:Warn('|cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r_Libraries_|cffF56C6Czh|r' ..
 							format(L['Not enabled, enter/ii to enable'], "|cff409EFF/ii|r"))
 					end
 				end
@@ -1194,6 +1214,11 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			U:InitGroupMembers()
 			LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 			LoadPostion(editBox)
+
+			local jieba = LibStub("inputinput-jieba")
+			for _, i in ipairs(jieba.lcut('汽车站长说只有按照', false, true)) do
+				LOG:Debug(i)
+			end
 		end
 	end
 end)

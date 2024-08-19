@@ -1,12 +1,12 @@
 
 local MIN_FLOAT = -3.14e100
-local start = LibStub("prob_start").prob_start
-local emit = LibStub("prob_emit").prob_emit
-local trans = LibStub("prob_trans").prob_trans
-local ut = LibStub("utils")
+local start = LibStub("inputinput-jieba-prob_start").prob_start
+local emit = LibStub("inputinput-jieba-prob_emit").prob_emit
+local trans = LibStub("inputinput-jieba-prob_trans").prob_trans
+local ut = LibStub("inputinput-jieba-utils")
 
 -- 使用 LibStub 创建一个新库
-local MAJOR, MINOR = "hmm", 1
+local MAJOR, MINOR = "inputinput-jieba-hmm", 1
 local M, oldVersion = LibStub:NewLibrary(MAJOR, MINOR)
 
 -- 检查是否成功创建了新版本的库

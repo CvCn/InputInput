@@ -1,5 +1,5 @@
 -- 使用 LibStub 创建一个新库
-local MAJOR, MINOR = "prob_start", 1
+local MAJOR, MINOR = "inputinput-jieba-prob_start", 1
 local p, oldVersion = LibStub:NewLibrary(MAJOR, MINOR)
 
 -- 检查是否成功创建了新版本的库

@@ -7,7 +7,7 @@ local Data = {}
 local Locale = {}
 local API = {}
 local LOG = {}
-local Environment = 'PRO'
+local Environment = 'DEV'
 
 AddOnesTable[1] = Widget
 Widget.N = Name

@@ -182,8 +182,10 @@ Fun({
     },
     C_AddOns_GetAddOnEnableState = {
         ['10.2.0'] = C_AddOns.GetAddOnEnableState,
-        ---@diagnostic disable-next-line: deprecated
-        ['1.0.0'] = GetAddOnEnableState
+        ['1.0.0'] = function(name, character)
+            ---@diagnostic disable-next-line: deprecated
+            return GetAddOnEnableState(character, name)
+        end
     },
     C_AddOns_EnableAddOn = {
         ['10.2.0'] = C_AddOns.EnableAddOn,

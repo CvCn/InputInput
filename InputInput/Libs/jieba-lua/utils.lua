@@ -1,7 +1,7 @@
-local utf8 = LibStub("utf8")
+local utf8 = LibStub("inputinput-jieba-utf8")
 
 -- 使用 LibStub 创建一个新库
-local MAJOR, MINOR = "utils", 1
+local MAJOR, MINOR = "inputinput-jieba-utils", 1
 local M, oldVersion = LibStub:NewLibrary(MAJOR, MINOR)
 
 -- 检查是否成功创建了新版本的库

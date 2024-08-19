@@ -1,6 +1,6 @@
 local W, M, U, D, G, L, E, API, LOG = unpack((select(2, ...)))
 -- 使用 LibStub 创建一个新库
-local MAJOR, MINOR = "utf8", 1
+local MAJOR, MINOR = "inputinput-jieba-utf8", 1
 local utf8, oldVersion = LibStub:NewLibrary(MAJOR, MINOR)
 
 -- 检查是否成功创建了新版本的库

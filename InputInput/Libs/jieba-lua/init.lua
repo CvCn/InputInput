@@ -1,47 +1,19 @@
 local W, M, U, D, G, L, E, API, LOG = unpack((select(2, ...)))
 
-local ut = LibStub("utils")
-local utf8 = LibStub("utf8")
-local hmm = LibStub("hmm")
+local ut = LibStub("inputinput-jieba-utils")
+local utf8 = LibStub("inputinput-jieba-utf8")
+local hmm = LibStub("inputinput-jieba-hmm")
 local p = "[%z\1-\127\194-\244][\128-\191]*"
 
 -- 使用 LibStub 创建一个新库
-local MAJOR, MINOR = "jieba", 1
+local MAJOR, MINOR = "inputinput-jieba", 1
 local init, oldVersion = LibStub:NewLibrary(MAJOR, MINOR)
 
 -- 检查是否成功创建了新版本的库
 if not init then
    return
 end
--- local dict1 = LibStub("dict1").dict
--- local dict2 = LibStub("dict2").dict
--- local dict3 = LibStub("dict3").dict
--- local dict4 = LibStub("dict4").dict
--- local dict5 = LibStub("dict5").dict
--- local dict6 = LibStub("dict6").dict
 
--- local total = 60101967
-
--- local logtotal = math.log(total)
-
--- for i, v in pairs(dict1) do
---    dict1[i] = math.log(v) - logtotal
--- end
--- for i, v in pairs(dict2) do
---    dict2[i] = math.log(v) - logtotal
--- end
--- for i, v in pairs(dict3) do
---    dict3[i] = math.log(v) - logtotal
--- end
--- for i, v in pairs(dict4) do
---    dict4[i] = math.log(v) - logtotal
--- end
--- for i, v in pairs(dict5) do
---    dict5[i] = math.log(v) - logtotal
--- end
--- for i, v in pairs(dict6) do
---    dict6[i] = math.log(v) - logtotal
--- end
 local function dictItem(k)
    if W.dict1 then
       return W.dict1[k] or W.dict2[k] or W.dict3[k] or W.dict4[k] or W.dict5[k] or W.dict6[k]
