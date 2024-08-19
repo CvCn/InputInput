@@ -19,7 +19,7 @@ local function Uprint(level, ...)
                     ps = ps .. m .. ' '
                 end
             end
-            print(prnSuffix, color, ps, '|r')
+            print(color, U:GetFormattedTimeOrDate(time()) .. ' ' .. prnSuffix, ps, '|r')
         else
             print(prnSuffix, color, ..., '|r')
         end

@@ -408,8 +408,11 @@ function U:InitZones()
 end
 
 local groupMembers = {}
+local cacheMember = 0
 function U:InitGroupMembers()
     local numGroupMembers = GetNumGroupMembers()
+    if numGroupMembers == cacheMember then return end
+    cacheMember = numGroupMembers
     LOG:Debug('---队伍成员初始化---')
     for i = 1, numGroupMembers do
         local unitID = "party" .. i -- 对于小队成员
