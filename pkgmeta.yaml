@@ -13,6 +13,3 @@ move-folders:
 
 move-files:
   InputInput/README.md: InputInput/InputInput/README.md
-  InputInput/LICENSE: 
-    InputInput/InputInput/LICENSE
-    InputInput/InputInput_Libraries_zh/LICENSE
