@@ -8,6 +8,7 @@ ignore:
   - .github
   - README.md
   - */README.md
+  - LICENSE
 
 move-folders:
   InputInput/InputInput: InputInput
