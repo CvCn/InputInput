@@ -6,12 +6,10 @@ ignore:
   - pkgmeta.yaml
   - .gitignore
   - .github
-  - LICENSE
 
 move-folders:
   InputInput/InputInput: InputInput
   InputInput/InputInput_Libraries_zh: InputInput_Libraries_zh
-  
 
 move-files:
   InputInput/README.md: InputInput/InputInput/README.md

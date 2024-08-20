@@ -7,7 +7,8 @@ local Data = {}
 local Locale = {}
 local API = {}
 local LOG = {}
-local Environment = 'DEV'
+local Environment = 'PRO'
+
 Widget.defaultFontName = GameFontHighlightSmall:GetFont()
 AddOnesTable[1] = Widget
 Widget.N = Name
