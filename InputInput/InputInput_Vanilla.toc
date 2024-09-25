@@ -1,4 +1,4 @@
-## Interface: 11503
+## Interface: 11504, 11503
 
 ## Title: |cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r
 ## Notes: Input box enhancement
