@@ -96,3 +96,5 @@ L['Login Information 1'] = "您正在使用%s输入框增强插件, 使用过程
 L['Login Information 2'] = "输入 %s 或者 %s 打开设置面板"
 
 L['Not enabled, enter/ii to enable'] = '未启用，输入%s启用'
+
+L['New Version Discovered'] = '%s 发现新版本 %s'

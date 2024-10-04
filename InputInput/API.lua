@@ -2,9 +2,14 @@ local W, M, U, D, G, L, E, API, LOG = unpack((select(2, ...)))
 
 local version, buildVersion, buildDate, uiVersion = GetBuildInfo()
 
+-- 斩断 ctr+shift+m
 
-local function getVersion(v)
-    local expansion, majorPatch, minorPatch = (v or "5.0.0"):match("^(%d+)%.(%d+)%.(%d+)")
+
+-- 版本信息
+-- @param v 版本号
+-- @return 版本号（number）
+function W:getVersion(v)
+    local expansion, majorPatch, minorPatch = (v or "1.0.0"):match("^(%d+)%.(%d+)%.(%d+)")
     return (expansion or 0) * 10000 + (majorPatch or 0) * 100 + (minorPatch or 0)
 end
 
@@ -27,18 +32,18 @@ local function sortTableByKey(t, comp)
     return sortedTable
 end
 
-local clientVersion = getVersion(version)
+local clientVersion = W:getVersion(version)
 
 local function Fun(funTable)
     for name, t in pairs(funTable) do
         if t then
-            t = sortTableByKey(t, function (a1, a2)
+            t = sortTableByKey(t, function(a1, a2)
                 -- LOG:Debug(a1)
-                return getVersion(a1) < getVersion(a2)
+                return W:getVersion(a1) < W:getVersion(a2)
             end)
             for v, f in pairs(t) do
                 -- LOG:Debug(name, clientVersion, getVersion(v))
-                if clientVersion >= getVersion(v) then
+                if clientVersion >= W:getVersion(v) then
                     API[name] = f
                     break
                 end
@@ -240,5 +245,21 @@ Fun({
     --  Returns the game client locale.
     GetLocale = {
         ['1.0.0'] = GetLocale
+    },
+    C_ChatInfo_SendAddonMessage = {
+        ['1.0.0'] = C_ChatInfo and C_ChatInfo.SendAddonMessage
+    },
+    C_ChatInfo_RegisterAddonMessagePrefix = {
+        ['1.0.0'] = C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix
+    },
+    C_AddOns_GetAddOnMetadata = {
+        ['1.0.0'] = C_AddOns and C_AddOns.GetAddOnMetadata
+    },
+    C_Timer_After = {
+        ['1.0.0'] = C_Timer and C_Timer.After
     }
 })
+
+
+local C_AddOns_GetAddOnMetadata = API.C_AddOns_GetAddOnMetadata
+W.version = C_AddOns_GetAddOnMetadata('InputInput', 'Version')

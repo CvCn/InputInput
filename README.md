@@ -1,16 +1,15 @@
 
 # 关于插件 Features：
-- 重写了游戏内默认的输入框，位于角色下方，习惯了你就会爱上它 Rewrite the default input box in the game, located below the character. Once you get used to it, you will fall in love with it
+- 重写了游戏内默认的输入框，将其显示在角色下方，习惯了你就会爱上它 Rewrite the default input box in the game, located below the character. Once you get used to it, you will fall in love with it
 - 支持移动（Shift+左键）、缩放（Shift+右边箭头）、重置（Shift+右键）Support movement (Shift+left button), zoom (Shift+right arrow), reset (Shift+right button)
-- 频道颜色、Tab切换 Channel color, Tab switching
+- 频道颜色、Tab切换频道 Channel color, Tab to switch channel
 - 历史记录（⬆️⬇️） Historical records
 - 输入提示、自动补充（Control+Enter） Input prompts, automatic supplementation
 - 撤销（Control+Z）反撤销（Control+Shift+Z） undo、redo
 - 最近消息 Recent chat messages
-- 聊天过滤器 Chat filter
 
 # 设置 Options：
-- /ii or /InputInput or Esc->选项->插件->InputInput
+- /ii or /InputInput or Esc->选项(options)->插件(addOnes)->InputInput
 
 # 支持的游戏版本 Supported WOW Versions：
 - 地心之战（TWW） 110000, 110002

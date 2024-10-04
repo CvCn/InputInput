@@ -94,3 +94,5 @@ L['Login Information 1'] = "您正在使用%s輸入框增強插件，使用過�
 L['Login Information 2'] = "輸入 %s 或 %s 打開設定面板"
 
 L['Not enabled, enter/ii to enable'] = '未開啟，輸入%s開啟'
+
+L['New Version Discovered'] = '%s 發現新版本 %s'

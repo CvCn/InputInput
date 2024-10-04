@@ -22,6 +22,7 @@ local IsLeftShiftKeyDown = API.IsLeftShiftKeyDown
 local C_AddOns_GetAddOnEnableState = API.C_AddOns_GetAddOnEnableState
 local C_AddOns_EnableAddOn = API.C_AddOns_EnableAddOn
 local C_AddOns_DisableAddOn = API.C_AddOns_DisableAddOn
+local C_ChatInfo_RegisterAddonMessagePrefix = API.C_ChatInfo_RegisterAddonMessagePrefix
 
 local measureFontString = UIParent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 
@@ -1138,6 +1139,7 @@ frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("CVAR_UPDATE")
 frame:RegisterEvent("ADDON_LOADED")
+frame:RegisterEvent("CHAT_MSG_ADDON")
 
 frame:RegisterEvent("ZONE_CHANGED")
 frame:RegisterEvent("ZONE_CHANGED_INDOORS")
@@ -1153,11 +1155,14 @@ for _, event in pairs(ChatTypeGroup["WHISPER"]) do
 	frame:RegisterEvent(event);
 end
 local editBox, bg, border, backdropFrame2, resizeButton, resizeBtnTexture, channel_name, II_TIP, II_LANG, bg3
-
+local SendRecieveGroupSize = 0
+local SendMessageWaiting = nil
+local versionUpdateMsg = nil
 frame:HookScript("OnEvent", function(self_f, event, ...)
 	if not isInit then
 		editBox, bg, border, backdropFrame2, resizeButton, resizeBtnTexture, channel_name, II_TIP, II_LANG, bg3 =
 			MAIN:Init()
+		C_ChatInfo_RegisterAddonMessagePrefix('INPUTINPUT_V')
 	end
 	if event == 'PLAYER_ENTERING_WORLD' or strfind(event, "WHISPER", 0, true) then
 		for _, chatFrameName in pairs(CHAT_FRAMES) do
@@ -1191,6 +1196,9 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			end
 		end)
 		U:InitZones()
+		if not SendMessageWaiting then
+			SendMessageWaiting = U:Delay(10, U.SendVersionMsg)
+		end
 	elseif event == 'CVAR_UPDATE' then
 		local cvarName, value = ...
 		if cvarName == 'chatStyle' or cvarName == 'whisperMode' then
@@ -1241,6 +1249,26 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 		U:InitZones()
 	elseif event == 'GROUP_ROSTER_UPDATE' or event == 'RAID_ROSTER_UPDATE' then
 		U:InitGroupMembers()
+		local num = GetNumGroupMembers()
+		if num ~= SendRecieveGroupSize then
+			if num > 1 and num > SendRecieveGroupSize then
+				if not SendMessageWaiting then
+					SendMessageWaiting = U:Delay(10, U.SendVersionMsg)
+				end
+			end
+			SendRecieveGroupSize = num
+		end
+	elseif event == 'CHAT_MSG_ADDON' then
+		local prefix, text, channel, sender, target, zoneChannelID, localID, name, instanceID = ...
+		if prefix == "INPUTINPUT_V" and (not versionUpdateMsg or time() - versionUpdateMsg > 60 * 30) then
+			local ver, msg, inCombat = W:getVersion(W.version), W:getVersion(text), InCombatLockdown()
+			LOG:Debug(ver, msg, text)
+			if msg and (msg > ver) and not inCombat then
+				LOG:Info(string.format(L['New Version Discovered'], W.colorName,
+					'|cFFFFFFFF' .. text .. '|r|cFF909399 (' .. W.version .. ')|r'))
+				versionUpdateMsg = time()
+			end
+		end
 	else
 		if (C_AddOns_IsAddOnLoaded("ElvUI") or ElvUI == nil) and
 			(C_AddOns_IsAddOnLoaded("NDui") or NDui == nil) then
@@ -1249,16 +1277,16 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 
 			optionSetup(backdropFrame2)
 
-			C_Timer.After(5, function(cb)
+			U:Delay(5, function(cb)
 				LOG:Info(string.format(L['Login Information 1'],
 					W.colorName,
 					"|cff409EFFDiscord|r |cFFFFFFFF[https://discord.gg/qC9RAdXN]|r",
 					"|cff409EFFCurseForge|r |cFFFFFFFF[https://www.curseforge.com/wow/addons/inputinput/comments]|r"))
 			end)
-			C_Timer.After(6, function(cb)
+			U:Delay(6, function(cb)
 				LOG:Info(string.format(L['Login Information 2'], "|cff409EFF/ii|r", "|cff409EFF/inputinput|r"))
 			end)
-			C_Timer.After(7, function(cb)
+			U:Delay(7, function(cb)
 				local isLoad = C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2
 				if GetLocale() == 'zhCN' or GetLocale() == 'zhTW' then
 					if not (C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2) then

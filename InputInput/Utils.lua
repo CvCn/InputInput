@@ -11,6 +11,8 @@ local IsInRaid = API.IsInRaid
 local GetNumGroupMembers = API.GetNumGroupMembers
 local GetZoneText = API.GetZoneText
 local GetSubZoneText = API.GetSubZoneText
+local C_ChatInfo_SendAddonMessage = API.C_ChatInfo_SendAddonMessage
+local C_Timer_After = API.C_Timer_After
 
 -- 格式化时间戳函数
 -- @param currentTime 当前时间，通常为系统当前时间
@@ -243,27 +245,27 @@ function U:BTagFilter(text)
     local patt = '%|?%|BTag:.-%|?%|BTag'
     -- 定义不符合要求的BTag标记的正则表达式模式
     local notpatt = '%|%|BTag:.-%|%|BTag'
-    
+
     -- 如果文本为空或不包含BTag标记，则直接返回原文本
     if text == nil or #text <= 0 or not text:find(patt) then return text end
-    
+
     -- 使用正则表达式替换所有符合要求的BTag标记
     return gsub(text, patt, function(str)
         -- 如果当前BTag标记不符合要求，则保持不变
         if str:find(notpatt) then
             return str
         end
-        
+
         -- 提取BTag标记中的账号信息
         local BTag, _ = str:match('%|BTag:(.-)%|BTag')
         -- 通过BTag获取对应的账号信息
         local accountInfo = U:GetAccountInfoByBattleTag(BTag)
-        
+
         -- 如果找到了对应的账号信息
         if accountInfo then
             -- 获取账号的游戏信息
             local gameFriend = accountInfo.gameAccountInfo
-            
+
             -- 如果游戏信息包含职业名称
             if gameFriend and gameFriend.className then
                 -- 根据职业名称获取对应的颜色
@@ -273,7 +275,7 @@ function U:BTagFilter(text)
                 -- 返回带有颜色代码的账号名称
                 return '|c' .. classColor.colorStr .. accountInfo.accountName .. '|r'
             end
-            
+
             -- 如果没有游戏信息，直接返回账号名称
             return accountInfo.accountName
         else
@@ -391,7 +393,7 @@ function U:AddOrMoveToEnd(array, element)
 end
 
 -- 获取表的元素数量
--- 
+--
 ---@param t table 要计算大小的表
 ---@return integer 表中元素的数量
 local function getTableSize(t)
@@ -409,7 +411,7 @@ end
 function U:UnitColor(unitName, color)
     -- 从数据库读取单位颜色缓存，如果不存在，则初始化为空表，避免每次都读取数据库
     local UNIT_COLOR_CACHE = D:ReadDB('UNIT_COLOR_CACHE', {}, true)
-    
+
     -- 如果缓存表的大小超过200，为了防止表过大影响性能，删除第一个元素
     if getTableSize(UNIT_COLOR_CACHE) >= 200 then
         -- 找到第一个键并删除，这里使用break实现只删除一个元素
@@ -418,10 +420,10 @@ function U:UnitColor(unitName, color)
             break
         end
     end
-    
+
     -- 如果提供了颜色，则直接缓存该颜色，否则尝试从缓存中获取
     UNIT_COLOR_CACHE[unitName] = color or UNIT_COLOR_CACHE[unitName]
-    
+
     -- 如果缓存中没有该单位的颜色，尝试根据单位名称获取战斗网账号信息并设置颜色
     if UNIT_COLOR_CACHE[unitName] == nil then
         local accountInfo = BNet_GetAccountInfoFromAccountName(unitName)
@@ -432,10 +434,10 @@ function U:UnitColor(unitName, color)
                 [lcoalClassToEnglishClass(accountInfo.gameAccountInfo.className)].colorStr
         end
     end
-    
+
     -- 将更新后的缓存保存回数据库
     D:SaveDB('UNIT_COLOR_CACHE', UNIT_COLOR_CACHE, true)
-    
+
     -- 返回单位的颜色，可能为nil
     return UNIT_COLOR_CACHE[unitName]
 end
@@ -506,14 +508,14 @@ end
 function U:CutWord(str)
     -- 检查输入是否为空或空字符串，如果是，则直接返回
     if not str or str == '' then return {} end
-    
+
     -- 尝试从缓存中获取切割结果，如果存在缓存则直接返回
     local cache = wordCache[str]
     if cache then return cache end
-    
+
     -- 初始化一个空表，用于存储最终的切割结果
     local re = {}
-    
+
     -- 使用jieba分词库对输入字符串进行分词，不使用模糊模式，使用HMM模式
     for _, i in ipairs(jieba.lcut(str, false, true)) do
         -- 过滤掉所有的空白词（如空格、换行等）
@@ -522,10 +524,10 @@ function U:CutWord(str)
             tinsert(re, i)
         end
     end
-    
+
     -- 将最终的切割结果缓存起来，用于后续相同输入的快速返回
     wordCache[str] = re
-    
+
     -- 返回切割后的单词列表
     return re
 end
@@ -649,10 +651,10 @@ function U:InitGroupMembers()
         local unitID = "party" .. i -- 对于小队成员
         -- 如果在团队中，则使用团队的单位ID
         if IsInRaid() then
-            unitID = "raid" .. i    -- 对于团队成员
-        -- 如果是小队成员的最后一个，并且不在团队中，则设置为玩家自己
+            unitID = "raid" .. i -- 对于团队成员
+            -- 如果是小队成员的最后一个，并且不在团队中，则设置为玩家自己
         elseif i == numGroupMembers and not IsInRaid() then
-            unitID = "player"       -- 自己作为小队成员的最后一个
+            unitID = "player" -- 自己作为小队成员的最后一个
         end
 
         -- 获取成员的名字和服务器
@@ -738,16 +740,52 @@ function U:PlayerTip(inpall, inp)
     end
 end
 
+-- INPUTINPUT_V
+-- 发送版本信息
+function U:SendVersionMsg()
+    if IsInRaid() then
+        C_ChatInfo_SendAddonMessage('INPUTINPUT_V', W.version,
+            (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE)) and 'INSTANCE_CHAT' or 'RAID')
+    elseif IsInGroup() then
+        C_ChatInfo_SendAddonMessage('INPUTINPUT_V', W.version,
+            (not IsInGroup(LE_PARTY_CATEGORY_HOME) and IsInGroup(LE_PARTY_CATEGORY_INSTANCE)) and 'INSTANCE_CHAT' or
+            'PARTY')
+    elseif IsInGuild() then
+        C_ChatInfo_SendAddonMessage('INPUTINPUT_V', W.version, 'GUILD')
+    end
+end
+
+do
+    -- 创建一个闭包函数，用于将可变参数传递给目标函数
+    local function CreateClosure(func, data)
+        return function() func(unpack(data)) end
+    end
+
+    -- 延迟执行函数
+    -- @param delay: 延迟时间，单位为秒
+    -- @param func: 要延迟执行的函数
+    -- @param ...: 可变参数，传递给要延迟执行的函数
+    -- @return: 返回一个布尔值，表示是否成功创建延迟执行任务
+    function U:Delay(delay, func, ...)
+        if type(delay) ~= 'number' or type(func) ~= 'function' then return false end
+
+        local args = { ... } -- delay: Restrict to the lowest time that the API allows us
+        C_Timer_After(delay < 0.01 and 0.01 or delay, (#args <= 0 and func) or CreateClosure(func, args))
+
+        return true
+    end
+end
+
 -- 定义一个静态提示框，用于在用户需要重新加载UI时提供确认提示
 StaticPopupDialogs["InputInput_RELOAD_UI_CONFIRMATION"] = {
     text = L['Do you want to reload the addOnes'], -- 提示框的文本内容，询问用户是否想要重新加载插件
-    button1 = L['Yes'], -- 提示框的第一个按钮，提供“是”的选项
-    button2 = L['No'], -- 提示框的第二个按钮，提供“否”的选项
-    OnAccept = function() -- 当用户点击“是”时的回调函数
-        ReloadUI() -- 执行重载UI的操作
+    button1 = L['Yes'],                            -- 提示框的第一个按钮，提供“是”的选项
+    button2 = L['No'],                             -- 提示框的第二个按钮，提供“否”的选项
+    OnAccept = function()                          -- 当用户点击“是”时的回调函数
+        ReloadUI()                                 -- 执行重载UI的操作
     end,
-    timeout = 10, -- 提示框显示的超时时间，0表示不自动消失
-    whileDead = true, -- 在玩家死亡时是否显示该提示框，true表示显示
-    hideOnEscape = true, -- 当用户按下ESC键时是否隐藏该提示框，true表示隐藏
-    preferredIndex = 3, -- 设置提示框的显示优先级，避免与其他静态提示框冲突
+    timeout = 10,                                  -- 提示框显示的超时时间，0表示不自动消失
+    whileDead = true,                              -- 在玩家死亡时是否显示该提示框，true表示显示
+    hideOnEscape = true,                           -- 当用户按下ESC键时是否隐藏该提示框，true表示隐藏
+    preferredIndex = 3,                            -- 设置提示框的显示优先级，避免与其他静态提示框冲突
 }
