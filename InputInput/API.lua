@@ -13,7 +13,7 @@ function W:getVersion(v)
     return (expansion or 0) * 10000 + (majorPatch or 0) * 100 + (minorPatch or 0)
 end
 
-local function sortTableByKey(t, comp)
+function U:sortTableByKey(t, comp)
     -- 创建一个键的数组
     local keys = {}
     for k in pairs(t) do
@@ -37,7 +37,7 @@ local clientVersion = W:getVersion(version)
 local function Fun(funTable)
     for name, t in pairs(funTable) do
         if t then
-            t = sortTableByKey(t, function(a1, a2)
+            t = U:sortTableByKey(t, function(a1, a2)
                 -- LOG:Debug(a1)
                 return W:getVersion(a1) < W:getVersion(a2)
             end)

@@ -394,15 +394,57 @@ end
 
 -- 获取表的元素数量
 --
----@param t table 要计算大小的表
+---@param tbl table 要计算大小的表
 ---@return integer 表中元素的数量
-local function getTableSize(t)
+local function getTableSize(tbl)
     local count = 0
-    for _ in pairs(t) do
+    local key = next(tbl)
+    while key do
         count = count + 1
+        key = next(tbl, key)
     end
     return count
 end
+
+function U:AddOrAddOne(tables, element)
+    local e = tables[element]
+    if e then
+        e = e + 1
+    else
+        e = 1
+    end
+    tables[element] = e
+    -- LOG:Debug(tableSize(tables))
+    if getTableSize(tables) > 300 then
+        local min = 0
+        local minv = ''
+        for k, v in pairs(tables) do
+            if v <= min or min == 0 then
+                min = v
+                minv = k
+            end
+        end
+        tables[minv] = nil
+    end
+    return tables
+end
+
+function U:FindMaxValue(tables, msg)
+    if not tables then return nil end
+    local maxv = 0
+    local word = nil
+    for k, v in pairs(tables) do
+        local start, _end = strfind(k, msg, 1, true)
+        if start and start > 0 and _end ~= #k then
+            if v > maxv then
+                maxv = v
+                word = k
+            end
+        end
+    end
+    return word
+end
+
 
 -- 设置或获取单位的颜色
 ---@param unitName string 单位名称
@@ -576,6 +618,7 @@ end
 
 -- 定义一个空表，用于存储公会名称
 local guildName = {}
+local guildNameOnLine = {}
 
 -- 初始化公会成员
 function U:InitGuilds()
@@ -588,15 +631,27 @@ function U:InitGuilds()
         local name, rank, rankIndex, level, class, zone, note, officerNote, online = GetGuildRosterInfo(i)
         -- 如果成员名称存在，则进行处理
         if name then
-            -- 添加或移动成员到列表末尾
-            U:AddOrMoveToEnd(guildName, name)
-            -- 分割名称和服务器
-            local name, realm = strsplit('-', name)
-            -- 获取或设置服务器名称
-            realm = realm or GetRealmName()
-            -- 添加或移动服务器到列表末尾
-            U:AddOrMoveToEnd(guildName, name)
-            U:AddOrMoveToEnd(guildName, realm)
+            if online then
+                -- 添加或移动成员到列表末尾
+                U:AddOrMoveToEnd(guildNameOnLine, name)
+                -- 分割名称和服务器
+                local name, realm = strsplit('-', name)
+                -- 获取或设置服务器名称
+                realm = realm or GetRealmName()
+                -- 添加或移动服务器到列表末尾
+                U:AddOrMoveToEnd(guildNameOnLine, name)
+                U:AddOrMoveToEnd(guildNameOnLine, realm)
+            else
+                -- 添加或移动成员到列表末尾
+                U:AddOrMoveToEnd(guildName, name)
+                -- 分割名称和服务器
+                local name, realm = strsplit('-', name)
+                -- 获取或设置服务器名称
+                realm = realm or GetRealmName()
+                -- 添加或移动服务器到列表末尾
+                U:AddOrMoveToEnd(guildName, name)
+                U:AddOrMoveToEnd(guildName, realm)
+            end
         end
     end
     -- 结束公会成员初始化
@@ -692,6 +747,22 @@ function U:PlayerTip(inpall, inp)
             -- 从匹配位置之后截取字符串，作为玩家名称建议
             local p = strsub(v, _end + 1)
             if p and #p > 0 then
+                LOG:Debug('好友')
+                return p
+            end
+        end
+    end
+
+    -- 遍历公会列表(在线），寻找匹配的玩家名称建议
+    for i = #guildNameOnLine, 1, -1 do
+        local v = guildNameOnLine[i]
+        -- 在公会名称中查找输入字符串，如果找到且不是完整匹配，则处理
+        local start, _end = strfind(v, inp, 1, true)
+        if start and start > 0 and _end ~= #v then
+            -- 从匹配位置之后截取字符串，作为玩家名称建议
+            local p = strsub(v, _end + 1)
+            if p and #p > 0 then
+                LOG:Debug('公会(在线）', v)
                 return p
             end
         end
@@ -706,20 +777,7 @@ function U:PlayerTip(inpall, inp)
             -- 从匹配位置之后截取字符串，作为玩家名称建议
             local p = strsub(v, _end + 1)
             if p and #p > 0 then
-                return p
-            end
-        end
-    end
-
-    -- 遍历区域列表，寻找匹配的玩家名称建议
-    for i = #zoneName, 1, -1 do
-        local v = zoneName[i]
-        -- 在区域名称中查找输入字符串，如果找到且不是完整匹配，则处理
-        local start, _end = strfind(v, inp, 1, true)
-        if start and start > 0 and _end ~= #v then
-            -- 从匹配位置之后截取字符串，作为玩家名称建议
-            local p = strsub(v, _end + 1)
-            if p and #p > 0 then
+                LOG:Debug('公会', v)
                 return p
             end
         end
@@ -734,6 +792,22 @@ function U:PlayerTip(inpall, inp)
             -- 从匹配位置之后截取字符串，作为玩家名称建议
             local p = strsub(v, _end + 1)
             if p and #p > 0 then
+                LOG:Debug('组队')
+                return p
+            end
+        end
+    end
+
+    -- 遍历区域列表，寻找匹配的玩家名称建议
+    for i = #zoneName, 1, -1 do
+        local v = zoneName[i]
+        -- 在区域名称中查找输入字符串，如果找到且不是完整匹配，则处理
+        local start, _end = strfind(v, inp, 1, true)
+        if start and start > 0 and _end ~= #v then
+            -- 从匹配位置之后截取字符串，作为玩家名称建议
+            local p = strsub(v, _end + 1)
+            if p and #p > 0 then
+                LOG:Debug('区域')
                 return p
             end
         end
