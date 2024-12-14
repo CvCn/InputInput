@@ -2,6 +2,7 @@
 # 关于插件 Features：
 - 重写了游戏内默认的输入框，将其显示在角色下方，习惯了你就会爱上它 Rewrite the default input box in the game, located below the character. Once you get used to it, you will fall in love with it
 - 支持移动（Shift+左键）、缩放（Shift+右边箭头）、重置（Shift+右键）Support move (Shift+left button), zoom (Shift+right arrow), reset (Shift+right button)
+- 正式服可以进入编辑模式编辑
 - 频道颜色、Tab切换频道 Channel color, Tab to switch channel
 - 历史记录（⬆️⬇️） Historical records
 - 输入提示、自动补充（Control+Enter） Input prompts, automatic supplementation
@@ -27,7 +28,7 @@
 # 本地化 Locales：
 - 英语 enUS
 - 简体中文 zhCN
-- 繁体中文 znTW
+- 繁体中文 zhTW
 
 *其他语言本地化请提交至Locales文件夹 Please submit localization for other languages to the Locales folder*
 

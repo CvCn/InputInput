@@ -36,6 +36,8 @@ rm:SetPoint("TOPLEFT", 16, -264)
 rm:SetText('|cff909399' .. L['READ ME'] .. '|r')
 rm:SetJustifyH('LEFT')
 rm:SetTextColor(1, 1, 1)
+rm:SetWordWrap(true)  -- 启用换行
+rm:SetWidth(600)
 
 local button = CreateFrame("Button", nil, options, "UIPanelButtonTemplate")
 button:SetSize(120, 25)

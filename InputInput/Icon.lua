@@ -180,6 +180,7 @@ local function ReplaceIconString(text)
             if unit then
                 local classColor = RAID_CLASS_COLORS[select(2, UnitClass(unit))]
                 if not classColor then
+                    ---@diagnostic disable-next-line: missing-fields
                     classColor = {
                         colorStr = 'ffffffff'
                     }

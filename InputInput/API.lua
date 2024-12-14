@@ -33,6 +33,7 @@ function U:sortTableByKey(t, comp)
 end
 
 local clientVersion = W:getVersion(version)
+W.ClientVersion = clientVersion
 
 local function Fun(funTable)
     for name, t in pairs(funTable) do

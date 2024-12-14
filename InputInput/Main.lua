@@ -27,6 +27,8 @@ local C_Timer_After = API.C_Timer_After
 
 local measureFontString = UIParent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 
+local editMode = false
+
 local tip = ''
 -- 更新显示 FontString 位置的函数
 ---@param editBox EditBox
@@ -322,7 +324,8 @@ local chat_h = 1
 function LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 	editBox:SetWidth(480 * scale)
 	local font, _, flags = editBox:GetFont()
-	editBox:SetFont(font, newFontSize * scale, flags)
+	local newH = newFontSize * scale
+	editBox:SetFont(font, newH < 0 and 0 or newH, flags)
 
 	-- 确保光标可见
 	-- editBox.cursorOffset = 0
@@ -537,6 +540,7 @@ function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
 
 	local classColor = RAID_CLASS_COLORS[class]
 	if not classColor then
+		---@diagnostic disable-next-line: missing-fields
 		classColor = {
 			colorStr = 'FF' .. channelColor
 		}
@@ -827,6 +831,8 @@ local function chatEventHandler(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7,
 	return false, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16,
 		arg17
 end
+local autoHide = true
+
 local last_text = ''
 
 ---@param editBox EditBox
@@ -865,7 +871,7 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 		end
 	end
 	editBox:HookScript("OnDragStart", function(...)
-		if IsShiftKeyDown() then
+		if IsShiftKeyDown() and not editMode then
 			editBox.StartMoving(...)
 		end
 	end);
@@ -878,7 +884,7 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 	end);
 	-- resize repoint
 	editBox:HookScript("OnMouseDown", function(self, button)
-		if IsShiftKeyDown() and button == "RightButton" then
+		if IsShiftKeyDown() and button == "RightButton" and not editMode then
 			editBox:ClearAllPoints()
 			editBox:SetPoint("CENTER", UIParent, "BOTTOM", 0, 330)
 			local point, _, relativePoint, xOfs, yOfs = editBox:GetPoint(1)
@@ -923,7 +929,7 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 	end)
 
 	UIParent:HookScript("OnUpdate", function(self, button)
-		if not InCombatLockdown() then
+		if not InCombatLockdown() and not editMode then
 			if IsShiftKeyDown() then
 				resizeButton:Show()
 			else
@@ -1087,12 +1093,16 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 		ChatChange = true
 		self:SetText(last_text)
 	end)
-
 	editBox:HookScript("OnEditFocusLost", function(self)
-		self:Hide()
-		ChatChange = false
-		if not self:GetText() or #self:GetText() <= 0 then
-			M.HISTORY:clearHistory()
+		if not autoHide then
+			self:Show()  -- 强制显示
+			self:SetFocus()  -- 保持焦点
+		else
+			self:Hide()
+			ChatChange = false
+			if not self:GetText() or #self:GetText() <= 0 then
+				M.HISTORY:clearHistory()
+			end
 		end
 	end)
 
@@ -1248,11 +1258,60 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 		editBox, bg, border, backdropFrame2, resizeButton, resizeBtnTexture, channel_name, II_TIP, II_LANG, bg3 =
 			MAIN:Init()
 		C_ChatInfo_RegisterAddonMessagePrefix('INPUTINPUT_V')
-		C_Timer_After(5, function ()
+		C_Timer_After(5, function()
 			U:InitFriends()
 			U:InitGuilds()
 			U:InitGroupMembers()
 		end)
+
+		-- 正式服编辑模式
+		if W.ClientVersion >= 100000 then
+			local LEM = LibStub('LibEditMode')
+			editBox.editModeName = L['InputBox']
+			LEM:AddFrame(editBox, function(f, layoutName, point, x, y)
+				local _, _, relativePoint, _, _ = editBox:GetPoint(1)
+				D:SaveDB('editBoxPosition', {
+					point, relativePoint, x, y
+				})
+			end, {
+				point = 'BOTTOM',
+				x = 0,
+				y = 315,
+			})
+
+			LEM:RegisterCallback('enter', function()
+				editBox:Show()
+				autoHide = false
+				editMode = true
+			end)
+			LEM:RegisterCallback('exit', function()
+				editBox:Hide()
+				autoHide = true
+				editMode = false
+				editBox:SetMovable(true)
+			end)
+
+			LEM:AddFrameSettings(editBox, {
+				{
+					name = L['scale'],
+					kind = LEM.SettingType.Slider,
+					default = 1,
+					get = function(layoutName)
+						return scale
+					end,
+					set = function(layoutName, value)
+						scale = value
+						LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
+					end,
+					minValue = 0.1,
+					maxValue = 10,
+					valueStep = 0.1,
+					formatter = function(value)
+						return FormatPercentage(value, true)
+					end,
+				}
+			})
+		end
 	end
 	if event == 'PLAYER_ENTERING_WORLD' or strfind(event, "WHISPER", 0, true) then
 		for _, chatFrameName in pairs(CHAT_FRAMES) do
@@ -1285,7 +1344,7 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 				self:SetText(temp)
 			end
 		end)
-		
+
 		U:InitZones()
 		if not SendMessageWaiting then
 			SendMessageWaiting = U:Delay(10, U.SendVersionMsg)
@@ -1386,7 +1445,7 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 					end
 				end
 			end)
-			
+
 			LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 			LoadPostion(editBox)
 

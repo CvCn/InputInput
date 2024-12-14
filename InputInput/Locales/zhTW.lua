@@ -97,8 +97,12 @@ L['Not enabled, enter/ii to enable'] = '未開啟，輸入%s開啟'
 
 L['New Version Discovered'] = '%s 發現新版本 %s'
 
-L['READ ME'] = '- 移動（Shift+左鍵）、縮放（Shift+右邊箭頭）、重置（Shift+右鍵）\
+L['READ ME'] = '- 移動（Shift+左鍵）、縮放（Shift+右邊箭頭）、重置（Shift+右鍵）、正式服可以進入編輯模式編輯\
 - Tab 切換頻道\
 - 歷史記錄（↑ ↓）\
 - 自動補充（Control+Enter）\
 - 撤銷（Control+Z）、反撤銷（Control+Shift+Z）'
+
+L['scale'] = '大小'
+
+L['InputBox'] = '聊天輸入框'
