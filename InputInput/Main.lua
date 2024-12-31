@@ -23,18 +23,21 @@ local C_AddOns_GetAddOnEnableState = API.C_AddOns_GetAddOnEnableState
 local C_AddOns_EnableAddOn = API.C_AddOns_EnableAddOn
 local C_AddOns_DisableAddOn = API.C_AddOns_DisableAddOn
 local C_ChatInfo_RegisterAddonMessagePrefix = API.C_ChatInfo_RegisterAddonMessagePrefix
-local C_Timer_After = API.C_Timer_After
+-- 引入结巴分词库
+local jieba = LibStub("inputinput-jieba")
 
 local measureFontString = UIParent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 
 local editMode = false
+
+local II_TIP_BG = {}
 
 local tip = ''
 -- 更新显示 FontString 位置的函数
 ---@param editBox EditBox
 ---@param displayFontString FontString
 ---@param msg string
-local function UpdateFontStringPosition(editBox, displayFontString, msg)
+local function UpdateFontStringPosition(editBox, displayFontString, msg, i, sizei)
 	if not msg or #msg <= 0 then
 		displayFontString:Hide()
 		return
@@ -118,10 +121,33 @@ local function UpdateFontStringPosition(editBox, displayFontString, msg)
 	local font, fontSize = measureFontString:GetFont()
 	local x = widthBeforeCursor + leftPadding
 	local y = -fontSize * (cursorLine - 1) - topPadding
-	displayFontString:SetFontObject(editBox:GetFontObject())
+	-- displayFontString:SetFontObject(editBox:GetFontObject())
 	displayFontString:ClearAllPoints()
-	displayFontString:SetPoint("TOPLEFT", editBox, "TOPLEFT", x, y)
-	displayFontString:SetText(msg)
+	local font2, fontsize, flags = editBox:GetFont()
+	local smallSize = 1
+	displayFontString:SetFont(font2, fontsize * smallSize, flags)
+	displayFontString:SetDrawLayer("OVERLAY", 1)
+	-- 创建背景纹理
+	local bg = II_TIP_BG[i] or displayFontString:GetParent():CreateTexture(nil, "BACKGROUND")
+	II_TIP_BG[i] = bg
+	bg:SetAllPoints(displayFontString)
+	-- bg:SetTexture("Interface\\AddOns\\InputInput\\Media\\rounded-backdrop-small.tga")
+	bg:Show()
+	bg:SetDrawLayer("OVERLAY", 1)
+	bg:SetColorTexture(0, 0, 0, 0.6)
+	if i > 1 then
+		displayFontString:SetPoint("TOPLEFT", editBox, "TOPLEFT", x - (1.5 * fontsize),
+			y - (i - 0.8) * fontsize - fontsize * (1 - smallSize))
+		displayFontString:SetText(' ' .. i .. ': ' .. msg .. ' ')
+	else
+		displayFontString:SetPoint("TOPLEFT", editBox, "TOPLEFT", x, y)
+		displayFontString:SetText(msg)
+	end
+	-- if sizei > 1 then
+	-- 	bg:SetColorTexture(0, 0, 0, 0.7)
+	-- else
+	-- 	bg:SetColorTexture(0, 0, 0, 0)
+	-- end
 	displayFontString:Show()
 end
 
@@ -156,7 +182,7 @@ local function getLastUTF8Char(s)
 end
 
 local C_Word = {}
-
+local multiTip = true
 local function FindHis(his, patt)
 	if not his or #his <= 0 or not patt or #patt <= 0 then return '' end
 	patt = patt:gsub("%|c.-(%[.-%]).-%|r", function(a1)
@@ -169,7 +195,10 @@ local function FindHis(his, patt)
 	-- 	LOG:Debug('pattp2: ', v)
 	-- end
 	if not pattp or #pattp <= 0 then return '' end
+	local _tip = {}
+	local f1break = false
 	for i = #his, 1, -1 do
+		if f1break then break end
 		local h = his[i]
 		if h and #h > 0 then
 			h = h:gsub("%|c.-(%[.-%]).-%|r", function(a1)
@@ -179,6 +208,7 @@ local function FindHis(his, patt)
 			-- LOG:Debug('h: ', h)
 			local hisp = U:CutWord(h)
 			for h_index, h2 in ipairs(hisp) do
+				if f1break then break end
 				-- 先按分词匹配
 				local patt2 = pattp[#pattp]
 				-- LOG:Debug(patt2)
@@ -186,11 +216,12 @@ local function FindHis(his, patt)
 				if start and start > 0 then
 					-- LOG:Debug(patt2)
 					if _end ~= # h2 then
-						return strsub(h2, _end + 1)
+						U:InsertNoRepeat(_tip, strsub(h2, _end + 1))
 					else
 						local pnex = hisp[h_index + 1]
 						if pnex and #pnex > 0 then
-							return pnex
+							U:InsertNoRepeat(_tip, pnex)
+							f1break = true
 						end
 					end
 				end
@@ -227,7 +258,8 @@ local function FindHis(his, patt)
 	-- 匹配常用词
 	local c_w = U:FindMaxValue(C_Word, pattp[#pattp])
 	if c_w then
-		return c_w
+		local start, _end = strfind(c_w, pattp[#pattp], 1, true)
+		U:InsertNoRepeat(_tip, strsub(c_w, _end + 1))
 	end
 	for i = #his, 1, -1 do
 		local h = his[i]
@@ -239,18 +271,62 @@ local function FindHis(his, patt)
 			-- end
 			-- LOG:Debug(lastChat)
 			-- 匹配角色名字和地区名字
+			-- LOG:Debug(pattp[#pattp])
 			local playerTip = U:PlayerTip(patt, pattp[#pattp])
 			if playerTip then
-				return playerTip
+				U:InsertNoRepeat(_tip, playerTip)
+				break
 			else
-				playerTip = U:PlayerTip(patt, lastChat)
+				playerTip = U:PlayerTip(patt, patt)
 				if playerTip then
-					return playerTip
+					U:InsertNoRepeat(_tip, playerTip)
+					break
 				end
 			end
 		end
 	end
-	return ''
+	-- 魔兽词库
+	if W.words then
+		local w = ''
+		local f = 0
+		local w2 = ''
+		local f2 = 0
+		local treeKey = jieba.sub(pattp[#pattp], 1, 1)
+		local tree = W.words[treeKey] or {}
+		for _, v in ipairs(tree) do
+			local word = v.word
+			local freq = tonumber(v.freq) or 0
+			local start, _end = strfind(word, pattp[#pattp], 1, true)
+			if start and start == 1 and _end ~= #word and freq > f then
+				-- 从匹配位置之后截取字符串
+				local p = strsub(word, _end + 1)
+				if p and #p > 0 then
+					w = p
+					f = freq
+				end
+			end
+			if start and start == 1 and _end ~= #word and freq > f2 and freq < f then
+				-- 从匹配位置之后截取字符串
+				local p = strsub(word, _end + 1)
+				if p and #p > 0 then
+					w2 = p
+					f2 = freq
+				end
+			end
+		end
+		if f > 0 then
+			LOG:Debug('词库')
+			U:InsertNoRepeat(_tip, w)
+		end
+		if f2 > 0 then
+			LOG:Debug('词库')
+			U:InsertNoRepeat(_tip, w2)
+		end
+	end
+	if not multiTip then
+		return { _tip[1] }
+	end
+	return _tip
 end
 
 local lastChannel = ''
@@ -350,7 +426,9 @@ function LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 		c_h = c_h + v:GetHeight() + 3
 	end
 	backdropFrame2:SetHeight(c_h + 10)
-	UpdateFontStringPosition(editBox, II_TIP, tip)
+	for i, v in ipairs(II_TIP) do
+		UpdateFontStringPosition(editBox, v, tip[i], i, #tip)
+	end
 
 	local font, fontsize, flags = editBox:GetFont()
 	II_LANG:SetFont(font, fontsize * 0.4, flags)
@@ -405,8 +483,8 @@ function MAIN:Init()
 
 	-- 创建自定义背景和边框
 	local backdropFrame = CreateFrame("Frame", "II_BG_FRAME", editBox, "BackdropTemplate")
-	backdropFrame:SetPoint("TOPLEFT", editBox, "TOPLEFT", -5, 5)
-	backdropFrame:SetPoint("BOTTOMRIGHT", editBox, "BOTTOMRIGHT", 5, -5)
+	backdropFrame:SetPoint("TOPLEFT", editBox, "TOPLEFT", -4, 4)
+	backdropFrame:SetPoint("BOTTOMRIGHT", editBox, "BOTTOMRIGHT", 4, -4)
 
 	local bg2 = backdropFrame:CreateTexture("II_BG_FRAME_TEXTURE2", "BACKGROUND")
 	bg2:SetColorTexture(0, 0, 0, 0.5) -- 半透明黑色背景
@@ -422,6 +500,7 @@ function MAIN:Init()
 	-- 添加阴影
 	channel_name:SetShadowOffset(2, -2)  -- 阴影偏移（右下角）
 	channel_name:SetShadowColor(0, 0, 0, 1) -- 阴影颜色为黑色，透明度为50%
+	channel_name:SetDrawLayer("ARTWORK", 1)
 
 	local border = CreateFrame("Frame", "II_BG_FRAME_BORDER", backdropFrame, "BackdropTemplate")
 	border:SetPoint("TOPLEFT", -25, 25)
@@ -469,9 +548,17 @@ function MAIN:Init()
 
 	resizeButton:Hide()
 
-	local II_TIP = editBox:CreateFontString('II_TIP', "OVERLAY", "GameFontNormal")
-	II_TIP:SetTextColor(1, 1, 1, 0.3) -- 设置颜色为白色
-	II_TIP:Hide()
+	local II_TIP = {
+		backdropFrame:CreateFontString('II_TIP', "OVERLAY", "GameFontNormal"),
+		backdropFrame:CreateFontString('II_TIP2', "OVERLAY", "GameFontNormal"),
+		backdropFrame:CreateFontString('II_TIP3', "OVERLAY", "GameFontNormal"),
+		backdropFrame:CreateFontString('II_TIP4', "OVERLAY", "GameFontNormal"),
+		backdropFrame:CreateFontString('II_TIP5', "OVERLAY", "GameFontNormal"),
+	}
+	for _, v in ipairs(II_TIP) do
+		v:SetTextColor(1, 1, 1, 0.3) -- 设置颜色为白色
+		v:Hide()
+	end
 
 	-- 语言
 	local II_LANG = editBox:CreateFontString('II_LANG', "OVERLAY", "GameFontNormal")
@@ -774,6 +861,9 @@ function ChannelChange(editBox, bg, bg3, border, backdropFrame2, resizeBtnTextur
 	local info = ChatTypeInfo[chatType]
 	local r, g, b = info.r, info.g, info.b
 	bg:SetColorTexture(r, g, b, 0.15)
+	-- for i, v in ipairs(II_TIP_BG) do
+	-- 	v:SetColorTexture(r, g, b, 0.15)
+	-- end
 	II_LANG:SetTextColor(r, g, b, 0.6)
 	-- local c_start = CreateColor(0, 0, 0, 0.3)
 	-- local c_end = CreateColor(r, g, b, 0.15)
@@ -942,8 +1032,8 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 	local orgOnEnterPressed = editBox:GetScript("OnEnterPressed")
 	editBox:SetScript("OnEnterPressed", function(self, ...)
 		local message = self:GetText()
-		if II_TIP:IsShown() and IsLeftControlKeyDown() then
-			local p = message .. tip
+		if #tip > 0 and IsLeftControlKeyDown() then
+			local p = message .. tip[1]
 			self:SetText(p)
 			M.HISTORY:simulateInputChange(p, self:GetInputLanguage())
 			return
@@ -1017,7 +1107,12 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 			tip = FindHis(messageHistory, text)
 			cacheTxt = text
 		end
-		UpdateFontStringPosition(self, II_TIP, tip)
+		for i, v in ipairs(II_TIP) do
+			if II_TIP_BG[i] then
+				II_TIP_BG[i]:Hide()
+			end
+			UpdateFontStringPosition(self, v, tip[i], i, #tip)
+		end
 		if userInput then
 			M.HISTORY:simulateInputChange(text, self:GetInputLanguage())
 		end
@@ -1031,6 +1126,10 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 		II_LANG:SetText(_G["INPUT_" .. self:GetInputLanguage()])
 	end)
 	editBox:HookScript("OnKeyDown", function(self, key, ...)
+		-- local totalHeight = self:GetHeight() -- 获取 EditBox 的总高度
+		-- local _, fontHeight = self:GetFont() -- 获取字体高度
+		-- local multiLine = totalHeight > fontHeight * 1.1
+		local multiLine = false
 		if key == "TAB" then
 			if not ElvUI and not NDui then
 				UpdateChannel(self)
@@ -1040,7 +1139,7 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 					ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
 				end)
 			end
-		elseif key == "UP" then
+		elseif key == "UP" and not multiLine then
 			-- 上滚历史消息
 			if not ElvUI or ls_Glass then
 				if historyIndex > 1 then
@@ -1050,7 +1149,7 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 					self:SetCursorPosition(#h)
 				end
 			end
-		elseif key == "DOWN" then
+		elseif key == "DOWN" and not multiLine then
 			if not ElvUI or ls_Glass then
 				-- 下滚历史消息
 				if historyIndex < #messageHistory then
@@ -1074,7 +1173,14 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 			if text then
 				self:SetText(text)
 			end
-		else
+		elseif #tip > 0 and IsLeftControlKeyDown() and (key == "1" or key == "2" or key == "3" or key == "4" or key == "5") then
+			local ps = tip[tonumber(key)]
+			if ps then
+				local message = self:GetText()
+				local p = message .. ps
+				self:SetText(p)
+				M.HISTORY:simulateInputChange(p, self:GetInputLanguage())
+			end
 		end
 	end)
 	hooksecurefunc("ChatEdit_UpdateHeader", function(self)
@@ -1095,8 +1201,8 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 	end)
 	editBox:HookScript("OnEditFocusLost", function(self)
 		if not autoHide then
-			self:Show()  -- 强制显示
-			self:SetFocus()  -- 保持焦点
+			self:Show() -- 强制显示
+			self:SetFocus() -- 保持焦点
 		else
 			self:Hide()
 			ChatChange = false
@@ -1213,6 +1319,30 @@ local function optionSetup(backdropFrame2)
 		showbg = show
 	end
 
+	function MAIN:MultiTip(show)
+		multiTip = show
+	end
+
+	-- M:RegisterCallback('MAIN', 'HideChat', function(show)
+	-- 	if show then
+	-- 		backdropFrame2:Show()
+	-- 	else
+	-- 		backdropFrame2:Hide()
+	-- 	end
+	-- end)
+	-- M:RegisterCallback('MAIN', 'HideChannel', function(show)
+	-- 	showChannelName = show
+	-- end)
+	-- M:RegisterCallback('MAIN', 'HideTime', function (show)
+	-- 	showTime = show
+	-- end)
+	-- M:RegisterCallback('MAIN', 'Hidebg', function (show)
+	-- 	showbg = show
+	-- end)
+	-- M:RegisterCallback('MAIN', 'MultiTip', function (show)
+	-- 	multiTip = show
+	-- end)
+
 	function M.MAIN:EnableIL_zh(show)
 		local isLoad = C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2
 		if (isLoad and not show) or (not isLoad and show) then
@@ -1225,7 +1355,8 @@ local function optionSetup(backdropFrame2)
 		end
 	end
 
-	M.OPT:loadOPT()
+	M:Fire('OPT', 'loadOPT')
+	-- M.OPT:loadOPT()
 end
 
 local ChatChange = false
@@ -1258,7 +1389,7 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 		editBox, bg, border, backdropFrame2, resizeButton, resizeBtnTexture, channel_name, II_TIP, II_LANG, bg3 =
 			MAIN:Init()
 		C_ChatInfo_RegisterAddonMessagePrefix('INPUTINPUT_V')
-		C_Timer_After(5, function()
+		U:Delay(5, function()
 			U:InitFriends()
 			U:InitGuilds()
 			U:InitGroupMembers()
@@ -1273,6 +1404,7 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 				D:SaveDB('editBoxPosition', {
 					point, relativePoint, x, y
 				})
+				D:SaveDB('input_size', scale)
 			end, {
 				point = 'BOTTOM',
 				x = 0,
@@ -1369,6 +1501,8 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			W.dict4 = LibStub("inputinput-dict4").dict
 			W.dict5 = LibStub("inputinput-dict5").dict
 			W.dict6 = LibStub("inputinput-dict6").dict
+			-- 魔兽词库
+			W.words = LibStub("inputinput-words").words
 
 			local total = 60101967
 

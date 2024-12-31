@@ -1,12 +1,13 @@
 ## Interface: 11505, 11504
+## IconTexture: Interface\AddOns\InputInput\Media\icon
 
 ## Title: |cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r
 ## Notes: Input box enhancement
 ## Notes-zhCN: 输入框增强
 ## Notes-zhTW: 輸入框增強
 ## Author: York
-## Version: 1.0.13
-## X-Date: 2024-10-03
+## Version: 1.0.15
+## X-Date: 2024-12-23
 
 ## X-Category: Interface Enhancements
 ## X-Curse-Project-ID: 1076615

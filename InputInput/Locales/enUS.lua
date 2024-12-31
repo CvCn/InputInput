@@ -87,7 +87,7 @@ L['Do you want to reload the addOnes'] = 'Do you want to reload the addOnes'
 L['Yes'] = 'Yes'
 L['No'] = 'No'
 L['Chinese word processing module can make input prompts more intelligent'] = 'Chinese word processing module can make input prompts more intelligent'
-
+L['Show multi tip'] = 'Show multi tip'
 
 -- Login Information
 L['Login Information 1'] = "You are using the %s Input Enhancement addon. If you encounter any issues during use, you can provide feedback via %s or on the addon website %s"
@@ -101,6 +101,7 @@ L['READ ME'] = '- move (Shift+left button), zoom (Shift+right arrow), reset (Shi
 - Tab to switch channel\
 - Historical records（↑ ↓）\
 - automatic supplementation（Control+Enter）\
+- Please use Control+numbers for multiline prompts\
 - undo（Control+Z）redo（Control+Shift+Z）'
 
 L['scale'] = 'scale'

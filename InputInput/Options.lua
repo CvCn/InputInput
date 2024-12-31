@@ -6,23 +6,9 @@ local C_AddOns_IsAddOnLoaded = API.C_AddOns_IsAddOnLoaded
 local GetAddOnMemoryUsage = API.GetAddOnMemoryUsage
 local C_AddOns_GetAddOnEnableState = API.C_AddOns_GetAddOnEnableState
 
-local settings = {
-    showChat = true,
-    showChannel = true,
-    showTime = true,
-    showbg = false,
-    enableIL_zh = true
-}
-
-
 local options = CreateFrame("FRAME")
 options.name = W.N
 options:Hide()
-
--- local texture = options:CreateTexture(nil, "BACKGROUND")
--- texture:SetPoint("TOPLEFT", options, "TOPLEFT", 220, -20)
--- texture:SetTexture("Interface/AddOns/InputInput/Media/pet_type_dragon")
--- texture:SetSize(100, 100)
 
 local title = options:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 title:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -20)
@@ -30,14 +16,6 @@ title:SetText(W.colorName)
 local font, fontsize, flags = title:GetFont()
 ---@diagnostic disable-next-line: param-type-mismatch
 title:SetFont(font, 28, flags)
-
-local rm = options:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-rm:SetPoint("TOPLEFT", 16, -264)
-rm:SetText('|cff909399' .. L['READ ME'] .. '|r')
-rm:SetJustifyH('LEFT')
-rm:SetTextColor(1, 1, 1)
-rm:SetWordWrap(true)  -- 启用换行
-rm:SetWidth(600)
 
 local button = CreateFrame("Button", nil, options, "UIPanelButtonTemplate")
 button:SetSize(120, 25)
@@ -68,12 +46,20 @@ end
 
 SlashCmdList["INPUTINPUT"] = OpenSettingsPanel
 
-local function changeSetting()
+local function changeSetting(settings)
     M.MAIN:HideChat(settings.showChat)
     M.MAIN:HideChannel(settings.showChannel)
     M.MAIN:HideTime(settings.showTime)
     M.MAIN:Hidebg(settings.showbg)
     M.MAIN:EnableIL_zh(settings.enableIL_zh)
+    M.MAIN:MultiTip(settings.showMultiTip)
+
+    -- M:Fire('MAIN', 'HideChat', settings.showChat)
+    -- M:Fire('MAIN', 'HideChannel', settings.showChannel)
+    -- M:Fire('MAIN', 'HideTime', settings.showTime)
+    -- M:Fire('MAIN', 'Hidebg', settings.showbg)
+    -- M:Fire('MAIN', 'EnableIL_zh', settings.enableIL_zh)
+    -- M:Fire('MAIN', 'MultiTip', settings.showMultiTip)
 end
 
 ---@param addonName string
@@ -90,132 +76,122 @@ local function GetAddonMemory(addonName)
     end
 end
 
+local option_info = M.OPTCONFIG.optionConfig
+
+local settings = {
+}
+local this = {}
+OPT.this = this
+local function InItOPT(config, preX, preY, name)
+    preX = preX or 0
+    preY = preY or 0
+    config = config or option_info
+    local offsetX = 16
+    local offsetY = -32
+    local nextY = 0
+    for i, v in ipairs(config) do
+        local baseX = preX + 16
+        local baseY = preY
+        local frame = nil
+        if v.type == 'CheckButton' then
+            frame = this[v.name] or
+                CreateFrame(v.type, W.N .. v.name, options, "InterfaceOptionsCheckButtonTemplate")
+            if name ~= v.name then
+                frame:SetChecked(settings[v.name] ~= nil and settings[v.name] or v.default)
+            end
+            frame.Text:SetText(v.text)
+            if frame:HasScript("OnClick") then
+                frame:SetScript('OnClick', function(...)
+                    local self = ...
+                    local open = self:GetChecked()
+                    settings[v.name] = open
+                    D:SaveDB("settings", settings)
+                    if self.IIConfig.subElement then
+                        for _, v2 in ipairs(self.IIConfig.subElement) do
+                            if open then
+                                this[v2.name]:Show()
+                            else
+                                this[v2.name]:Hide()
+                            end
+                        end
+                        InItOPT(nil, nil, -32, v.name)
+                    end
+                    if v.click then
+                        v.click(this, ...)
+                    end
+                    changeSetting(settings)
+                end)
+            end
+        end
+        if v.type == 'text' then
+            frame = this[v.name] or options:CreateFontString(W.N .. v.name, "OVERLAY", "GameFontNormal")
+            frame:SetText(v.text)
+            frame:SetJustifyH('LEFT')
+            frame:SetTextColor(1, 1, 1)
+            frame:SetWordWrap(true) -- 启用换行
+            frame:SetWidth(600)
+        end
+        if frame then
+            this[v.name] = frame
+            frame.IIConfig = v
+            local thisY = baseY + i * offsetY
+            nextY = thisY + 32
+            frame:SetPoint("TOPLEFT", baseX, thisY)
+            if v.enter then
+                frame:SetScript('OnEnter', function(...)
+                    v.enter(this, ...)
+                end)
+            end
+            if v.leave then
+                frame:SetScript('OnLeave', function(...)
+                    v.leave(this, ...)
+                end)
+            end
+            if v.subElement and #v.subElement > 0 and settings[v.name] then
+                preY = InItOPT(v.subElement, baseX + offsetX, thisY)
+            end
+        end
+    end
+    return nextY
+end
+
+local function InitConfig(config, s)
+    for _, v in ipairs(config) do
+        if v.type == 'CheckButton' then
+            s[v.name] = s[v.name] ~= nil and s[v.name] or v.default
+        end
+    end
+    return s
+end
+
 function OPT:loadOPT()
     settings = D:ReadDB("settings", settings)
-    settings.enableIL_zh = C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2
-    -- Show Chat 显示聊天
-    local showChat = CreateFrame("CheckButton", W.N .. "showChat", options,
-        "InterfaceOptionsCheckButtonTemplate")
-    showChat:SetPoint("TOPLEFT", 16, -66)
-    showChat.Text:SetText(L['Show Chat'])
-    showChat:SetChecked(settings.showChat)
-
-    -- 时间戳
-    local showTime = CreateFrame("CheckButton", W.N .. "showTime", options,
-        "InterfaceOptionsCheckButtonTemplate")
-    showTime:SetPoint("TOPLEFT", 32, -98)
-    showTime.Text:SetText(L['Show Timestamp'])
-    showTime:SetChecked(settings.showTime)
-
-    -- 聊天消息背景
-    local showbg = CreateFrame("CheckButton", W.N .. "showbg", options,
-        "InterfaceOptionsCheckButtonTemplate")
-    showbg:SetPoint("TOPLEFT", 32, -130)
-    showbg.Text:SetText(L['Show bg'])
-    showbg:SetChecked(settings.showbg)
-
-    -- 显示频道名称
-    local showChannel = CreateFrame("CheckButton", W.N .. "showChannel", options,
-        "InterfaceOptionsCheckButtonTemplate")
-    showChannel:SetPoint("TOPLEFT", 16, -168)
-    showChannel.Text:SetText(L['Show channel Name'])
-    showChannel:SetChecked(settings.showChannel)
-
-    -- 启用|cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r_Libraries_|cffF56C6Czh|r
-    local enableIL_zh = CreateFrame("CheckButton", W.N .. "enableIL_zh", options,
-        "InterfaceOptionsCheckButtonTemplate")
-    enableIL_zh:SetPoint("TOPLEFT", 16, -206)
-    -- enableIL_zh.Text:SetText(format(L['Enable InputInput_Libraries_zh'],
-    --     'InputInput_Libraries_zh'))
-    -- enableIL_zh:Hide()
-
-    -- 添加鼠标提示的显示和隐藏事件
-    enableIL_zh:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")                                                       -- 设置提示框的位置
-        GameTooltip:SetText(L['Chinese word processing module can make input prompts more intelligent']) -- 设置提示框的内容
-        GameTooltip:Show()                                                                               -- 显示提示框
-    end)
-
-    enableIL_zh:SetScript("OnLeave", function(self)
-        GameTooltip:Hide() -- 隐藏提示框
-    end)
-
-
+    InItOPT(nil, nil, -32)
     options:SetScript("OnShow", function(self)
-        UpdateAddOnMemoryUsage()
-        enableIL_zh.Text:SetText(format(L['Enable InputInput_Libraries_zh'],
-                '|cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r_Libraries_|cffF56C6Czh|r') ..
-            ' |cFF909399' .. GetAddonMemory('InputInput_Libraries_zh') .. ' (' .. L['Need To Reload'] .. ')|r')
-        settings.enableIL_zh = C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2
-        enableIL_zh:SetChecked(settings.enableIL_zh)
+        U:Delay(0.01, function()
+            UpdateAddOnMemoryUsage()
+            local text = format(L['Enable InputInput_Libraries_zh'],
+                    '|cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r_Libraries_|cffF56C6Czh|r') ..
+                ' |cFF909399' .. GetAddonMemory('InputInput_Libraries_zh') .. ' (' .. L['Need To Reload'] .. ')|r'
+            this.enableIL_zh.Text:SetText(text)
+            settings.enableIL_zh = C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2
+            this.enableIL_zh:SetChecked(settings.enableIL_zh)
+            for _, v in ipairs(option_info) do
+                if v.name == 'enableIL_zh' then
+                    v.text = text
+                    break
+                end
+            end
+        end)
     end)
-
-    changeSetting()
-
-    showChat:SetScript("OnClick", function(self)
-        settings.showChat = self:GetChecked()
-        D:SaveDB("settings", settings)
-        changeSetting()
-        if settings.showChat then
-            showTime:Show()
-            showbg:Show()
-            showChannel:SetPoint("TOPLEFT", 16, -168)
-            enableIL_zh:SetPoint("TOPLEFT", 16, -206)
-            rm:SetPoint("TOPLEFT", 16, -264)
-        else
-            showTime:Hide()
-            showbg:Hide()
-            showChannel:SetPoint("TOPLEFT", 16, -98)
-            enableIL_zh:SetPoint("TOPLEFT", 16, -136)
-            rm:SetPoint("TOPLEFT", 16, -194)
-        end
-    end)
-    showChannel:SetScript("OnClick", function(self)
-        settings.showChannel = self:GetChecked()
-        D:SaveDB("settings", settings)
-        changeSetting()
-    end)
-    showTime:SetScript("OnClick", function(self)
-        settings.showTime = self:GetChecked()
-        D:SaveDB("settings", settings)
-        changeSetting()
-    end)
-    showbg:SetScript("OnClick", function(self)
-        settings.showbg = self:GetChecked()
-        D:SaveDB("settings", settings)
-        changeSetting()
-    end)
-    enableIL_zh:SetScript("OnClick", function(self)
-        settings.enableIL_zh = self:GetChecked()
-        D:SaveDB("settings", settings)
-        changeSetting()
-    end)
-
     button:SetScript("OnClick", function()
-        settings = {
-            showChat = true,
-            showChannel = true,
-            showTime = true,
-            showbg = false,
-            enableIL_zh = true
-        }
+        settings = InitConfig(option_info, settings)
         D:SaveDB("settings", settings)
-        changeSetting()
-        showChat:SetChecked(settings.showChat)
-        if settings.showChat then
-            showTime:Show()
-            showbg:Show()
-            showChannel:SetPoint("TOPLEFT", 16, -168)
-            enableIL_zh:SetPoint("TOPLEFT", 16, -206)
-        else
-            showTime:Hide()
-            showbg:Hide()
-            showChannel:SetPoint("TOPLEFT", 16, -98)
-            enableIL_zh:SetPoint("TOPLEFT", 16, -136)
-        end
-        showTime:SetChecked(settings.showTime)
-        showbg:SetChecked(settings.showbg)
-        showChannel:SetChecked(settings.showChannel)
-        enableIL_zh:SetChecked(settings.enableIL_zh)
+        changeSetting(settings)
+        InItOPT(nil, nil, -32)
     end)
+    settings = InitConfig(option_info, settings)
+    changeSetting(settings)
 end
+
+M:RegisterCallback('OPT', 'loadOPT', OPT.loadOPT)

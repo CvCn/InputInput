@@ -88,6 +88,7 @@ L['Yes'] = '確定'
 L['No'] = '取消'
 
 L['Chinese word processing module can make input prompts more intelligent'] = '中文詞語處理模組，可以使輸入提示更智能'
+L['Show multi tip'] = '多行提示'
 
 -- Login Information
 L['Login Information 1'] = "您正在使用%s輸入框增強插件，使用過程中的任何問題都可以透過 %s 或到插件網站 %s 進行反饋"
@@ -101,6 +102,7 @@ L['READ ME'] = '- 移動（Shift+左鍵）、縮放（Shift+右邊箭頭）、�
 - Tab 切換頻道\
 - 歷史記錄（↑ ↓）\
 - 自動補充（Control+Enter）\
+- 多行提示請使用Control+數字\
 - 撤銷（Control+Z）、反撤銷（Control+Shift+Z）'
 
 L['scale'] = '大小'

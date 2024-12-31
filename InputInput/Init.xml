@@ -7,7 +7,9 @@
     <Script file='Save.lua'/>
     <Script file='Icon.lua'/>
     <Script file='Utils.lua'/>
+    <Script file='CallbackHandler.lua'/>
     <Script file='History.lua'/>
+    <Script file='OptionConfig.lua'/>
     <Script file='Options.lua'/>
     <Script file='Main.lua'/>
 </Ui>

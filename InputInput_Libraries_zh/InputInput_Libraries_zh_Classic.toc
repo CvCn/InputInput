@@ -1,4 +1,5 @@
 ## Interface: 11505, 11504
+## IconTexture: Interface\AddOns\InputInput\Media\icon
 
 ## Title: |cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r_Libraries_|cffF56C6Czh|r
 ## Notes: InputInput Libraries ZH
@@ -21,3 +22,4 @@ dict3.lua
 dict4.lua
 dict5.lua
 dict6.lua
+words.lua

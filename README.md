@@ -6,6 +6,7 @@
 - 频道颜色、Tab切换频道 Channel color, Tab to switch channel
 - 历史记录（⬆️⬇️） Historical records
 - 输入提示、自动补充（Control+Enter） Input prompts, automatic supplementation
+- 多行提示请使用Control+数字 Please use Control+numbers for multiline prompts
 - 撤销（Control+Z）反撤销（Control+Shift+Z） undo、redo
 - 最近消息 Recent chat messages
 
@@ -24,6 +25,7 @@
 - ElvUI
 - NdUI
 - 大脚（BigFoot）
+- LS_GLass
 
 # 本地化 Locales：
 - 英语 enUS

@@ -182,3 +182,5 @@ init.lcut = function(sentence, all, HMM)
    end
    return res
 end
+
+init.sub = ut.sub
