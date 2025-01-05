@@ -4,7 +4,7 @@ local Level = {
     ERROR = '|cFFF56C6C',
     WARN = '|cFFE6A23C',
     DEBUG = '|cFF909399',
-    INFO = '|cFFFFFF00'
+    INFO = '|cFFFFFFFF'
 }
 local prnSuffix = "|cff409EFFII|r : "
 

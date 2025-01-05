@@ -32,7 +32,7 @@ local editMode = false
 
 local II_TIP_BG = {}
 
-local tip = ''
+local tip = {}
 -- 更新显示 FontString 位置的函数
 ---@param editBox EditBox
 ---@param displayFontString FontString
@@ -956,10 +956,16 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 			editBox:HookScript("OnShow", function(self)
 				-- if lastChannel ~= '' and lastChannel ~= self:GetAttribute("channelTarget") then
 				-- 	editBox:SetText("/" .. lastChannel .. " ")
-				-- end
+				-- end`
 			end)
+		else
 		end
 	end
+	-- editBox:HookScript("OnShow", function(self)
+	-- 	LoadPostion(self)
+	-- 	LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
+	-- end)
+
 	editBox:HookScript("OnDragStart", function(...)
 		if IsShiftKeyDown() and not editMode then
 			editBox.StartMoving(...)
@@ -1296,6 +1302,7 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 			end
 		end)
 end
+local disableLoginInformation = false
 ---@param backdropFrame2 table|BackdropTemplate|Frame
 local function optionSetup(backdropFrame2)
 	-- options 设置
@@ -1321,6 +1328,10 @@ local function optionSetup(backdropFrame2)
 
 	function MAIN:MultiTip(show)
 		multiTip = show
+	end
+
+	function MAIN:DisableLoginInformation(show)
+		disableLoginInformation = show
 	end
 
 	-- M:RegisterCallback('MAIN', 'HideChat', function(show)
@@ -1558,23 +1569,31 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			(C_AddOns_IsAddOnLoaded("NDui") or NDui == nil) then
 			eventSetup(editBox, bg, border, backdropFrame2, resizeButton, resizeBtnTexture, channel_name, II_TIP, II_LANG,
 				bg3)
-
 			optionSetup(backdropFrame2)
+			M:RegisterCallback('OPT', 'loadOPTFinish', function()
+				if not disableLoginInformation then
+					local discord = 'https://discord.gg/qC9RAdXN'
+					local curseforge = 'https://www.curseforge.com/wow/addons/inputinput/comments'
+					local kook = 'https://kook.vip/vghP6R'
+					U:Delay(5, function(cb)
+						LOG:Info(string.format(L['Login Information 1'],
+							W.colorName,
+							'|cFFF56C6C[|HInputInputURL:' ..
+							kook .. '|hKOOK(国服)|h]|r' .. '|cFFF56C6C[|HInputInputURL:' .. discord .. '|hDiscord|h]|r',
+							'|cFFF56C6C[|HInputInputURL:' .. curseforge .. '|hCurseForge|h]|r'))
+					end)
+					U:Delay(6, function(cb)
+						LOG:Info(string.format(L['Login Information 2'], "|cff409EFF/ii|r", "|cff409EFF/inputinput|r",
+							'|cffF56C6C|HInputInputOPT:show|h[', ']|h|r'))
+					end)
+				end
+			end)
 
-			U:Delay(5, function(cb)
-				LOG:Info(string.format(L['Login Information 1'],
-					W.colorName,
-					"|cff409EFFDiscord|r |cFFFFFFFF[https://discord.gg/qC9RAdXN]|r",
-					"|cff409EFFCurseForge|r |cFFFFFFFF[https://www.curseforge.com/wow/addons/inputinput/comments]|r"))
-			end)
-			U:Delay(6, function(cb)
-				LOG:Info(string.format(L['Login Information 2'], "|cff409EFF/ii|r", "|cff409EFF/inputinput|r"))
-			end)
 			U:Delay(7, function(cb)
 				local isLoad = C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2
 				if GetLocale() == 'zhCN' or GetLocale() == 'zhTW' then
 					if not (C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2) then
-						LOG:Warn('|cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r_Libraries_|cffF56C6Czh|r' ..
+						LOG:Warn('|cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r_Libraries_|cffF56C6Czh|r' ..
 							format(L['Not enabled, enter/ii to enable'], "|cff409EFF/ii|r"))
 					end
 				end

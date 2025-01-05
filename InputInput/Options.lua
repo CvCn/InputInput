@@ -53,6 +53,7 @@ local function changeSetting(settings)
     M.MAIN:Hidebg(settings.showbg)
     M.MAIN:EnableIL_zh(settings.enableIL_zh)
     M.MAIN:MultiTip(settings.showMultiTip)
+    M.MAIN:DisableLoginInformation(settings.disableLoginInformation)
 
     -- M:Fire('MAIN', 'HideChat', settings.showChat)
     -- M:Fire('MAIN', 'HideChannel', settings.showChannel)
@@ -61,19 +62,26 @@ local function changeSetting(settings)
     -- M:Fire('MAIN', 'EnableIL_zh', settings.enableIL_zh)
     -- M:Fire('MAIN', 'MultiTip', settings.showMultiTip)
 end
-
+local afterMemory = 0
 ---@param addonName string
 ---@return string
 local function GetAddonMemory(addonName)
-    -- 获取插件的内存占用（以 KB 为单位）
-    local memoryUsage = GetAddOnMemoryUsage(addonName)
-    -- 转换为 MB（可选）
-    local memoryUsageMB = memoryUsage / 1024
-    if memoryUsageMB == 0 then
-        return ''
-    else
-        return '(' .. (math.floor(memoryUsageMB * 100) / 100) .. 'MB)'
+    if C_AddOns_GetAddOnEnableState(addonName) == 2 then
+        if GetTime() - afterMemory > 30 then
+            UpdateAddOnMemoryUsage()
+            afterMemory = GetTime()
+        end
+        -- 获取插件的内存占用（以 KB 为单位）
+        local memoryUsage = GetAddOnMemoryUsage(addonName)
+        -- 转换为 MB（可选）
+        local memoryUsageMB = memoryUsage / 1024
+        if memoryUsageMB == 0 then
+            return ''
+        else
+            return '(' .. (math.floor(memoryUsageMB * 100) / 100) .. 'MB)'
+        end
     end
+    return ''
 end
 
 local option_info = M.OPTCONFIG.optionConfig
@@ -155,23 +163,28 @@ local function InItOPT(config, preX, preY, name)
     return nextY
 end
 
-local function InitConfig(config, s)
+local function InitConfig(config, s, isDefault)
     for _, v in ipairs(config) do
         if v.type == 'CheckButton' then
-            s[v.name] = s[v.name] ~= nil and s[v.name] or v.default
+            if isDefault then
+                s[v.name] = v.default
+            else
+                s[v.name] = s[v.name] ~= nil and s[v.name] or v.default
+            end
+        end
+        if v.subElement and #v.subElement > 0 then
+            InitConfig(v.subElement, s, isDefault)
         end
     end
     return s
 end
-
 function OPT:loadOPT()
     settings = D:ReadDB("settings", settings)
     InItOPT(nil, nil, -32)
     options:SetScript("OnShow", function(self)
         U:Delay(0.01, function()
-            UpdateAddOnMemoryUsage()
             local text = format(L['Enable InputInput_Libraries_zh'],
-                    '|cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r_Libraries_|cffF56C6Czh|r') ..
+                    '|cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r_Libraries_|cffF56C6Czh|r') ..
                 ' |cFF909399' .. GetAddonMemory('InputInput_Libraries_zh') .. ' (' .. L['Need To Reload'] .. ')|r'
             this.enableIL_zh.Text:SetText(text)
             settings.enableIL_zh = C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2
@@ -185,13 +198,34 @@ function OPT:loadOPT()
         end)
     end)
     button:SetScript("OnClick", function()
-        settings = InitConfig(option_info, settings)
+        settings = InitConfig(option_info, settings, true)
         D:SaveDB("settings", settings)
         changeSetting(settings)
         InItOPT(nil, nil, -32)
     end)
     settings = InitConfig(option_info, settings)
     changeSetting(settings)
+    M:Fire('OPT', 'loadOPTFinish')
 end
 
 M:RegisterCallback('OPT', 'loadOPT', OPT.loadOPT)
+
+-- 拦截超链接点击事件
+function IISetItemRef(link, text, button, chatFrame)
+    local linkType, linkData = link:match("^(.-):(.*)$")
+    if linkType == "InputInputURL" then
+        -- 如果链接是自定义的 url 类型，打开浏览器
+        ChatFrame1EditBox:Show() -- 强制显示
+        ChatFrame1EditBox:SetFocus() -- 保持焦点
+        ChatFrame1EditBox:SetText(linkData)
+        ChatFrame1EditBox:HighlightText()
+        return false
+    elseif linkType == "InputInputOPT" and linkData == 'show' then
+        OpenSettingsPanel()
+        return false
+    end
+    return true
+end
+
+-- 注册点击事件拦截
+hooksecurefunc("SetItemRef", IISetItemRef)

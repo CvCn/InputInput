@@ -1,7 +1,7 @@
 ## Interface: 11505, 11504
 ## IconTexture: Interface\AddOns\InputInput\Media\icon
 
-## Title: |cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r
+## Title: |cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r
 ## Notes: Input box enhancement
 ## Notes-zhCN: 输入框增强
 ## Notes-zhTW: 輸入框增強

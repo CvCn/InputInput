@@ -15,13 +15,13 @@ OPTCONFIG.optionConfig = {
                 name = 'showTime',
                 type = 'CheckButton',
                 text = L['Show Timestamp'],
-                showChat = true,
+                default = true,
             },
             {
                 name = 'showbg',
                 type = 'CheckButton',
                 text = L['Show bg'],
-                showChat = false,
+                default = false,
             }
         }
     },
@@ -38,10 +38,16 @@ OPTCONFIG.optionConfig = {
         default = true
     },
     {
+        name = 'disableLoginInformation',
+        type = 'CheckButton',
+        text = L['Disable Login Information'],
+        default = false
+    },
+    {
         name = 'enableIL_zh',
         type = 'CheckButton',
         text = format(L['Enable InputInput_Libraries_zh'],
-                '|cff409EFF|cffF56C6Ci|rnput|cffF56C6Ci|rnput|r_Libraries_|cffF56C6Czh|r') ..
+                '|cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r_Libraries_|cffF56C6Czh|r') ..
             ' |cFF909399' .. ' (' .. L['Need To Reload'] .. ')|r',
         enter = function(this, self)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")                                                       -- 设置提示框的位置

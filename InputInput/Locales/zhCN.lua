@@ -90,10 +90,11 @@ L['No'] = '取消'
 
 L['Chinese word processing module can make input prompts more intelligent'] = '中文词语处理模块，可以使输入提示更智能'
 L['Show multi tip'] = '多行提示'
+L['Disable Login Information'] = '关闭登录信息'
 
 -- Login Information
 L['Login Information 1'] = "您正在使用%s输入框增强插件, 使用过程中的任何问题都可以通过 %s 或者 到插件网站 %s 进行反馈"
-L['Login Information 2'] = "输入 %s 或者 %s 打开设置面板"
+L['Login Information 2'] = "输入 %s 或者 %s 打开%s设置面板%s"
 
 L['Not enabled, enter/ii to enable'] = '未启用，输入%s启用'
 
