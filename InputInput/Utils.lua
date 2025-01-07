@@ -862,6 +862,13 @@ do
     end
 end
 
+function U:OpenLink(linkData)
+    ChatFrame1EditBox:Show() -- 强制显示
+    ChatFrame1EditBox:SetFocus() -- 保持焦点
+    ChatFrame1EditBox:SetText(linkData)
+    ChatFrame1EditBox:HighlightText()
+end
+
 -- 定义一个静态提示框，用于在用户需要重新加载UI时提供确认提示
 StaticPopupDialogs["InputInput_RELOAD_UI_CONFIRMATION"] = {
     text = L['Do you want to reload the addOnes'], -- 提示框的文本内容，询问用户是否想要重新加载插件

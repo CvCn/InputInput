@@ -55,5 +55,9 @@
 
 # Discord
 [https://discord.gg/qC9RAdXN](https://discord.gg/qC9RAdXN)
+
+# KOOK(国服)
+[https://kook.vip/vghP6R](https://kook.vip/vghP6R)
+
 # LICENSE：
 GNU GENERAL PUBLIC LICENSE

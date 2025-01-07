@@ -1579,10 +1579,8 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 						LOG:Info(string.format(L['Login Information 1'],
 							W.colorName,
 							'|cFFF56C6C[|HInputInputURL:' ..
-							kook .. '|hKOOK(国服)|h]|r' .. '|cFFF56C6C[|HInputInputURL:' .. discord .. '|hDiscord|h]|r',
+							kook .. '|hKOOK(国服)|h]|r、' .. '|cFFF56C6C[|HInputInputURL:' .. discord .. '|hDiscord|h]|r',
 							'|cFFF56C6C[|HInputInputURL:' .. curseforge .. '|hCurseForge|h]|r'))
-					end)
-					U:Delay(6, function(cb)
 						LOG:Info(string.format(L['Login Information 2'], "|cff409EFF/ii|r", "|cff409EFF/inputinput|r",
 							'|cffF56C6C|HInputInputOPT:show|h[', ']|h|r'))
 					end)

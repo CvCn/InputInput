@@ -139,10 +139,46 @@ local function InItOPT(config, preX, preY, name)
             frame:SetWordWrap(true) -- 启用换行
             frame:SetWidth(600)
         end
+        if v.type == 'BTNGroup' then
+            frame = CreateFrame("FRAME", W.N .. v.name, options)
+            frame:SetSize(600, 200)
+            for idx, btnConfig in ipairs(v.BTNElement) do
+                local btn = this[btnConfig.name] or CreateFrame("Button", W.N .. btnConfig.name, frame, "UIPanelButtonTemplate")
+                btn:SetSize(50, 50)
+                btn:SetText(btnConfig.text)
+                -- 设置按钮普通状态的材质
+                local normalTexture = this[btnConfig.name .. 'Texture'] or btn:CreateTexture(nil, "BACKGROUND")
+                normalTexture:SetAllPoints()
+                normalTexture:SetTexture(btnConfig.texture) -- 指定材质路径
+                btn:SetNormalTexture(normalTexture)
+                btn:SetPoint("TOPLEFT", idx * 100, 0)
+
+                -- 获取按钮的文字对象
+                local fontString = btn:GetFontString()
+                -- 调整文字位置到底部
+                -- local fontFile, fontHeight, flags = fontString:GetFont()
+                -- fontString:SetFont(fontFile or W.defaultFontName, fontHeight * 0.67, flags)
+                fontString:SetPoint("TOP", btn, "BOTTOM", 0, 0) -- 底部位置，微调 Y 坐标
+
+                if btn:HasScript("OnClick") then
+                    btn:SetScript('OnClick', function(...)
+                        if btnConfig.click then
+                            btnConfig.click(this, ...)
+                        end
+                    end)
+                end
+                this[btnConfig.name] = btn
+                this[btnConfig.name .. 'Texture'] = normalTexture
+            end
+        end
         if frame then
             this[v.name] = frame
             frame.IIConfig = v
             local thisY = baseY + i * offsetY
+            if i > 1 and config[i - 1].type == 'text' then
+                local h = this[config[i - 1].name]:GetHeight()
+                thisY = thisY - h
+            end
             nextY = thisY + 32
             frame:SetPoint("TOPLEFT", baseX, thisY)
             if v.enter then
@@ -214,11 +250,7 @@ M:RegisterCallback('OPT', 'loadOPT', OPT.loadOPT)
 function IISetItemRef(link, text, button, chatFrame)
     local linkType, linkData = link:match("^(.-):(.*)$")
     if linkType == "InputInputURL" then
-        -- 如果链接是自定义的 url 类型，打开浏览器
-        ChatFrame1EditBox:Show() -- 强制显示
-        ChatFrame1EditBox:SetFocus() -- 保持焦点
-        ChatFrame1EditBox:SetText(linkData)
-        ChatFrame1EditBox:HighlightText()
+        U:OpenLink(linkData)
         return false
     elseif linkType == "InputInputOPT" and linkData == 'show' then
         OpenSettingsPanel()

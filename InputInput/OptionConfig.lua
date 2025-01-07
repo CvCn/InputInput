@@ -62,6 +62,49 @@ OPTCONFIG.optionConfig = {
     {
         name = 'read_me',
         type = 'text',
-        text = '\n\n\n\n|cff909399' .. L['READ ME'] .. '|r',
+        text = '\n\n|cff909399' .. L['READ ME'] .. '|r',
+    },
+    {
+        name = 'contact',
+        type = 'BTNGroup',
+        BTNElement = {
+            {
+                name = 'KOOK',
+                type = 'Button',
+                text = 'KOOK(国服)',
+                default = true,
+                click = function(this, self)
+                    U:OpenLink('https://kook.vip/vghP6R')
+                end,
+                texture = "Interface\\AddOns\\InputInput\\Media\\icon\\KOOK"
+            },{
+                name = 'Discord',
+                type = 'Button',
+                text = 'Discord',
+                default = true,
+                click = function(this, self)
+                    U:OpenLink('https://discord.gg/qC9RAdXN')
+                end,
+                texture = "Interface\\AddOns\\InputInput\\Media\\icon\\Discord"
+            },{
+                name = 'GitHub',
+                type = 'Button',
+                text = 'GitHub',
+                default = true,
+                click = function(this, self)
+                    U:OpenLink('https://github.com/CvCn/InputInput')
+                end,
+                texture = "Interface\\AddOns\\InputInput\\Media\\icon\\GitHub"
+            },{
+                name = 'CurseForge',
+                type = 'Button',
+                text = 'CurseForge',
+                default = true,
+                click = function(this, self)
+                    U:OpenLink('https://www.curseforge.com/wow/addons/inputinput/comments')
+                end,
+                texture = "Interface\\AddOns\\InputInput\\Media\\icon\\CurseForge"
+            },
+        }
     }
 }
