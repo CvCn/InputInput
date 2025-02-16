@@ -9,14 +9,25 @@ local C_AddOns_GetAddOnEnableState = API.C_AddOns_GetAddOnEnableState
 local options = CreateFrame("FRAME")
 options.name = W.N
 options:Hide()
+-- options:GetFontObject():SetTextColor(1, 1, 1)
 
 local title = options:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 title:SetPoint("TOPLEFT", options, "TOPLEFT", 20, -20)
 title:SetText(W.colorName)
-local font, fontsize, flags = title:GetFont()
+local font, _, flags = title:GetFont()
 ---@diagnostic disable-next-line: param-type-mismatch
 title:SetFont(font, 28, flags)
 
+local title2 = options:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+title2:SetPoint("TOPLEFT", title, "TOPRIGHT", 0, 0)
+title2:SetText('Bete')
+local font2, _, flags2 = title:GetFont()
+---@diagnostic disable-next-line: param-type-mismatch
+title2:SetFont(font2, 12, flags2)
+title2:SetTextColor(245 / 255, 108 / 255, 108 / 255)
+if E ~= 'BETE' then
+    title2:Hide()
+end
 local button = CreateFrame("Button", nil, options, "UIPanelButtonTemplate")
 button:SetSize(120, 25)
 button:SetPoint("TOPRIGHT", options, "TOPRIGHT", -20, -20)
@@ -205,7 +216,9 @@ local function InitConfig(config, s, isDefault)
             if isDefault then
                 s[v.name] = v.default
             else
-                s[v.name] = s[v.name] ~= nil and s[v.name] or v.default
+                if s[v.name] == nil then
+                    s[v.name] = v.default
+                end
             end
         end
         if v.subElement and #v.subElement > 0 then

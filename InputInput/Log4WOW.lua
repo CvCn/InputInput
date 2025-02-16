@@ -25,7 +25,7 @@ local function Uprint(level, ...)
         else
             print(prnSuffix, color, ..., '|r')
         end
-    elseif E == 'PRO' then
+    elseif E == 'PRO' or E == 'BETE' then
         if level == 'ERROR' or level == 'WARN' or level == 'INFO' then
             print(prnSuffix, color, ..., '|r')
         end
