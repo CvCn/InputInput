@@ -38,7 +38,7 @@ function D:ReadDB(key, defaultValue, AccountUniversal)
     if not accountID then return defaultValue end
     InputInput_DB[accountID] = InputInput_DB[accountID] or {}
     if InputInput_DB[accountID][key] == nil then
-        InputInput_DB[accountID][key] = defaultValue or {}
+        InputInput_DB[accountID][key] = defaultValue
     end
     return InputInput_DB[accountID][key]
 end

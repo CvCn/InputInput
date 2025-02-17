@@ -183,18 +183,20 @@ end
 
 local C_Word = {}
 local multiTip = true
+
+---@return table
 local function FindHis(his, patt)
-	if not his or #his <= 0 or not patt or #patt <= 0 then return '' end
+	if not his or #his <= 0 or not patt or #patt <= 0 then return {} end
 	patt = patt:gsub("%|c.-(%[.-%]).-%|r", function(a1)
 		return a1
 	end)
-	local lastChat = getLastUTF8Char(patt)
+	-- local lastChat = getLastUTF8Char(patt)
 	local pattp = U:CutWord(patt)
 	-- LOG:Debug('pattp: ', pattp[#pattp])
 	-- for i, v in ipairs(U:CutWord('不会 找jason')) do
 	-- 	LOG:Debug('pattp2: ', v)
 	-- end
-	if not pattp or #pattp <= 0 then return '' end
+	if not pattp or #pattp <= 0 then return {} end
 	local _tip = {}
 	local f1break = false
 	for i = #his, 1, -1 do
@@ -758,7 +760,7 @@ function Chat(editBox, chatType, backdropFrame2, channel_name)
 			channelText = '|cFF' .. U:RGBToHex(r, g, b) .. channelTarget .. ' ' .. channelname .. '|r'
 		end
 		channel_name:SetText(channelText)
-		msg_list = D:ReadDB('CHANNEL' .. channelNumber)
+		msg_list = D:ReadDB('CHANNEL' .. channelNumber, {})
 	else
 		local classColor
 		local target = (editBox:GetAttribute("tellTarget") or '')
@@ -786,7 +788,7 @@ function Chat(editBox, chatType, backdropFrame2, channel_name)
 		if strfind(chatType, "BN_WHISPER") then
 			msg_list = D:ReadDB(chatGroup, {}, true)
 		else
-			msg_list = D:ReadDB(chatGroup)
+			msg_list = D:ReadDB(chatGroup, {})
 		end
 	end
 	for _, v in ipairs(chat_frame) do
@@ -1035,17 +1037,12 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 			resizeButton:Hide()
 		end
 	end)
-	local orgOnEnterPressed = editBox:GetScript("OnEnterPressed")
-	editBox:SetScript("OnEnterPressed", function(self, ...)
-		local message = self:GetText()
-		if #tip > 0 and IsLeftControlKeyDown() then
-			local p = message .. tip[1]
-			self:SetText(p)
-			M.HISTORY:simulateInputChange(p, self:GetInputLanguage())
-			return
-		end
+
+	-- local orgOnEnterPressed = editBox:GetScript("OnEnterPressed")
+	editBox:HookScript("OnEnterPressed", function(self, ...)
+		local message = last_text
 		-- 检查输入框是否有内容
-		if message and message ~= "" then
+		if message and message ~= "" and message:sub(1, 1) ~= "/" then
 			U:AddOrMoveToEnd(messageHistory, message)
 			local patt = message:gsub("%|c.-(%[.-%]).-%|r", function(a1)
 				return a1
@@ -1076,34 +1073,6 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 
 		-- 重置历史索引
 		historyIndex = #messageHistory + 1
-
-		if message:sub(1, 4) == "/sp " then
-			message = string.gsub(message, "/sp ", "", 1)
-			message = '/script print(' .. message .. ')'
-			self:SetText(message)
-		elseif message:sub(1, 5) == "/sps " then
-			message = string.gsub(message, "/sps ", "", 1)
-			message = '/script print("' .. message .. '")'
-			self:SetText(message)
-		elseif message:sub(1, 5) == "/spa " then
-			message = string.gsub(message, "/spa ", "", 1)
-			message = '/script for _, v in ipairs(' .. message .. ') do print(v) end'
-			self:SetText(message)
-		elseif message:sub(1, 5) == "/spt " then
-			message = string.gsub(message, "/spt ", "", 1)
-			message = '/script for k, v in pairs(' .. message .. ') do print(k, v) end'
-			self:SetText(message)
-			-- elseif message:sub(1, 7) == "/iclear" then
-			-- 	for _, chatFrame in ipairs(G.CHAT_FRAMES) do
-			-- 		local frame1 = G[chatFrame]
-			-- 		frame1:Clear()
-			-- 	end
-		else
-
-		end
-		if orgOnEnterPressed then
-			orgOnEnterPressed(self, ...)
-		end
 		last_text = ''
 	end)
 	local cacheTxt = ''
@@ -1187,6 +1156,31 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 				self:SetText(p)
 				M.HISTORY:simulateInputChange(p, self:GetInputLanguage())
 			end
+		elseif key == "LCTRL" then
+			-- local message = self:GetText()
+			-- if #tip > 0 and IsLeftControlKeyDown() then
+			-- 	local p = message .. tip[1]
+			-- 	self:SetText(p)
+			-- 	M.HISTORY:simulateInputChange(p, self:GetInputLanguage())
+			-- 	return
+			-- end
+			-- if message:sub(1, 4) == "/sp " then
+			-- 	message = string.gsub(message, "/sp ", "", 1)
+			-- 	message = '/script print(' .. message .. ')'
+			-- 	self:SetText(message)
+			-- elseif message:sub(1, 5) == "/sps " then
+			-- 	message = string.gsub(message, "/sps ", "", 1)
+			-- 	message = '/script print("' .. message .. '")'
+			-- 	self:SetText(message)
+			-- elseif message:sub(1, 5) == "/spa " then
+			-- 	message = string.gsub(message, "/spa ", "", 1)
+			-- 	message = '/script for _, v in ipairs(' .. message .. ') do print(v) end'
+			-- 	self:SetText(message)
+			-- elseif message:sub(1, 5) == "/spt " then
+			-- 	message = string.gsub(message, "/spt ", "", 1)
+			-- 	message = '/script for k, v in pairs(' .. message .. ') do print(k, v) end'
+			-- 	self:SetText(message)
+			-- end
 		end
 	end)
 	hooksecurefunc("ChatEdit_UpdateHeader", function(self)
@@ -1454,6 +1448,66 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 					end,
 				}
 			})
+		end
+
+		
+		-- 更新记录
+		local updateTip = D:ReadDB('IIUpdateTip', '1.0.17', true)
+		-- 首次安装的版本
+		local fristInstallVersion = D:ReadDB('fristInstallVersion', nil, true)
+		-- if fristInstallVersion ~= nil and W:getVersion(fristInstallVersion) < W:getVersion(W.version) then
+		-- 	updateTip = W.version
+		-- end
+		if fristInstallVersion == nil then
+			D:SaveDB('fristInstallVersion', W.version, true)
+		end
+		if W:getVersion(updateTip) <= W:getVersion(W.version) then
+			local updateTipframe = CreateFrame("Frame", nil, UIParent)
+			updateTipframe:SetSize(1000, 200)  -- 设置框的大小
+			updateTipframe:SetPoint("CENTER", UIParent, "CENTER", 0, 0)  -- 设置框的位置
+
+			-- 创建一个背景纹理并设置为黑色
+			local background = updateTipframe:CreateTexture(nil, "BACKGROUND")
+			background:SetAllPoints(updateTipframe)  -- 设置背景纹理填满整个框
+			background:SetColorTexture(0, 0, 0, 0.6)  -- 设置背景颜色为黑色（RGBA）
+
+			local title = updateTipframe:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+			title:SetPoint("TOP", updateTipframe, "TOP", 0, -5)  -- 设置文本在框中的位置
+			title:SetText(W.colorName)
+			local fontFile, hight, flags = title:GetFont()
+			title:SetFont(fontFile or W.defaultFontName, 44, flags)
+
+			-- 创建一个显示文本的框
+			local text = updateTipframe:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+			text:SetPoint("CENTER", updateTipframe, "CENTER", 0, 0)  -- 设置文本在框中的位置
+			text:SetText(L['UpdateTip'])  -- 设置显示的文本
+			local fontFile, hight, flags = text:GetFont()
+			text:SetFont(fontFile or W.defaultFontName, 22, flags)
+			text:SetWordWrap(true)
+			text:SetNonSpaceWrap(true)
+			text:SetWidth(800)
+
+			-- 可选：修改文本颜色
+			text:SetTextColor(1, 1, 1)  -- 设置文本颜色为白色
+
+			-- 创建关闭按钮
+			local closeButton = CreateFrame("Button", nil, updateTipframe, "UIPanelCloseButton")
+			closeButton:SetPoint("TOPRIGHT", updateTipframe, "TOPRIGHT", -5, -5)
+
+			-- 创建“下次不再提示”复选框
+			local checkBox = CreateFrame("CheckButton", nil, updateTipframe, "UICheckButtonTemplate")
+			checkBox:SetPoint("TOPRIGHT", updateTipframe, "TOPRIGHT", 30, 0)
+			checkBox.text:SetText(L['nextNoTip'])
+			checkBox:SetChecked(false)
+
+			-- 关闭按钮点击事件
+			closeButton:SetScript("OnClick", function()
+				local check = checkBox:GetChecked()
+				if check == true then
+					D:SaveDB('IIUpdateTip', '99999.0.0', true)
+				end
+				updateTipframe:Hide()
+			end)
 		end
 	end
 	if event == 'PLAYER_ENTERING_WORLD' or strfind(event, "WHISPER", 0, true) then

@@ -104,6 +104,15 @@ OPTCONFIG.optionConfig = {
                     U:OpenLink('https://www.curseforge.com/wow/addons/inputinput/comments')
                 end,
                 texture = "Interface\\AddOns\\InputInput\\Media\\icon\\CurseForge"
+            },{
+                name = 'TiktokLive',
+                type = 'Button',
+                text = L['TiktokLive'],
+                default = true,
+                click = function(this, self)
+                    U:OpenLink('https://live.douyin.com/232963549806')
+                end,
+                texture = "Interface\\AddOns\\InputInput\\Media\\icon\\Tiktok"
             },
         }
     }

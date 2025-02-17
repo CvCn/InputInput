@@ -101,7 +101,7 @@ local settings = {
 }
 local this = {}
 OPT.this = this
-local function InItOPT(config, preX, preY, name)
+local function InItOPT(config, preX, preY, name, show)
     preX = preX or 0
     preY = preY or 0
     config = config or option_info
@@ -116,7 +116,12 @@ local function InItOPT(config, preX, preY, name)
             frame = this[v.name] or
                 CreateFrame(v.type, W.N .. v.name, options, "InterfaceOptionsCheckButtonTemplate")
             if name ~= v.name then
-                frame:SetChecked(settings[v.name] ~= nil and settings[v.name] or v.default)
+                if settings[v.name] ~= nil then
+                    frame:SetChecked(settings[v.name])
+                else
+                    frame:SetChecked(v.default)
+                end
+                
             end
             frame.Text:SetText(v.text)
             if frame:HasScript("OnClick") then
@@ -133,7 +138,7 @@ local function InItOPT(config, preX, preY, name)
                                 this[v2.name]:Hide()
                             end
                         end
-                        InItOPT(nil, nil, -32, v.name)
+                        InItOPT(nil, nil, -32, v.name, show)
                     end
                     if v.click then
                         v.click(this, ...)
@@ -162,7 +167,7 @@ local function InItOPT(config, preX, preY, name)
                 normalTexture:SetAllPoints()
                 normalTexture:SetTexture(btnConfig.texture) -- 指定材质路径
                 btn:SetNormalTexture(normalTexture)
-                btn:SetPoint("TOPLEFT", idx * 100, 0)
+                btn:SetPoint("TOPLEFT", frame, "TOPLEFT", (idx-1) * 100 + 20, 0)
 
                 -- 获取按钮的文字对象
                 local fontString = btn:GetFontString()
@@ -170,6 +175,9 @@ local function InItOPT(config, preX, preY, name)
                 -- local fontFile, fontHeight, flags = fontString:GetFont()
                 -- fontString:SetFont(fontFile or W.defaultFontName, fontHeight * 0.67, flags)
                 fontString:SetPoint("TOP", btn, "BOTTOM", 0, 0) -- 底部位置，微调 Y 坐标
+                fontString:SetWidth(100)
+                fontString:SetWordWrap(true)
+                fontString:SetNonSpaceWrap(true)
 
                 if btn:HasScript("OnClick") then
                     btn:SetScript('OnClick', function(...)
@@ -190,7 +198,14 @@ local function InItOPT(config, preX, preY, name)
                 local h = this[config[i - 1].name]:GetHeight()
                 thisY = thisY - h
             end
-            nextY = thisY + 32
+            if show == true then
+                frame:Show()
+                nextY = thisY + 32
+            else
+                frame:Hide()
+                nextY = preY + 32
+            end
+            
             frame:SetPoint("TOPLEFT", baseX, thisY)
             if v.enter then
                 frame:SetScript('OnEnter', function(...)
@@ -202,8 +217,8 @@ local function InItOPT(config, preX, preY, name)
                     v.leave(this, ...)
                 end)
             end
-            if v.subElement and #v.subElement > 0 and settings[v.name] then
-                preY = InItOPT(v.subElement, baseX + offsetX, thisY)
+            if v.subElement and #v.subElement > 0 then
+                preY = InItOPT(v.subElement, baseX + offsetX, thisY, '', settings[v.name])
             end
         end
     end
@@ -229,7 +244,7 @@ local function InitConfig(config, s, isDefault)
 end
 function OPT:loadOPT()
     settings = D:ReadDB("settings", settings)
-    InItOPT(nil, nil, -32)
+    InItOPT(nil, nil, -32, '', true)
     options:SetScript("OnShow", function(self)
         U:Delay(0.01, function()
             local text = format(L['Enable InputInput_Libraries_zh'],
@@ -250,7 +265,7 @@ function OPT:loadOPT()
         settings = InitConfig(option_info, settings, true)
         D:SaveDB("settings", settings)
         changeSetting(settings)
-        InItOPT(nil, nil, -32)
+        InItOPT(nil, nil, -32, '', true)
     end)
     settings = InitConfig(option_info, settings)
     changeSetting(settings)

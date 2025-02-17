@@ -5,8 +5,7 @@
 - 正式服可以进入编辑模式编辑
 - 频道颜色、Tab切换频道 Channel color, Tab to switch channel
 - 历史记录（⬆️⬇️） Historical records
-- 输入提示、自动补充（Control+Enter） Input prompts, automatic supplementation
-- 多行提示请使用Control+数字 Please use Control+numbers for multiline prompts
+- 输入提示、自动补充（Control+数字） Input prompts, automatic addition (Control+numbers)
 - 撤销（Control+Z）反撤销（Control+Shift+Z） undo、redo
 - 最近消息 Recent chat messages
 
@@ -58,6 +57,9 @@
 
 # KOOK(国服)
 [https://kook.vip/vghP6R](https://kook.vip/vghP6R)
+
+# 抖音直播间 Tiktok live(only China)
+[https://live.douyin.com/232963549806](https://live.douyin.com/232963549806)
 
 # LICENSE：
 GNU GENERAL PUBLIC LICENSE

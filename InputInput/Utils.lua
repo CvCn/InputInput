@@ -20,9 +20,9 @@ local C_Timer_After = API.C_Timer_After
 -- @param format 格式字符串，默认为"%y/%m/%d %H:%M:%S"
 -- @param notMilli 是否不显示毫秒数，默认为false
 -- @return 格式化后的时间戳字符串
-local function GetFormattedTimestamp(currentTime, milliseconds, foramt, notMilli)
+local function GetFormattedTimestamp(currentTime, milliseconds, format, notMilli)
     -- 根据提供的格式字符串或默认格式，格式化时间戳
-    local formattedTime = date(foramt or "%y/%m/%d %H:%M:%S", currentTime)
+    local formattedTime = date(format or "%y/%m/%d %H:%M:%S", currentTime)
     -- 如果不需要毫秒数，则不进行任何操作
     if not notMilli then
         -- 将毫秒数添加到时间戳上

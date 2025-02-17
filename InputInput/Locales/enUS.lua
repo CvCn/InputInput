@@ -101,10 +101,14 @@ L['New Version Discovered'] = '%s Discovered a new version %s'
 L['READ ME'] = '- move (Shift+left button), zoom (Shift+right arrow), reset (Shift+right button), The retail can enter editing mode for editing\
 - Tab to switch channel\
 - Historical records（↑ ↓）\
-- automatic supplementation（Control+Enter）\
-- Please use Control+numbers for multiline prompts\
+- automatic addition（Control+numbers）\
 - undo（Control+Z）redo（Control+Shift+Z）'
 
 L['scale'] = 'scale'
 
 L['InputBox'] = 'ChatInputBox'
+
+L['TiktokLive'] = 'Tiktok live(only China)'
+
+L['nextNoTip'] = "No more prompts next time"
+L['UpdateTip'] = "The automatic addition shortcut key（|cffF56C6CControl+Enter|r）is |cffF56C6Cno longer in use|r and has been replaced by（|cff409EFFControl+number1|r），This is because the shortcut key conflicts with the \"/\" command. Although this is an unfriendly modification, in order not to conflict with Blizzard's default UI, please understand!"
