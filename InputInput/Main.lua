@@ -187,6 +187,7 @@ local multiTip = true
 ---@return table
 local function FindHis(his, patt)
 	if not his or #his <= 0 or not patt or #patt <= 0 then return {} end
+	if patt:sub(1, 1) == "/" then return {} end
 	patt = patt:gsub("%|c.-(%[.-%]).-%|r", function(a1)
 		return a1
 	end)
