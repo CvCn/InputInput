@@ -15,4 +15,5 @@
 
 ## SavedVariables: InputInput_DB
 
+Libs/LibEditMode/embed.xml
 Init.xml
