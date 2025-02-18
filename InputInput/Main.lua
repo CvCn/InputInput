@@ -1498,7 +1498,7 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			-- 创建“下次不再提示”复选框
 			local checkBox = CreateFrame("CheckButton", nil, updateTipframe, "UICheckButtonTemplate")
 			checkBox:SetPoint("TOPRIGHT", updateTipframe, "TOPRIGHT", 30, 0)
-			checkBox.text:SetText(L['nextNoTip'])
+			checkBox.Text:SetText(L['nextNoTip'])
 			checkBox:SetChecked(false)
 
 			-- 关闭按钮点击事件
