@@ -1,19 +1,36 @@
-## Interface: 110100 110007 110005
+## Interface: 110100, 110007, 110005
 ## IconTexture: Interface\AddOns\InputInput\Media\icon
 
 ## Title: |cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r
 ## Notes: Input box enhancement
 ## Notes-zhCN: 输入框增强
 ## Notes-zhTW: 輸入框增強
+## Notes-ruRU: Расширение поля ввода
 ## Author: York
 ## Version: 1.0.17
 ## X-Date: 2024-12-23
+
+## Group: inputinput
+
+## Category-enUS: Chat
+## Category-deDE: Chat
+## Category-esES: Chat
+## Category-esMX: Chat
+## Category-frFR: Discussion
+## Category-itIT: Chat
+## Category-koKR: 대화
+## Category-ptBR: Bate-papo
+## Category-ruRU: Чат
+## Category-zhCN: 聊天
+## Category-zhTW: 對話
 
 ## X-Category: Interface Enhancements
 ## X-Curse-Project-ID: 1076615
 ## X-Wago-ID: aNevRn62
 
 ## SavedVariables: InputInput_DB
+
+
 
 Libs/LibEditMode/embed.xml
 Init.xml

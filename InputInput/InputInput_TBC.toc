@@ -1,4 +1,4 @@
-## Interface: 11504, 11503
+## Interface: 20504
 ## IconTexture: Interface\AddOns\InputInput\Media\icon
 
 ## Title: |cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r
@@ -17,4 +17,3 @@
 ## SavedVariables: InputInput_DB
 
 Init.xml
-
