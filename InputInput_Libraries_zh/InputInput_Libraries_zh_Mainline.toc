@@ -10,8 +10,6 @@
 ## X-Date: 2024-08-18
 ## Dependencies: InputInput
 
-## Group: inputinput
-
 ## Category-enUS: Chat
 ## Category-deDE: Chat
 ## Category-esES: Chat

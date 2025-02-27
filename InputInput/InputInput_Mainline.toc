@@ -10,8 +10,6 @@
 ## Version: 1.0.17
 ## X-Date: 2024-12-23
 
-## Group: inputinput
-
 ## Category-enUS: Chat
 ## Category-deDE: Chat
 ## Category-esES: Chat
