@@ -188,6 +188,7 @@ local multiTip = true
 local function FindHis(his, patt)
 	if not his or #his <= 0 or not patt or #patt <= 0 then return {} end
 	if patt:sub(1, 1) == "/" then return {} end
+	LOG:Debug(patt)
 	patt = patt:gsub("%|c.-(%[.-%]).-%|r", function(a1)
 		return a1
 	end)
@@ -1612,7 +1613,7 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 		local prefix, text, channel, sender, target, zoneChannelID, localID, name, instanceID = ...
 		if prefix == "INPUTINPUT_V" and (not versionUpdateMsg or time() - versionUpdateMsg > 60 * 30) then
 			local ver, msg, inCombat = W:getVersion(W.version), W:getVersion(text), InCombatLockdown()
-			LOG:Debug(ver, msg, text)
+			-- LOG:Debug(ver, msg, text)
 			if msg and (msg > ver) and not inCombat then
 				LOG:Info(string.format(L['New Version Discovered'], W.colorName,
 					'|cFFFFFFFF' .. text .. '|r|cFF909399 (' .. W.version .. ')|r'))

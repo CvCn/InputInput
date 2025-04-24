@@ -1,4 +1,4 @@
-## Interface: 11506, 11505, 11504
+## Interface: 11506, 11507
 ## IconTexture: Interface\AddOns\InputInput\Media\icon
 
 ## Title: |cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r
@@ -7,7 +7,7 @@
 ## Notes-zhTW: 輸入框增強
 ## Notes-ruRU: Расширение поля ввода
 ## Author: York
-## Version: 1.0.17
+## Version: 1.1.0
 ## X-Date: 2024-12-23
 
 ## X-Category: Interface Enhancements

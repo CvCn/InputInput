@@ -1,8 +1,8 @@
-## Interface: 110100, 110007, 110005
+## Interface: 110105, 110100
 ## IconTexture: Interface\AddOns\InputInput\Media\icon
 
 ## Title: |cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r_Libraries_|cffF56C6Czh|r
-## Notes: InputInput Libraries ZH
+## Notes: InputInput Libraries ZH--Chinese word processing module, can make input prompts more intelligent
 ## Notes-zhCN: InputInput插件中文词语处理模块-可以使输入提示更智能
 ## Notes-zhTW: InputInput插件中文詞語處理模組-可以使輸入提示更智能
 ## Author: York
