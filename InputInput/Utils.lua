@@ -56,7 +56,7 @@ end
 function U:GetFormattedTimeOrDate(localTime)
     -- 如果给定时间与当前时间的年份不同，则返回包含年月日时分的格式化字符串
     if not sameYear(localTime, time()) then
-        return GetFormattedTimestamp(localTime, 0, "%y%m/%d %H:%M", true)
+        return GetFormattedTimestamp(localTime, 0, "%y/%m/%d %H:%M", true)
         -- 如果给定时间与当前时间的日期不同，则返回包含月日时分的格式化字符串
     elseif not sameDate(localTime, time()) then
         return GetFormattedTimestamp(localTime, 0, "%m/%d %H:%M", true)
@@ -445,6 +445,32 @@ function U:FindMaxValue(tables, msg)
     return word
 end
 
+-- 从战网账户名称获取账户信息
+-- 该函数解析传入的账户名称，尝试从战网获取相应的账户信息
+---@param name string 带有"-"分隔的账户名称字符串
+---@return table|nil 如果找到对应的账户信息，则返回一个表，否则返回nil
+local function BNet_GetAccountInfoFromAccountName(name)
+    -- 分割账户名称以获取可能的游戏角色名称
+    local n, r = strsplit("-", name)
+    -- 获取在线的战网好友数量
+    local _, numBNetOnline = BNGetNumFriends();
+    -- 遍历在线的好友列表
+    for i = 1, numBNetOnline do
+        -- 获取当前好友的账户信息
+        local accountInfo = C_BattleNet_GetFriendAccountInfo(i);
+        -- 检查是否能通过账户名称匹配到好友
+        if accountInfo and accountInfo.accountName and name == accountInfo.accountName then
+            -- 如果匹配成功，则返回该账户信息
+            return accountInfo
+        end
+        -- 检查是否能通过游戏角色名称匹配到好友
+        if accountInfo and accountInfo.gameAccountInfo and n == accountInfo.gameAccountInfo.characterName then
+            -- 如果匹配成功，则返回该账户信息
+            return accountInfo
+        end
+    end
+end
+
 -- 设置或获取单位的颜色
 ---@param unitName string 单位名称
 ---@param color string|nil 单位颜色，如果未提供，则尝试根据单位名称从缓存中获取
@@ -481,32 +507,6 @@ function U:UnitColor(unitName, color)
 
     -- 返回单位的颜色，可能为nil
     return UNIT_COLOR_CACHE[unitName]
-end
-
--- 从战网账户名称获取账户信息
--- 该函数解析传入的账户名称，尝试从战网获取相应的账户信息
----@param name string 带有"-"分隔的账户名称字符串
----@return table|nil 如果找到对应的账户信息，则返回一个表，否则返回nil
-function BNet_GetAccountInfoFromAccountName(name)
-    -- 分割账户名称以获取可能的游戏角色名称
-    local n, r = strsplit("-", name)
-    -- 获取在线的战网好友数量
-    local _, numBNetOnline = BNGetNumFriends();
-    -- 遍历在线的好友列表
-    for i = 1, numBNetOnline do
-        -- 获取当前好友的账户信息
-        local accountInfo = C_BattleNet_GetFriendAccountInfo(i);
-        -- 检查是否能通过账户名称匹配到好友
-        if accountInfo and accountInfo.accountName and name == accountInfo.accountName then
-            -- 如果匹配成功，则返回该账户信息
-            return accountInfo
-        end
-        -- 检查是否能通过游戏角色名称匹配到好友
-        if accountInfo and accountInfo.gameAccountInfo and n == accountInfo.gameAccountInfo.characterName then
-            -- 如果匹配成功，则返回该账户信息
-            return accountInfo
-        end
-    end
 end
 
 -- 判断字符串是否全为空白字符

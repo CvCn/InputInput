@@ -186,7 +186,7 @@ local multiTip = true
 
 ---@return table
 local function FindHis(his, patt)
-	if not his or #his <= 0 or not patt or #patt <= 0 then return {} end
+	if not patt or #patt <= 0 then return {} end
 	if patt:sub(1, 1) == "/" then return {} end
 	LOG:Debug(patt)
 	patt = patt:gsub("%|c.-(%[.-%]).-%|r", function(a1)
@@ -201,37 +201,40 @@ local function FindHis(his, patt)
 	if not pattp or #pattp <= 0 then return {} end
 	local _tip = {}
 	local f1break = false
-	for i = #his, 1, -1 do
-		if f1break then break end
-		local h = his[i]
-		if h and #h > 0 then
-			h = h:gsub("%|c.-(%[.-%]).-%|r", function(a1)
-				-- LOG:Debug(a1)
-				return a1
-			end)
-			-- LOG:Debug('h: ', h)
-			local hisp = U:CutWord(h)
-			for h_index, h2 in ipairs(hisp) do
-				if f1break then break end
-				-- 先按分词匹配
-				local patt2 = pattp[#pattp]
-				-- LOG:Debug(patt2)
-				local start, _end = strfind(h2, patt2, 1, true)
-				if start and start > 0 then
+	if his then
+		for i = #his, 1, -1 do
+			if f1break then break end
+			local h = his[i]
+			if h and #h > 0 then
+				h = h:gsub("%|c.-(%[.-%]).-%|r", function(a1)
+					-- LOG:Debug(a1)
+					return a1
+				end)
+				-- LOG:Debug('h: ', h)
+				local hisp = U:CutWord(h)
+				for h_index, h2 in ipairs(hisp) do
+					if f1break then break end
+					-- 先按分词匹配
+					local patt2 = pattp[#pattp]
 					-- LOG:Debug(patt2)
-					if _end ~= # h2 then
-						U:InsertNoRepeat(_tip, strsub(h2, _end + 1))
-					else
-						local pnex = hisp[h_index + 1]
-						if pnex and #pnex > 0 then
-							U:InsertNoRepeat(_tip, pnex)
-							f1break = true
+					local start, _end = strfind(h2, patt2, 1, true)
+					if start and start > 0 then
+						-- LOG:Debug(patt2)
+						if _end ~= # h2 then
+							U:InsertNoRepeat(_tip, strsub(h2, _end + 1))
+						else
+							local pnex = hisp[h_index + 1]
+							if pnex and #pnex > 0 then
+								U:InsertNoRepeat(_tip, pnex)
+								f1break = true
+							end
 						end
 					end
 				end
 			end
 		end
 	end
+
 	-- for i = #his, 1, -1 do
 	-- 	local h = his[i]
 	-- 	if h and #h > 0 then
@@ -265,28 +268,22 @@ local function FindHis(his, patt)
 		local start, _end = strfind(c_w, pattp[#pattp], 1, true)
 		U:InsertNoRepeat(_tip, strsub(c_w, _end + 1))
 	end
-	for i = #his, 1, -1 do
-		local h = his[i]
-		if h and #h > 0 then
-			-- 如果分词匹配不到，使用输入的最后一个字符匹配
-			-- local start, _end = strfind(h, lastChat, 1, true)
-			-- if start and start > 0 and _end ~= #h then
-			-- 	return strsub(h, _end + 1)
-			-- end
-			-- LOG:Debug(lastChat)
-			-- 匹配角色名字和地区名字
-			-- LOG:Debug(pattp[#pattp])
-			local playerTip = U:PlayerTip(patt, pattp[#pattp])
-			if playerTip then
-				U:InsertNoRepeat(_tip, playerTip)
-				break
-			else
-				playerTip = U:PlayerTip(patt, patt)
-				if playerTip then
-					U:InsertNoRepeat(_tip, playerTip)
-					break
-				end
-			end
+	-- 如果分词匹配不到，使用输入的最后一个字符匹配
+	-- local start, _end = strfind(h, lastChat, 1, true)
+	-- if start and start > 0 and _end ~= #h then
+	-- 	return strsub(h, _end + 1)
+	-- end
+	-- LOG:Debug(lastChat)
+	
+	-- 匹配角色名字和地区名字
+	-- LOG:Debug(pattp[#pattp])
+	local playerTip = U:PlayerTip(patt, pattp[#pattp])
+	if playerTip then
+		U:InsertNoRepeat(_tip, playerTip)
+	else
+		playerTip = U:PlayerTip(patt, patt)
+		if playerTip then
+			U:InsertNoRepeat(_tip, playerTip)
 		end
 	end
 	-- 魔兽词库
@@ -335,7 +332,7 @@ end
 
 local lastChannel = ''
 
-function IsInChannel(channelName)
+local function IsInChannel(channelName)
 	local id, name
 	-- 获取所有加入的频道列表
 	for i = 1, select("#", GetChannelList()), 3 do
@@ -349,7 +346,7 @@ function IsInChannel(channelName)
 end
 
 local currentChannelIndex = 1
-function UpdateChannel(editBox)
+local function UpdateChannel(editBox)
 	local channels = { "SAY" }
 	if IsInRaid() then
 		tinsert(channels, 'RAID')
@@ -379,7 +376,7 @@ local messageHistory = {}
 local historyIndex = 0
 local newFontSize = 32 -- 新的字体大小
 
-function LoadPostion(editBox)
+local function LoadPostion(editBox)
 	-- load point
 	local point, relativePoint, xOfs, yOfs =
 		unpack(D:ReadDB('editBoxPosition', { "CENTER", "BOTTOM", 0, 330 }, false))
@@ -401,7 +398,7 @@ local chat_h = 1
 ---@param channel_name FontString
 ---@param II_TIP FontString
 ---@param II_LANG FontString
-function LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
+local function LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 	editBox:SetWidth(480 * scale)
 	local font, _, flags = editBox:GetFont()
 	local newH = newFontSize * scale
@@ -601,7 +598,7 @@ end
 ---@param sender string|nil
 ---@param isPlayer boolean|nil
 ---@return string
-function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
+local function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
 	local info = ChatTypeInfo[channel]
 	local channelColor = U:RGBToHex(info.r, info.g, info.b)
 	local name_realm = ''
@@ -667,7 +664,7 @@ local showbg = false
 ---@param isChannel boolean
 ---@param sender string|nil
 ---@param isPlayer boolean|nil
-function SaveMSG(saveKey, channel, senderGUID, msg, isChannel, sender, isPlayer)
+local function SaveMSG(saveKey, channel, senderGUID, msg, isChannel, sender, isPlayer)
 	local key = saveKey
 	local w = strfind(channel, 'BN_WHISPER')
 	local channelMsg = D:ReadDB(key, {}, w)
@@ -704,7 +701,7 @@ local ChatLabels = {
 }
 
 ---@param editBox EditBox
-function HideEuiBorder(editBox)
+local function HideEuiBorder(editBox)
 	if ElvUI then
 		---@diagnostic disable-next-line: undefined-field
 		if editBox.SetBackdropBorderColor then
@@ -732,7 +729,7 @@ function HideEuiBorder(editBox)
 	end
 end
 
-function HideLS_GLASSBorder(editBox)
+local function HideLS_GLASSBorder(editBox)
 	if ls_Glass and editBox and editBox.Backdrop then
 		LoadPostion(editBox)
 		---@diagnostic disable-next-line: undefined-field
@@ -749,7 +746,7 @@ local showChannelName = true
 ---@param chatType string
 ---@param backdropFrame2 table|BackdropTemplate|Frame
 ---@param channel_name FontString
-function Chat(editBox, chatType, backdropFrame2, channel_name)
+local function Chat(editBox, chatType, backdropFrame2, channel_name)
 	local msg_list
 	local info = ChatTypeInfo[chatType]
 	local r, g, b = info.r, info.g, info.b
@@ -855,7 +852,7 @@ end
 ---@param resizeBtnTexture Texture
 ---@param channel_name FontString
 ---@param II_LANG FontString
-function ChannelChange(editBox, bg, bg3, border, backdropFrame2, resizeBtnTexture, channel_name, II_LANG)
+local function ChannelChange(editBox, bg, bg3, border, backdropFrame2, resizeBtnTexture, channel_name, II_LANG)
 	HideEuiBorder(editBox)
 	for i = 1, #G.CHAT_FRAMES do
 		G['ChatFrame' .. i .. 'EditBoxHeader']:SetText("")
@@ -965,10 +962,9 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 		else
 		end
 	end
-	-- editBox:HookScript("OnShow", function(self)
-	-- 	LoadPostion(self)
-	-- 	LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
-	-- end)
+	ChatFrame1EditBoxHeaderSuffix:HookScript("OnShow", function(self)
+		ChatFrame1EditBoxHeaderSuffix:Hide()
+	end)
 
 	editBox:HookScript("OnDragStart", function(...)
 		if IsShiftKeyDown() and not editMode then
@@ -1452,7 +1448,7 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			})
 		end
 
-		
+
 		-- 更新记录
 		local updateTip = D:ReadDB('IIUpdateTip', '1.0.17', true)
 		-- 首次安装的版本
@@ -1465,24 +1461,24 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 		end
 		if W:getVersion(updateTip) <= W:getVersion(W.version) then
 			local updateTipframe = CreateFrame("Frame", nil, UIParent)
-			updateTipframe:SetSize(1000, 200)  -- 设置框的大小
-			updateTipframe:SetPoint("CENTER", UIParent, "CENTER", 0, 0)  -- 设置框的位置
+			updateTipframe:SetSize(1000, 200)                  -- 设置框的大小
+			updateTipframe:SetPoint("CENTER", UIParent, "CENTER", 0, 0) -- 设置框的位置
 
 			-- 创建一个背景纹理并设置为黑色
 			local background = updateTipframe:CreateTexture(nil, "BACKGROUND")
-			background:SetAllPoints(updateTipframe)  -- 设置背景纹理填满整个框
-			background:SetColorTexture(0, 0, 0, 0.6)  -- 设置背景颜色为黑色（RGBA）
+			background:SetAllPoints(updateTipframe) -- 设置背景纹理填满整个框
+			background:SetColorTexture(0, 0, 0, 0.6) -- 设置背景颜色为黑色（RGBA）
 
 			local title = updateTipframe:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-			title:SetPoint("TOP", updateTipframe, "TOP", 0, -5)  -- 设置文本在框中的位置
+			title:SetPoint("TOP", updateTipframe, "TOP", 0, -5) -- 设置文本在框中的位置
 			title:SetText(W.colorName)
 			local fontFile, hight, flags = title:GetFont()
 			title:SetFont(fontFile or W.defaultFontName, 44, flags)
 
 			-- 创建一个显示文本的框
 			local text = updateTipframe:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-			text:SetPoint("CENTER", updateTipframe, "CENTER", 0, 0)  -- 设置文本在框中的位置
-			text:SetText(L['UpdateTip'])  -- 设置显示的文本
+			text:SetPoint("CENTER", updateTipframe, "CENTER", 0, 0) -- 设置文本在框中的位置
+			text:SetText(L['UpdateTip'])                   -- 设置显示的文本
 			local fontFile, hight, flags = text:GetFont()
 			text:SetFont(fontFile or W.defaultFontName, 22, flags)
 			text:SetWordWrap(true)
@@ -1490,7 +1486,7 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			text:SetWidth(800)
 
 			-- 可选：修改文本颜色
-			text:SetTextColor(1, 1, 1)  -- 设置文本颜色为白色
+			text:SetTextColor(1, 1, 1) -- 设置文本颜色为白色
 
 			-- 创建关闭按钮
 			local closeButton = CreateFrame("Button", nil, updateTipframe, "UIPanelCloseButton")

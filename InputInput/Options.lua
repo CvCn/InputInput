@@ -275,7 +275,7 @@ end
 M:RegisterCallback('OPT', 'loadOPT', OPT.loadOPT)
 
 -- 拦截超链接点击事件
-function IISetItemRef(link, text, button, chatFrame)
+local function IISetItemRef(link, text, button, chatFrame)
     local linkType, linkData = link:match("^(.-):(.*)$")
     if linkType == "InputInputURL" then
         U:OpenLink(linkData)
