@@ -274,7 +274,7 @@ local function FindHis(his, patt)
 	-- 	return strsub(h, _end + 1)
 	-- end
 	-- LOG:Debug(lastChat)
-	
+
 	-- 匹配角色名字和地区名字
 	-- LOG:Debug(pattp[#pattp])
 	local playerTip = U:PlayerTip(patt, pattp[#pattp])
@@ -889,7 +889,7 @@ local function chatEventHandler(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7,
 		if G[chatFrame] then
 			for _, messageType in pairs(G[chatFrame].messageTypeList) do
 				if gsub(strsub(event, 10), '_INFORM', '') == messageType and arg1 and not MessageIsProtected(arg1) then
-					local chatFilters = ChatFrame_GetMessageEventFilters(event)
+					local chatFilters = ChatFrameUtil.GetMessageEventFilters(event)
 					if chatFilters then
 						for _, filterFunc in ipairs(chatFilters) do
 							local isUse = false
@@ -1181,9 +1181,22 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 			-- end
 		end
 	end)
-	hooksecurefunc("ChatEdit_UpdateHeader", function(self)
-		ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
-	end)
+
+
+	-- hooksecurefunc("ChatEdit_UpdateHeader", function(self)
+	-- 	ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
+	-- end)
+	-- 11.2.7
+	---@diagnostic disable-next-line: undefined-field
+	for _, frameName in ipairs(_G.CHAT_FRAMES) do
+		local chat = _G[frameName]
+		if chat then
+			local editbox = chat.editBox
+			hooksecurefunc(editbox, "UpdateHeader", function(self)
+				ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
+			end)
+		end
+	end
 
 	-- 设置焦点获得事件处理函数
 	editBox:HookScript("OnEditFocusGained", function(self)
