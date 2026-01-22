@@ -8,7 +8,7 @@
 ## Notes-ruRU: Расширение поля ввода
 ## Author: York
 ## Version: 1.1.0
-## X-Date: 2024-12-23
+## X-Date: 2025-01-22
 
 ## Category-enUS: Chat
 ## Category-deDE: Chat
