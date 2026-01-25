@@ -113,3 +113,7 @@ L['TiktokLive'] = '抖音直播間 Tiktok live(only China)'
 
 L['nextNoTip'] = "下次不再提示"
 L['UpdateTip'] = "自動補充快捷鍵（|cffF56C6CControl+Enter|r）已經|cffF56C6C不再使用|r，取而代之的是使用（|cff409EFFControl+數字1|r），這是因為該快捷鍵與\"/\"命令衝突，雖然這是一個不友好的修改，但是為了不與暴雪默認的UI衝突，還請多多諒解!"
+
+L['ExportLog'] = '導出運行日誌'
+
+L['This will not export any of your private information'] = "不會導出您的任何隱私信息"

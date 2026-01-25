@@ -121,7 +121,6 @@ local function InItOPT(config, preX, preY, name, show)
                 else
                     frame:SetChecked(v.default)
                 end
-                
             end
             frame.Text:SetText(v.text)
             if frame:HasScript("OnClick") then
@@ -159,7 +158,8 @@ local function InItOPT(config, preX, preY, name, show)
             frame = CreateFrame("FRAME", W.N .. v.name, options)
             frame:SetSize(600, 200)
             for idx, btnConfig in ipairs(v.BTNElement) do
-                local btn = this[btnConfig.name] or CreateFrame("Button", W.N .. btnConfig.name, frame, "UIPanelButtonTemplate")
+                local btn = this[btnConfig.name] or
+                CreateFrame("Button", W.N .. btnConfig.name, frame, "UIPanelButtonTemplate")
                 btn:SetSize(50, 50)
                 btn:SetText(btnConfig.text)
                 -- 设置按钮普通状态的材质
@@ -167,7 +167,7 @@ local function InItOPT(config, preX, preY, name, show)
                 normalTexture:SetAllPoints()
                 normalTexture:SetTexture(btnConfig.texture) -- 指定材质路径
                 btn:SetNormalTexture(normalTexture)
-                btn:SetPoint("TOPLEFT", frame, "TOPLEFT", (idx-1) * 100 + 20, 0)
+                btn:SetPoint("TOPLEFT", frame, "TOPLEFT", (idx - 1) * 100 + 20, 0)
 
                 -- 获取按钮的文字对象
                 local fontString = btn:GetFontString()
@@ -190,6 +190,18 @@ local function InItOPT(config, preX, preY, name, show)
                 this[btnConfig.name .. 'Texture'] = normalTexture
             end
         end
+        if v.type == 'Button' then
+            frame = this[v.name] or CreateFrame("Button", W.N .. v.name, options, "UIPanelButtonTemplate")
+            frame:SetSize(150, 25)
+            frame:SetText(v.text)
+            if frame:HasScript("OnClick") then
+                frame:SetScript('OnClick', function(...)
+                    if v.click then
+                        v.click(this, ...)
+                    end
+                end)
+            end
+        end
         if frame then
             this[v.name] = frame
             frame.IIConfig = v
@@ -205,7 +217,7 @@ local function InItOPT(config, preX, preY, name, show)
                 frame:Hide()
                 nextY = preY + 32
             end
-            
+
             frame:SetPoint("TOPLEFT", baseX, thisY)
             if v.enter then
                 frame:SetScript('OnEnter', function(...)

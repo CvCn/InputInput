@@ -14,6 +14,10 @@ local GetSubZoneText = API.GetSubZoneText
 local C_ChatInfo_SendAddonMessage = API.C_ChatInfo_SendAddonMessage
 local C_Timer_After = API.C_Timer_After
 
+local LibSerialize = LibStub("LibSerialize")
+local LibDeflate = LibStub:GetLibrary("LibDeflate")
+
+
 -- 格式化时间戳函数
 -- @param currentTime 当前时间，通常为系统当前时间
 -- @param milliseconds 毫秒数，用于在需要时添加到时间戳上
@@ -823,7 +827,6 @@ function U:PlayerTip(inpall, inp)
             end
         end
     end
-
 end
 
 -- INPUTINPUT_V
@@ -863,7 +866,7 @@ do
 end
 
 function U:OpenLink(linkData)
-    ChatFrame1EditBox:Show() -- 强制显示
+    ChatFrame1EditBox:Show()     -- 强制显示
     ChatFrame1EditBox:SetFocus() -- 保持焦点
     ChatFrame1EditBox:SetText(linkData)
     ChatFrame1EditBox:HighlightText()
@@ -882,3 +885,115 @@ StaticPopupDialogs["InputInput_RELOAD_UI_CONFIRMATION"] = {
     hideOnEscape = true,                           -- 当用户按下ESC键时是否隐藏该提示框，true表示隐藏
     preferredIndex = 3,                            -- 设置提示框的显示优先级，避免与其他静态提示框冲突
 }
+
+
+
+local editTip = CreateFrame("Frame", 'II_EDITTIP', UIParent)
+editTip:SetSize(900, 400)                            -- 设置框的大小
+editTip:SetPoint("CENTER", UIParent, "CENTER", 0, 0) -- 设置框的位置
+
+-- 创建一个背景纹理并设置为黑色
+local background = editTip:CreateTexture(nil, "BACKGROUND")
+background:SetAllPoints(editTip)         -- 设置背景纹理填满整个框
+background:SetColorTexture(0, 0, 0, 0.6) -- 设置背景颜色为黑色（RGBA）
+
+-- local title = editTip:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+-- title:SetPoint("TOP", editTip, "TOP", 0, -5) -- 设置文本在框中的位置
+-- title:SetText(W.colorName)
+-- local fontFile, hight, flags = title:GetFont()
+-- title:SetFont(fontFile or W.defaultFontName, 44, flags)
+
+local scroll = CreateFrame("ScrollFrame", nil, editTip, "UIPanelScrollFrameTemplate")
+scroll:SetPoint("TOPLEFT", 10, -10)
+scroll:SetPoint("BOTTOMRIGHT", -10, 10)
+
+-- 创建一个显示文本的框
+local editBox = CreateFrame("EditBox", nil, scroll)
+editBox:SetPoint("CENTER", editTip, "CENTER", 0, 0) -- 设置文本在框中的位置
+local fontFile, hight, flags = editBox:GetFont()
+editBox:SetFont(fontFile or W.defaultFontName, 22, flags)
+-- editBox:SetWordWrap(true)
+-- editBox:SetNonSpaceWrap(true)
+editBox:SetWidth(800)
+editBox:EnableMouse(true)
+editBox:SetMultiLine(true)
+editBox:SetScript("OnEditFocusGained", function(self)
+    self:HighlightText()
+end)
+-- 可选：修改文本颜色
+editBox:SetTextColor(1, 1, 1) -- 设置文本颜色为白色
+editTip.editBox = editBox
+scroll:SetScrollChild(editBox)
+-- 创建关闭按钮
+local closeButton = CreateFrame("Button", nil, editTip, "UIPanelCloseButton")
+closeButton:SetPoint("TOPRIGHT", editTip, "TOPRIGHT", -5, -5)
+
+-- 关闭按钮点击事件
+closeButton:SetScript("OnClick", function()
+    editTip:Hide()
+end)
+editTip:Hide()
+
+editBox:HookScript("OnKeyDown", function(self, key, ...)
+    if key == "C" and IsLeftControlKeyDown() then
+        editTip:Hide()
+    end
+end)
+
+function U:EditBoxTip(text)
+    editTip.editBox:SetText(text)
+    editTip:Show()
+end
+
+local compressedTablesCache = {}
+local configForDeflate = {level = 9}
+local configForLS = {
+  errorOnUnserializableType =  false
+}
+
+function U:TableToString(inTable)
+    local serialized = LibSerialize:SerializeEx(configForLS, inTable)
+    local compressed
+    -- get from / add to cache
+    if compressedTablesCache[serialized] then
+        compressed = compressedTablesCache[serialized].compressed
+        compressedTablesCache[serialized].lastAccess = time()
+    else
+        compressed = LibDeflate:CompressDeflate(serialized, configForDeflate)
+        compressedTablesCache[serialized] = {
+            compressed = compressed,
+            lastAccess = time(),
+        }
+    end
+    -- remove cache items after 5 minutes
+    for k, v in pairs(compressedTablesCache) do
+        if v.lastAccess < (time() - 300) then
+            compressedTablesCache[k] = nil
+        end
+    end
+    local encoded = "!INPUTINPUT:1!"
+    encoded = encoded .. LibDeflate:EncodeForPrint(compressed)
+    return encoded
+end
+
+function U:StringToTable(inString)
+    local _, _, encodeVersion, encoded = inString:find("^(!INPUTINPUT:%d+!)(.+)$")
+    if encodeVersion then
+        encodeVersion = tonumber(encodeVersion:match("%d+"))
+    else
+        encoded, encodeVersion = inString:gsub("^%!", "")
+    end
+    local decoded = LibDeflate:DecodeForPrint(encoded)
+
+    if not decoded then
+        return "Error decoding."
+    end
+
+    local decompressed = LibDeflate:DecompressDeflate(decoded)
+
+    local success, deserialized = LibSerialize:Deserialize(decompressed)
+    if not (success) then
+        return "Error deserializing"
+    end
+    return deserialized
+end

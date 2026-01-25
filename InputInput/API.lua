@@ -72,7 +72,7 @@ Fun({
     -- Returns the icon texture of a spell.
     C_Spell_GetSpellTexture = {
         ['10.2.6'] = C_Spell and C_Spell.GetSpellTexture,
-        ---@diagnostic disable-next-line: deprecated
+        ---@diagnostic disable-next-line: undefined-global
         ['1.0.0'] = GetSpellTexture
     },
     --  Returns information about the specified specialization.
@@ -86,6 +86,7 @@ Fun({
             for tabIndex = 1, GetNumTalentTabs() do
                 for talentIndex = 1, GetNumTalents(tabIndex) do
                     local name, iconTexture, tier, column, rank, maxRank,
+                    ---@diagnostic disable-next-line: missing-parameter
                     isExceptional, available, previewRank, previewAvailable, id = GetTalentInfo(tabIndex, talentIndex)
                     if id == talentID then
                         return id, name, iconTexture, available == 1, available ~= 1, nil, nil, tier, column,
@@ -100,6 +101,7 @@ Fun({
             for tabIndex = 1, GetNumTalentTabs() do
                 for talentIndex = 1, GetNumTalents(tabIndex) do
                     local talentName, iconTexture, tier, column, rank, maxRank, meetsPrereq, previewRank, meetsPreviewPrereq, isExceptional, goldBorder, id =
+                    ---@diagnostic disable-next-line: missing-parameter
                         GetTalentInfo(tabIndex, talentIndex)
                     if id == talentID then
                         return id, talentName, iconTexture, previewRank > 1, previewRank == 0, nil, nil, tier, column,
@@ -134,12 +136,6 @@ Fun({
     -- Returns info for a currency by ID.
     C_CurrencyInfo_GetCurrencyInfo = {
         ['1.0.0'] = C_CurrencyInfo.GetCurrencyInfo
-    },
-    -- Returns true if the specified addon is loaded.
-    C_AddOns_IsAddOnLoaded = {
-        ['10.2.0'] = C_AddOns and C_AddOns.IsAddOnLoaded,
-        ---@diagnostic disable-next-line: deprecated
-        ['1.0.0'] = IsAddOnLoaded
     },
     --  Returns the list of joined chat channels.
     GetChannelList = {
@@ -225,18 +221,18 @@ Fun({
     C_AddOns_GetAddOnEnableState = {
         ['10.2.0'] = C_AddOns and C_AddOns.GetAddOnEnableState,
         ['1.0.0'] = function(name, character)
-            ---@diagnostic disable-next-line: deprecated
+            ---@diagnostic disable-next-line: undefined-global
             return GetAddOnEnableState(character, name)
         end
     },
     C_AddOns_EnableAddOn = {
         ['10.2.0'] = C_AddOns and C_AddOns.EnableAddOn,
-        ---@diagnostic disable-next-line: deprecated
+        ---@diagnostic disable-next-line: undefined-global
         ['1.0.0'] = EnableAddOn
     },
     C_AddOns_DisableAddOn = {
         ['10.2.0'] = C_AddOns and C_AddOns.DisableAddOn,
-        ---@diagnostic disable-next-line: deprecated
+        ---@diagnostic disable-next-line: undefined-global
         ['1.0.0'] = DisableAddOn
     },
     --  Returns the memory used for an addon.
@@ -258,6 +254,24 @@ Fun({
     },
     C_Timer_After = {
         ['1.0.0'] = C_Timer and C_Timer.After
+    },
+    C_AddOns_GetNumAddOns = {
+        ['1.15.0'] = C_AddOns.GetNumAddOns,
+        ---@diagnostic disable-next-line: undefined-global
+        ['1.13.2'] = GetNumAddOns,
+        ['1.0.0'] = function () end
+    },
+    C_AddOns_GetAddOnInfo = {
+        ['1.15.0'] = C_AddOns.GetAddOnInfo,
+        ---@diagnostic disable-next-line: undefined-global
+        ['1.13.2'] = GetAddOnInfo,
+        ['1.0.0'] = function () end
+    },
+    C_AddOns_IsAddOnLoaded = {
+        ['1.15.0'] = C_AddOns.IsAddOnLoaded,
+        ---@diagnostic disable-next-line: undefined-global
+        ['1.13.2'] = IsAddOnLoaded,
+        ['1.0.0'] = function () end
     }
 })
 

@@ -124,7 +124,7 @@ local function UpdateFontStringPosition(editBox, displayFontString, msg, i, size
 	-- displayFontString:SetFontObject(editBox:GetFontObject())
 	displayFontString:ClearAllPoints()
 	local font2, fontsize, flags = editBox:GetFont()
-	local smallSize = 1
+	local smallSize = 0.8
 	displayFontString:SetFont(font2, fontsize * smallSize, flags)
 	displayFontString:SetDrawLayer("OVERLAY", 1)
 	-- 创建背景纹理
@@ -136,10 +136,11 @@ local function UpdateFontStringPosition(editBox, displayFontString, msg, i, size
 	bg:SetDrawLayer("OVERLAY", 1)
 	bg:SetColorTexture(0, 0, 0, 0.6)
 	if i > 1 then
-		displayFontString:SetPoint("TOPLEFT", editBox, "TOPLEFT", x - (1.5 * fontsize),
-			y - (i - 0.8) * fontsize - fontsize * (1 - smallSize))
+		displayFontString:SetPoint("TOPLEFT", editBox, "TOPLEFT", x - (1.5 * fontsize * smallSize),
+			y - (i - 0.8) * fontsize * smallSize - fontsize * smallSize * (1 - smallSize) - 4)
 		displayFontString:SetText(' ' .. i .. ': ' .. msg .. ' ')
 	else
+		displayFontString:SetFont(font2, fontsize * 1, flags)
 		displayFontString:SetPoint("TOPLEFT", editBox, "TOPLEFT", x, y)
 		displayFontString:SetText(msg)
 	end
@@ -1404,6 +1405,7 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 	if not isInit then
 		editBox, bg, border, backdropFrame2, resizeButton, resizeBtnTexture, channel_name, II_TIP, II_LANG, bg3 =
 			MAIN:Init()
+		
 		C_ChatInfo_RegisterAddonMessagePrefix('INPUTINPUT_V')
 		U:Delay(5, function()
 			U:InitFriends()

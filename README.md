@@ -49,6 +49,9 @@
 - 国服 1区-艾萨拉 China
 - 臺服 二組-水晶之刺 Taiwan, China
 
+# 提交问题 Issue：
+- 输入/ii打开设置面板，点击“导出运行日志”，将您的问题一并提交到以下联系方式 Input /ii to open the settings panel, click "Export run Log" and submit your issue along with the following contact information
+
 # github：
 [https://github.com/CvCn/InputInput](https://github.com/CvCn/InputInput)
 

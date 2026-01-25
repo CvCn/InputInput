@@ -112,3 +112,7 @@ L['TiktokLive'] = 'Tiktok live(only China)'
 
 L['nextNoTip'] = "No more prompts next time"
 L['UpdateTip'] = "The automatic addition shortcut key（|cffF56C6CControl+Enter|r）is |cffF56C6Cno longer in use|r and has been replaced by（|cff409EFFControl+number1|r），This is because the shortcut key conflicts with the \"/\" command. Although this is an unfriendly modification, in order not to conflict with Blizzard's default UI, please understand!"
+
+L['ExportLog'] = 'Export run log'
+
+L['This will not export any of your private information'] = 'This will not export any of your private information'

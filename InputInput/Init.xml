@@ -12,4 +12,5 @@
     <Script file='OptionConfig.lua'/>
     <Script file='Options.lua'/>
     <Script file='Main.lua'/>
+    <Script file='debug.lua'/>
 </Ui>
