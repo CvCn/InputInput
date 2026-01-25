@@ -7,8 +7,8 @@
 ## Notes-zhTW: 輸入框增強
 ## Notes-ruRU: Расширение поля ввода
 ## Author: York
-## Version: 1.1.0
-## X-Date: 2024-12-23
+## Version: 1.1.1
+## X-Date: 2025-01-25
 
 ## X-Category: Interface Enhancements
 ## X-Curse-Project-ID: 1076615
