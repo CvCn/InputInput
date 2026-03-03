@@ -14,6 +14,8 @@ OPTCONFIG.optionConfig = {
         click = function(this, self)
         end,
         default = true,
+        version1 = 10100,
+        version2 = 110207,
         subElement = {
             {
                 name = 'showTime',

@@ -58,7 +58,11 @@ end
 SlashCmdList["INPUTINPUT"] = OpenSettingsPanel
 
 local function changeSetting(settings)
-    M.MAIN:HideChat(settings.showChat)
+    if W.ClientVersion >= 120000 then
+        M.MAIN:HideChat(false)
+    else
+        M.MAIN:HideChat(settings.showChat)
+    end
     M.MAIN:HideChannel(settings.showChannel)
     M.MAIN:HideTime(settings.showTime)
     M.MAIN:Hidebg(settings.showbg)
@@ -108,129 +112,140 @@ local function InItOPT(config, preX, preY, name, show)
     local offsetX = 16
     local offsetY = -32
     local nextY = 0
-    for i, v in ipairs(config) do
-        local baseX = preX + 16
-        local baseY = preY
-        local frame = nil
-        if v.type == 'CheckButton' then
-            frame = this[v.name] or
-                CreateFrame(v.type, W.N .. v.name, options, "InterfaceOptionsCheckButtonTemplate")
-            if name ~= v.name then
-                if settings[v.name] ~= nil then
-                    frame:SetChecked(settings[v.name])
-                else
-                    frame:SetChecked(v.default)
+    local i = 0
+    for _, v in ipairs(config) do
+        local isVersion = true
+        if v.version1 and v.version2 then
+            if W.ClientVersion >= v.version1 and W.ClientVersion <= v.version2 then
+            else
+                isVersion = false
+            end
+        end
+        if isVersion then
+            i = i + 1
+            local baseX = preX + 16
+            local baseY = preY
+            local frame = nil
+            if v.type == 'CheckButton' then
+                frame = this[v.name] or
+                    CreateFrame(v.type, W.N .. v.name, options, "InterfaceOptionsCheckButtonTemplate")
+                if name ~= v.name then
+                    if settings[v.name] ~= nil then
+                        frame:SetChecked(settings[v.name])
+                    else
+                        frame:SetChecked(v.default)
+                    end
+                end
+                frame.Text:SetText(v.text)
+                if frame:HasScript("OnClick") then
+                    frame:SetScript('OnClick', function(...)
+                        local self = ...
+                        local open = self:GetChecked()
+                        settings[v.name] = open
+                        D:SaveDB("settings", settings)
+                        if self.IIConfig.subElement then
+                            for _, v2 in ipairs(self.IIConfig.subElement) do
+                                if open then
+                                    this[v2.name]:Show()
+                                else
+                                    this[v2.name]:Hide()
+                                end
+                            end
+                            InItOPT(nil, nil, -32, v.name, show)
+                        end
+                        if v.click then
+                            v.click(this, ...)
+                        end
+                        changeSetting(settings)
+                    end)
                 end
             end
-            frame.Text:SetText(v.text)
-            if frame:HasScript("OnClick") then
-                frame:SetScript('OnClick', function(...)
-                    local self = ...
-                    local open = self:GetChecked()
-                    settings[v.name] = open
-                    D:SaveDB("settings", settings)
-                    if self.IIConfig.subElement then
-                        for _, v2 in ipairs(self.IIConfig.subElement) do
-                            if open then
-                                this[v2.name]:Show()
-                            else
-                                this[v2.name]:Hide()
-                            end
-                        end
-                        InItOPT(nil, nil, -32, v.name, show)
-                    end
-                    if v.click then
-                        v.click(this, ...)
-                    end
-                    changeSetting(settings)
-                end)
+            if v.type == 'text' then
+                frame = this[v.name] or options:CreateFontString(W.N .. v.name, "OVERLAY", "GameFontNormal")
+                frame:SetText(v.text)
+                frame:SetJustifyH('LEFT')
+                frame:SetTextColor(1, 1, 1)
+                frame:SetWordWrap(true) -- 启用换行
+                frame:SetWidth(600)
             end
-        end
-        if v.type == 'text' then
-            frame = this[v.name] or options:CreateFontString(W.N .. v.name, "OVERLAY", "GameFontNormal")
-            frame:SetText(v.text)
-            frame:SetJustifyH('LEFT')
-            frame:SetTextColor(1, 1, 1)
-            frame:SetWordWrap(true) -- 启用换行
-            frame:SetWidth(600)
-        end
-        if v.type == 'BTNGroup' then
-            frame = CreateFrame("FRAME", W.N .. v.name, options)
-            frame:SetSize(600, 200)
-            for idx, btnConfig in ipairs(v.BTNElement) do
-                local btn = this[btnConfig.name] or
-                CreateFrame("Button", W.N .. btnConfig.name, frame, "UIPanelButtonTemplate")
-                btn:SetSize(50, 50)
-                btn:SetText(btnConfig.text)
-                -- 设置按钮普通状态的材质
-                local normalTexture = this[btnConfig.name .. 'Texture'] or btn:CreateTexture(nil, "BACKGROUND")
-                normalTexture:SetAllPoints()
-                normalTexture:SetTexture(btnConfig.texture) -- 指定材质路径
-                btn:SetNormalTexture(normalTexture)
-                btn:SetPoint("TOPLEFT", frame, "TOPLEFT", (idx - 1) * 100 + 20, 0)
+            if v.type == 'BTNGroup' then
+                frame = CreateFrame("FRAME", W.N .. v.name, options)
+                frame:SetSize(600, 200)
+                for idx, btnConfig in ipairs(v.BTNElement) do
+                    local btn = this[btnConfig.name] or
+                        CreateFrame("Button", W.N .. btnConfig.name, frame, "UIPanelButtonTemplate")
+                    btn:SetSize(50, 50)
+                    btn:SetText(btnConfig.text)
+                    -- 设置按钮普通状态的材质
+                    local normalTexture = this[btnConfig.name .. 'Texture'] or btn:CreateTexture(nil, "BACKGROUND")
+                    normalTexture:SetAllPoints()
+                    normalTexture:SetTexture(btnConfig.texture) -- 指定材质路径
+                    btn:SetNormalTexture(normalTexture)
+                    btn:SetPoint("TOPLEFT", frame, "TOPLEFT", (idx - 1) * 100 + 20, 0)
 
-                -- 获取按钮的文字对象
-                local fontString = btn:GetFontString()
-                -- 调整文字位置到底部
-                -- local fontFile, fontHeight, flags = fontString:GetFont()
-                -- fontString:SetFont(fontFile or W.defaultFontName, fontHeight * 0.67, flags)
-                fontString:SetPoint("TOP", btn, "BOTTOM", 0, 0) -- 底部位置，微调 Y 坐标
-                fontString:SetWidth(100)
-                fontString:SetWordWrap(true)
-                fontString:SetNonSpaceWrap(true)
+                    -- 获取按钮的文字对象
+                    local fontString = btn:GetFontString()
+                    -- 调整文字位置到底部
+                    -- local fontFile, fontHeight, flags = fontString:GetFont()
+                    -- fontString:SetFont(fontFile or W.defaultFontName, fontHeight * 0.67, flags)
+                    fontString:SetPoint("TOP", btn, "BOTTOM", 0, 0) -- 底部位置，微调 Y 坐标
+                    fontString:SetWidth(100)
+                    fontString:SetWordWrap(true)
+                    fontString:SetNonSpaceWrap(true)
 
-                if btn:HasScript("OnClick") then
-                    btn:SetScript('OnClick', function(...)
-                        if btnConfig.click then
-                            btnConfig.click(this, ...)
+                    if btn:HasScript("OnClick") then
+                        btn:SetScript('OnClick', function(...)
+                            if btnConfig.click then
+                                btnConfig.click(this, ...)
+                            end
+                        end)
+                    end
+                    this[btnConfig.name] = btn
+                    this[btnConfig.name .. 'Texture'] = normalTexture
+                end
+            end
+            if v.type == 'Button' then
+                frame = this[v.name] or CreateFrame("Button", W.N .. v.name, options, "UIPanelButtonTemplate")
+                frame:SetSize(150, 25)
+                frame:SetText(v.text)
+                if frame:HasScript("OnClick") then
+                    frame:SetScript('OnClick', function(...)
+                        if v.click then
+                            v.click(this, ...)
                         end
                     end)
                 end
-                this[btnConfig.name] = btn
-                this[btnConfig.name .. 'Texture'] = normalTexture
             end
-        end
-        if v.type == 'Button' then
-            frame = this[v.name] or CreateFrame("Button", W.N .. v.name, options, "UIPanelButtonTemplate")
-            frame:SetSize(150, 25)
-            frame:SetText(v.text)
-            if frame:HasScript("OnClick") then
-                frame:SetScript('OnClick', function(...)
-                    if v.click then
-                        v.click(this, ...)
-                    end
-                end)
-            end
-        end
-        if frame then
-            this[v.name] = frame
-            frame.IIConfig = v
-            local thisY = baseY + i * offsetY
-            if i > 1 and config[i - 1].type == 'text' then
-                local h = this[config[i - 1].name]:GetHeight()
-                thisY = thisY - h
-            end
-            if show == true then
-                frame:Show()
-                nextY = thisY + 32
-            else
-                frame:Hide()
-                nextY = preY + 32
-            end
+            if frame then
+                this[v.name] = frame
+                frame.IIConfig = v
+                local thisY = baseY + i * offsetY
+                if i > 1 and config[i - 1].type == 'text' then
+                    local h = this[config[i - 1].name]:GetHeight()
+                    thisY = thisY - h
+                end
+                if show == true then
+                    frame:Show()
+                    nextY = thisY + 32
+                else
+                    frame:Hide()
+                    nextY = preY + 32
+                end
 
-            frame:SetPoint("TOPLEFT", baseX, thisY)
-            if v.enter then
-                frame:SetScript('OnEnter', function(...)
-                    v.enter(this, ...)
-                end)
-            end
-            if v.leave then
-                frame:SetScript('OnLeave', function(...)
-                    v.leave(this, ...)
-                end)
-            end
-            if v.subElement and #v.subElement > 0 then
-                preY = InItOPT(v.subElement, baseX + offsetX, thisY, '', settings[v.name])
+                frame:SetPoint("TOPLEFT", baseX, thisY)
+                if v.enter then
+                    frame:SetScript('OnEnter', function(...)
+                        v.enter(this, ...)
+                    end)
+                end
+                if v.leave then
+                    frame:SetScript('OnLeave', function(...)
+                        v.leave(this, ...)
+                    end)
+                end
+                if v.subElement and #v.subElement > 0 then
+                    preY = InItOPT(v.subElement, baseX + offsetX, thisY, '', settings[v.name])
+                end
             end
         end
     end

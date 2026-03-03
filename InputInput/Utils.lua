@@ -13,6 +13,9 @@ local GetZoneText = API.GetZoneText
 local GetSubZoneText = API.GetSubZoneText
 local C_ChatInfo_SendAddonMessage = API.C_ChatInfo_SendAddonMessage
 local C_Timer_After = API.C_Timer_After
+local C_ClassColor_GetClassColor = API.C_ClassColor_GetClassColor
+local issecretvalue = API.issecretvalue
+local C_BattleNet_GetAccountInfoByGUID = API.C_BattleNet_GetAccountInfoByGUID
 
 local LibSerialize = LibStub("LibSerialize")
 local LibDeflate = LibStub:GetLibrary("LibDeflate")
@@ -273,7 +276,7 @@ function U:BTagFilter(text)
             -- 如果游戏信息包含职业名称
             if gameFriend and gameFriend.className then
                 -- 根据职业名称获取对应的颜色
-                local classColor = RAID_CLASS_COLORS[lcoalClassToEnglishClass(gameFriend.className)]
+                local classColor = C_ClassColor_GetClassColor(lcoalClassToEnglishClass(gameFriend.className))
                 -- 设置账号名称的颜色
                 self:UnitColor(accountInfo.accountName, classColor.colorStr)
                 -- 返回带有颜色代码的账号名称
@@ -479,7 +482,7 @@ end
 ---@param unitName string 单位名称
 ---@param color string|nil 单位颜色，如果未提供，则尝试根据单位名称从缓存中获取
 ---@return string|nil 单位的颜色字符串，如果无法确定，则为nil
-function U:UnitColor(unitName, color)
+function U:UnitColor(unitName, color, senderGUID)
     -- 从数据库读取单位颜色缓存，如果不存在，则初始化为空表，避免每次都读取数据库
     local UNIT_COLOR_CACHE = D:ReadDB('UNIT_COLOR_CACHE', {}, true)
 
@@ -491,18 +494,32 @@ function U:UnitColor(unitName, color)
             break
         end
     end
-
-    -- 如果提供了颜色，则直接缓存该颜色，否则尝试从缓存中获取
-    UNIT_COLOR_CACHE[unitName] = color or UNIT_COLOR_CACHE[unitName]
-
-    -- 如果缓存中没有该单位的颜色，尝试根据单位名称获取战斗网账号信息并设置颜色
-    if UNIT_COLOR_CACHE[unitName] == nil then
-        local accountInfo = BNet_GetAccountInfoFromAccountName(unitName)
-        -- 如果账号信息存在，并且包含游戏账号信息以及职业名称，则设置颜色
-        if accountInfo and accountInfo.gameAccountInfo and accountInfo.gameAccountInfo.className then
-            -- 将职业名称转换为英文，并根据职业获取对应的颜色
-            UNIT_COLOR_CACHE[unitName] = RAID_CLASS_COLORS
-                [lcoalClassToEnglishClass(accountInfo.gameAccountInfo.className)].colorStr
+    if issecretvalue(unitName) then
+        UNIT_COLOR_CACHE[senderGUID] = color or UNIT_COLOR_CACHE[senderGUID]
+        -- 如果缓存中没有该单位的颜色，尝试根据单位GUID获取战网账号信息并设置颜色
+        if UNIT_COLOR_CACHE[senderGUID] == nil then
+            local accountInfo = C_BattleNet_GetAccountInfoByGUID(senderGUID)
+            -- 如果账号信息存在，并且包含游戏账号信息以及职业名称，则设置颜色
+            if accountInfo and accountInfo.gameAccountInfo and accountInfo.gameAccountInfo.className then
+                -- 将职业名称转换为英文，并根据职业获取对应的颜色
+                UNIT_COLOR_CACHE[unitName] = C_ClassColor_GetClassColor(lcoalClassToEnglishClass(accountInfo
+                    .gameAccountInfo
+                    .className)).colorStr
+            end
+        end
+    else
+        -- 如果提供了颜色，则直接缓存该颜色，否则尝试从缓存中获取
+        UNIT_COLOR_CACHE[unitName] = color or UNIT_COLOR_CACHE[unitName]
+        -- 如果缓存中没有该单位的颜色，尝试根据单位名称获取战网账号信息并设置颜色
+        if UNIT_COLOR_CACHE[unitName] == nil then
+            local accountInfo = BNet_GetAccountInfoFromAccountName(unitName)
+            -- 如果账号信息存在，并且包含游戏账号信息以及职业名称，则设置颜色
+            if accountInfo and accountInfo.gameAccountInfo and accountInfo.gameAccountInfo.className then
+                -- 将职业名称转换为英文，并根据职业获取对应的颜色
+                UNIT_COLOR_CACHE[unitName] = C_ClassColor_GetClassColor(lcoalClassToEnglishClass(accountInfo
+                    .gameAccountInfo
+                    .className)).colorStr
+            end
         end
     end
 
@@ -946,9 +963,9 @@ function U:EditBoxTip(text)
 end
 
 local compressedTablesCache = {}
-local configForDeflate = {level = 9}
+local configForDeflate = { level = 9 }
 local configForLS = {
-  errorOnUnserializableType =  false
+    errorOnUnserializableType = false
 }
 
 function U:TableToString(inTable)

@@ -13,6 +13,7 @@ local C_ClubFinder_GetRecruitingClubInfoFromFinderGUID = API.C_ClubFinder_GetRec
 local GetAchievementInfo = API.GetAchievementInfo
 local UnitClass = API.UnitClass
 local C_CurrencyInfo_GetCurrencyInfo = API.C_CurrencyInfo_GetCurrencyInfo
+local C_ClassColor_GetClassColor = API.C_ClassColor_GetClassColor
 
 local emotes = {
     { value = "angel",      key = L["angel"] },
@@ -178,7 +179,7 @@ local function ReplaceIconString(text)
             -- trade_level = level
             local unit = UnitTokenFromGUID(guid)
             if unit then
-                local classColor = RAID_CLASS_COLORS[select(2, UnitClass(unit))]
+                local classColor = C_ClassColor_GetClassColor(select(2, UnitClass(unit)))
                 if not classColor then
                     ---@diagnostic disable-next-line: missing-fields
                     classColor = {

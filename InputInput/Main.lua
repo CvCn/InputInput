@@ -23,6 +23,8 @@ local C_AddOns_GetAddOnEnableState = API.C_AddOns_GetAddOnEnableState
 local C_AddOns_EnableAddOn = API.C_AddOns_EnableAddOn
 local C_AddOns_DisableAddOn = API.C_AddOns_DisableAddOn
 local C_ChatInfo_RegisterAddonMessagePrefix = API.C_ChatInfo_RegisterAddonMessagePrefix
+local issecretvalue = API.issecretvalue
+local C_ClassColor_GetClassColor = API.C_ClassColor_GetClassColor
 -- 引入结巴分词库
 local jieba = LibStub("inputinput-jieba")
 
@@ -579,15 +581,20 @@ end
 ---@param name string
 ---@param realm string
 ---@return string
-local function addLevel(name, realm)
-	local maxLevel = GetMaxPlayerLevel()
-	local level = UnitLevel(name)
+local function addLevel(name, realm, senderGUID)
+	local level = 0
+	if not issecretvalue(name) then
+		level = UnitLevel(name)
+	end
 	local name_realm = name
-	if realm and #realm > 0 and realm ~= GetRealmName() then
+	if not issecretvalue(realm) and realm and realm ~= GetRealmName() then
 		name_realm = U:join('-', name, realm)
 	end
-	if level and level ~= 0 and maxLevel ~= level then
-		name_realm = '|cFF909399' .. level .. ' |r' .. name_realm
+	if level and level ~= 0 then
+		local maxLevel = GetMaxPlayerLevel()
+		if maxLevel ~= level then
+			name_realm = '|cFF909399' .. level .. ' |r' .. name_realm
+		end
 	end
 	return name_realm
 end
@@ -613,30 +620,31 @@ local function FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer)
 					name_realm = '|BTag:' .. accountInfo.battleTag .. '|BTag'
 				end
 			end
-		elseif #senderGUID > 0 then
+		else
 			local localizedClass, englishClass, localizedRace, englishRace, sex, name, realmName = GetPlayerInfoByGUID(
 				senderGUID)
-			class = englishClass
-			name_realm = addLevel(name, realmName)
+			if localizedClass then
+				class = englishClass
+				name_realm = addLevel(name, realmName, senderGUID)
+			end
 		end
 	end
-	if #name_realm <= 0 then
+	if not issecretvalue(name_realm) and #name_realm <= 0 then
 		name_realm = sender or ''
 		local name, realm = strsplit('-', name_realm)
 		class = UnitClass(name)
-		name_realm = addLevel(name, realm)
+		name_realm = addLevel(name, realm, senderGUID)
 	end
 
-	local classColor = RAID_CLASS_COLORS[class]
+	local classColor = C_ClassColor_GetClassColor(class)
 	if not classColor then
 		---@diagnostic disable-next-line: missing-fields
 		classColor = {
 			colorStr = 'FF' .. channelColor
 		}
 	else
-		U:UnitColor(name_realm, classColor.colorStr)
+		U:UnitColor(name_realm, classColor.colorStr, senderGUID)
 	end
-
 	local TO = ''
 	if isPlayer then
 		TO = L['TO'] .. ': '
@@ -1183,21 +1191,24 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 		end
 	end)
 
-
-	-- hooksecurefunc("ChatEdit_UpdateHeader", function(self)
-	-- 	ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
-	-- end)
 	-- 11.2.7
-	---@diagnostic disable-next-line: undefined-field
-	for _, frameName in ipairs(_G.CHAT_FRAMES) do
-		local chat = _G[frameName]
-		if chat then
-			local editbox = chat.editBox
-			hooksecurefunc(editbox, "UpdateHeader", function(self)
-				ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
-			end)
+	if W.ClientVersion > 110207 then
+		---@diagnostic disable-next-line: undefined-field
+		for _, frameName in ipairs(_G.CHAT_FRAMES) do
+			local chat = _G[frameName]
+			if chat then
+				local editbox = chat.editBox
+				hooksecurefunc(editbox, "UpdateHeader", function(self)
+					ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
+				end)
+			end
 		end
+	else
+		hooksecurefunc("ChatEdit_UpdateHeader", function(self)
+			ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
+		end)
 	end
+
 
 	-- 设置焦点获得事件处理函数
 	editBox:HookScript("OnEditFocusGained", function(self)
@@ -1225,10 +1236,14 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 	end)
 
 	local frame_E = CreateFrame("Frame", "II_EVENT_FRAME")
-	for k, v in pairs(ChatLabels) do
-		frame_E:RegisterEvent(v)
+
+	--正式服关闭聊天信息显示功能
+	if W.ClientVersion >= 10100 and W.ClientVersion <= 110207 then
+		for k, v in pairs(ChatLabels) do
+			frame_E:RegisterEvent(v)
+		end
+		frame_E:RegisterEvent('CHAT_MSG_CHANNEL')
 	end
-	frame_E:RegisterEvent('CHAT_MSG_CHANNEL')
 
 	frame_E:HookScript("OnEvent",
 		function(self, ...)
@@ -1405,7 +1420,7 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 	if not isInit then
 		editBox, bg, border, backdropFrame2, resizeButton, resizeBtnTexture, channel_name, II_TIP, II_LANG, bg3 =
 			MAIN:Init()
-		
+
 		C_ChatInfo_RegisterAddonMessagePrefix('INPUTINPUT_V')
 		U:Delay(5, function()
 			U:InitFriends()
@@ -1642,15 +1657,28 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 					local discord = 'https://discord.gg/qC9RAdXN'
 					local curseforge = 'https://www.curseforge.com/wow/addons/inputinput/comments'
 					local kook = 'https://kook.vip/vghP6R'
-					U:Delay(5, function(cb)
-						LOG:Info(string.format(L['Login Information 1'],
-							W.colorName,
-							'|cFFF56C6C[|HInputInputURL:' ..
-							kook .. '|hKOOK(国服)|h]|r、' .. '|cFFF56C6C[|HInputInputURL:' .. discord .. '|hDiscord|h]|r',
-							'|cFFF56C6C[|HInputInputURL:' .. curseforge .. '|hCurseForge|h]|r'))
-						LOG:Info(string.format(L['Login Information 2'], "|cff409EFF/ii|r", "|cff409EFF/inputinput|r",
-							'|cffF56C6C|HInputInputOPT:show|h[', ']|h|r'))
-					end)
+					if W.ClientVersion >= 110000 then
+						U:Delay(5, function(cb)
+							LOG:Info(string.format(L['Login Information 1'],
+								W.colorName,
+								'|cFFF56C6C[|HInputInputURL:' ..
+								kook ..
+								'|hKOOK(国服)|h]|r、' .. '|cFFF56C6C[|HInputInputURL:' .. discord .. '|hDiscord|h]|r',
+								'|cFFF56C6C[|HInputInputURL:' .. curseforge .. '|hCurseForge|h]|r'))
+							LOG:Info(string.format(L['Login Information 2'], "|cff409EFF/ii|r", "|cff409EFF/inputinput|r",
+								'|cffF56C6C|HInputInputOPT:show|h[', ']|h|r'))
+						end)
+					else
+						U:Delay(5, function(cb)
+							LOG:Info(string.format(L['Login Information 1'],
+								W.colorName,
+								'|cFFF56C6C' ..
+								'KOOK(国服)|r、' .. '|cFFF56C6CDiscord|r',
+								'|cFFF56C6CCurseForge|r'))
+							LOG:Info(string.format(L['Login Information 2'], "|cff409EFF/ii|r", "|cff409EFF/inputinput|r",
+								'|cffF56C6C', '|r'))
+						end)
+					end
 				end
 			end)
 

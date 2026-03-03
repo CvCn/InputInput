@@ -259,19 +259,36 @@ Fun({
         ['1.15.0'] = C_AddOns.GetNumAddOns,
         ---@diagnostic disable-next-line: undefined-global
         ['1.13.2'] = GetNumAddOns,
-        ['1.0.0'] = function () end
+        ['1.0.0'] = function() end
     },
     C_AddOns_GetAddOnInfo = {
         ['1.15.0'] = C_AddOns.GetAddOnInfo,
         ---@diagnostic disable-next-line: undefined-global
         ['1.13.2'] = GetAddOnInfo,
-        ['1.0.0'] = function () end
+        ['1.0.0'] = function() end
     },
     C_AddOns_IsAddOnLoaded = {
         ['1.15.0'] = C_AddOns.IsAddOnLoaded,
         ---@diagnostic disable-next-line: undefined-global
         ['1.13.2'] = IsAddOnLoaded,
-        ['1.0.0'] = function () end
+        ['1.0.0'] = function() end
+    },
+    issecretvalue = {
+        ['12.0.0'] = issecretvalue,
+        ['1.0.0'] = function() return false end
+    },
+    C_ClassColor_GetClassColor = {
+        ['8.1.5'] = function (className)
+            local color = C_ClassColor.GetClassColor(className)
+            color.colorStr = color:GenerateHexColor()
+            return color
+        end,
+        ['1.0.0'] = function (class)
+            return RAID_CLASS_COLORS[class]
+        end
+    },
+    C_BattleNet_GetAccountInfoByGUID = {
+        ['1.1.0'] = C_BattleNet.GetAccountInfoByGUID
     }
 })
 
