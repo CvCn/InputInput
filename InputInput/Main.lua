@@ -571,6 +571,7 @@ function MAIN:Init()
 	local font, fontsize, flags = editBox:GetFont()
 	II_LANG:SetFont(font, fontsize * 0.4, flags)
 	II_LANG:SetText(_G["INPUT_" .. editBox:GetInputLanguage()])
+	-- II_LANG:Hide()
 
 	-- LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 
@@ -853,6 +854,7 @@ local function Chat(editBox, chatType, backdropFrame2, channel_name)
 	backdropFrame2:SetHeight(c_h)
 end
 
+local disableInputLanguageTip = false
 ---@param editBox EditBox
 ---@param bg Texture
 ---@param bg3 Texture
@@ -875,6 +877,11 @@ local function ChannelChange(editBox, bg, bg3, border, backdropFrame2, resizeBtn
 	-- 	v:SetColorTexture(r, g, b, 0.15)
 	-- end
 	II_LANG:SetTextColor(r, g, b, 0.6)
+	if disableInputLanguageTip then
+		II_LANG:Hide()
+	else
+		II_LANG:Show()
+	end
 	-- local c_start = CreateColor(0, 0, 0, 0.3)
 	-- local c_end = CreateColor(r, g, b, 0.15)
 	-- bg3:SetGradient("VERTICAL", c_start, c_end)
@@ -1353,6 +1360,10 @@ local function optionSetup(backdropFrame2)
 
 	function MAIN:DisableLoginInformation(show)
 		disableLoginInformation = show
+	end
+
+	function MAIN:DisableInputLanguageTip(show)
+		disableInputLanguageTip = show
 	end
 
 	-- M:RegisterCallback('MAIN', 'HideChat', function(show)

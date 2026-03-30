@@ -17,7 +17,7 @@ local function Uprint(level, ...)
             local ps = ""
             for _, v in ipairs({ ... }) do
                 if v then
-                    local m, c = gsub(v, '%|', "||")
+                    local m, c = gsub(tostring(v), '%|', "||")
                     ps = ps .. m .. ' '
                 end
             end

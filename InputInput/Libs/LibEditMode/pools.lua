@@ -1,8 +1,13 @@
----@diagnostic disable: undefined-global
-local MINOR = 8
-local lib, minor = LibStub('LibEditMode')
-if minor > MINOR then
-	return
+local _, ns = ...
+local lib
+if ns.LibEditMode then
+	lib = ns.LibEditMode
+else
+	local MINOR, prevMinor = 15
+	lib, prevMinor = LibStub('LibEditMode')
+	if prevMinor > MINOR then
+		return
+	end
 end
 
 local Acquire = CreateUnsecuredObjectPool().Acquire

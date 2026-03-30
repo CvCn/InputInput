@@ -21,21 +21,31 @@ exclude_files = {
 }
 
 read_globals = {
+	-- stdlib
+	table = {fields = {'wipe'}},
+
 	-- FrameXML objects
+	'ColorPickerFrame',
 	'CreateUnsecuredObjectPool',
 	'EditModeManagerFrame',
+	'EditModeSystemSettingsDialog',
 	'EventRegistry',
 	'MinimalSliderWithSteppersMixin',
 	'UIParent',
+	'SettingsTooltip',
+	'DefaultTooltipMixin',
 
 	-- FrameXML functions
 	'CopyTable',
+	'CreateColor',
 	'CreateMinimalSliderFormatter',
 	'GenerateClosure',
 	'Mixin',
 
 	-- FrameXML constants
+	'DISABLED_FONT_COLOR',
 	'SOUNDKIT',
+	'WHITE_FONT_COLOR',
 
 	-- GlobalStrings
 	'HUD_EDIT_MODE_RESET_POSITION',
@@ -47,6 +57,9 @@ read_globals = {
 
 	-- API
 	'CreateFrame',
+	'GetBuildInfo',
+	'InCombatLockdown',
+	'IsShiftKeyDown',
 	'PlaySound',
 	'hooksecurefunc',
 	'securecallfunction',

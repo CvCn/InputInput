@@ -69,6 +69,7 @@ local function changeSetting(settings)
     M.MAIN:EnableIL_zh(settings.enableIL_zh)
     M.MAIN:MultiTip(settings.showMultiTip)
     M.MAIN:DisableLoginInformation(settings.disableLoginInformation)
+    M.MAIN:DisableInputLanguageTip(settings.disableInputLanguageTip)
 
     -- M:Fire('MAIN', 'HideChat', settings.showChat)
     -- M:Fire('MAIN', 'HideChannel', settings.showChannel)
@@ -219,11 +220,11 @@ local function InItOPT(config, preX, preY, name, show)
             if frame then
                 this[v.name] = frame
                 frame.IIConfig = v
-                local thisY = baseY + i * offsetY
-                if i > 1 and config[i - 1].type == 'text' then
-                    local h = this[config[i - 1].name]:GetHeight()
-                    thisY = thisY - h
-                end
+                local thisY = baseY + i * offsetY + (v.offset and v.offset or 0)
+                -- if i > 1 and config[i - 1].type == 'text' then
+                --     local h = this[config[i - 1].name]:GetHeight()
+                --     thisY = thisY - h
+                -- end
                 if show == true then
                     frame:Show()
                     nextY = thisY + 32

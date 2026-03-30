@@ -50,6 +50,12 @@ OPTCONFIG.optionConfig = {
         default = false
     },
     {
+        name = 'disableInputLanguageTip',
+        type = 'CheckButton',
+        text = L['Disable Input Language Tip'],
+        default = false
+    },
+    {
         name = 'enableIL_zh',
         type = 'CheckButton',
         text = format(L['Enable InputInput_Libraries_zh'],
@@ -90,7 +96,7 @@ OPTCONFIG.optionConfig = {
             U:EditBoxTip(encoded)
         end,
         enter = function(this, self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")                                                       -- 设置提示框的位置
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")                                     -- 设置提示框的位置
             GameTooltip:SetText(L['This will not export any of your private information']) -- 设置提示框的内容
             GameTooltip:Show()
         end,
@@ -106,6 +112,7 @@ OPTCONFIG.optionConfig = {
     {
         name = 'contact',
         type = 'BTNGroup',
+        offset = -150,
         BTNElement = {
             {
                 name = 'KOOK',

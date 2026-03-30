@@ -1,0 +1,26 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - master
+    tags-ignore:
+      - '**'
+    paths:
+      - '**.lua'
+  pull_request:
+    paths:
+      - '**.lua'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Run luacheck
+        uses: nebularg/actions-luacheck@v1
+        with:
+          annotate: warning
+          args: --no-color

@@ -117,3 +117,5 @@ L['UpdateTip'] = "自動補充快捷鍵（|cffF56C6CControl+Enter|r）已經|cff
 L['ExportLog'] = '導出運行日誌'
 
 L['This will not export any of your private information'] = "不會導出您的任何隱私信息"
+
+L['Disable Input Language Tip'] = '關閉輸入語言提示'

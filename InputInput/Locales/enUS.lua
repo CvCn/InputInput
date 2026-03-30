@@ -116,3 +116,5 @@ L['UpdateTip'] = "The automatic addition shortcut key（|cffF56C6CControl+Enter|
 L['ExportLog'] = 'Export run log'
 
 L['This will not export any of your private information'] = 'This will not export any of your private information'
+
+L['Disable Input Language Tip'] = 'Disable Input Language Tip'
