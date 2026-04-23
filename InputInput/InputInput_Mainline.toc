@@ -1,14 +1,14 @@
-## Interface: 120001, 120000
+## Interface: 120001, 120005
 ## IconTexture: Interface\AddOns\InputInput\Media\icon
 
 ## Title: |cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r
 ## Notes: Input box enhancement
-## Notes-zhCN: 输入框增强
-## Notes-zhTW: 輸入框增強
-## Notes-ruRU: Расширение поля ввода
+## Notes-zhCN: 输入框增强 /ii or /inputinput
+## Notes-zhTW: 輸入框增強 /ii or /inputinput
+## Notes-ruRU: Расширение поля ввода /ii or /inputinput
 ## Author: York
-## Version: 1.1.2
-## X-Date: 2025-03-04
+## Version: 1.1.3
+## X-Date: 2025-04-23
 
 ## Category-enUS: Chat
 ## Category-deDE: Chat
