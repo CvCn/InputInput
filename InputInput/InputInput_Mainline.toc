@@ -7,8 +7,8 @@
 ## Notes-zhTW: 輸入框增強 /ii or /inputinput
 ## Notes-ruRU: Расширение поля ввода /ii or /inputinput
 ## Author: York
-## Version: 1.1.3
-## X-Date: 2025-04-23
+## Version: 1.1.4
+## X-Date: 2025-04-25
 
 ## Category-enUS: Chat
 ## Category-deDE: Chat

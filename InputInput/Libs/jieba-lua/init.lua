@@ -15,8 +15,8 @@ if not init then
 end
 
 local function dictItem(k)
-   if W.dict1 then
-      return W.dict1[k] or W.dict2[k] or W.dict3[k] or W.dict4[k] or W.dict5[k] or W.dict6[k]
+   if W.M_zh then
+      return W.M_zh:dictItem(k)
    end
 end
 

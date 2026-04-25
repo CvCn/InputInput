@@ -25,6 +25,7 @@ local C_AddOns_DisableAddOn = API.C_AddOns_DisableAddOn
 local C_ChatInfo_RegisterAddonMessagePrefix = API.C_ChatInfo_RegisterAddonMessagePrefix
 local issecretvalue = API.issecretvalue
 local C_ClassColor_GetClassColor = API.C_ClassColor_GetClassColor
+local GetLocale = API.GetLocale
 -- 引入结巴分词库
 local jieba = LibStub("inputinput-jieba")
 
@@ -143,7 +144,7 @@ local function UpdateFontStringPosition(editBox, displayFontString, msg, i, size
 		displayFontString:SetText(' ' .. i .. ': ' .. msg .. ' ')
 	else
 		displayFontString:SetFont(font2, fontsize * 1, flags)
-		displayFontString:SetPoint("TOPLEFT", editBox, "TOPLEFT", x, y)
+		displayFontString:SetPoint("TOPLEFT", editBox, "TOPLEFT", x, math.floor(y))
 		displayFontString:SetText(msg)
 	end
 	-- if sizei > 1 then
@@ -184,6 +185,48 @@ local function getLastUTF8Char(s)
 	return s:sub(lastCharStart)
 end
 
+local function searchHis(_tip, patt2, his, reverse)
+	local f1break = false
+	if his then
+		local start, _end, step = 1, #his, 1
+		if reverse then
+			start, _end, step = #his, 1, -1
+		end
+		local count = 0
+		for i = start, _end, step do
+			if f1break or count >= 2 then break end
+			local h = his[i]
+			if h and #h > 0 then
+				h = h:gsub("%|c.-(%[.-%]).-%|r", function(a1)
+					-- LOG:Debug(a1)
+					return a1
+				end)
+				-- LOG:Debug('h: ', h)
+				local hisp = U:CutWord(h)
+				for h_index, h2 in ipairs(hisp) do
+					if f1break then break end
+					-- 先按分词匹配
+					-- LOG:Debug(patt2)
+					local start, _end = strfind(h2, patt2, 1, true)
+					if start and start > 0 then
+						-- LOG:Debug(patt2)
+						if _end ~= #h2 then
+							U:InsertNoRepeat(_tip, strsub(h2, _end + 1))
+							count = count + 1
+						else
+							local pnex = hisp[h_index + 1]
+							if pnex and #pnex > 0 then
+								U:InsertNoRepeat(_tip, pnex)
+								f1break = true
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
 local C_Word = {}
 local multiTip = true
 
@@ -203,39 +246,14 @@ local function FindHis(his, patt)
 	-- end
 	if not pattp or #pattp <= 0 then return {} end
 	local _tip = {}
-	local f1break = false
-	if his then
-		for i = #his, 1, -1 do
-			if f1break then break end
-			local h = his[i]
-			if h and #h > 0 then
-				h = h:gsub("%|c.-(%[.-%]).-%|r", function(a1)
-					-- LOG:Debug(a1)
-					return a1
-				end)
-				-- LOG:Debug('h: ', h)
-				local hisp = U:CutWord(h)
-				for h_index, h2 in ipairs(hisp) do
-					if f1break then break end
-					-- 先按分词匹配
-					local patt2 = pattp[#pattp]
-					-- LOG:Debug(patt2)
-					local start, _end = strfind(h2, patt2, 1, true)
-					if start and start > 0 then
-						-- LOG:Debug(patt2)
-						if _end ~= # h2 then
-							U:InsertNoRepeat(_tip, strsub(h2, _end + 1))
-						else
-							local pnex = hisp[h_index + 1]
-							if pnex and #pnex > 0 then
-								U:InsertNoRepeat(_tip, pnex)
-								f1break = true
-							end
-						end
-					end
-				end
-			end
-		end
+
+	-- 匹配历史记录 2
+	searchHis(_tip, pattp[#pattp], his, true)
+	
+
+	-- 英文词库 2
+	if W.M_en then
+		W.M_en:searchWords(pattp, _tip)
 	end
 
 	-- for i = #his, 1, -1 do
@@ -265,7 +283,7 @@ local function FindHis(his, patt)
 	-- 		end
 	-- 	end
 	-- end
-	-- 匹配常用词
+	-- 匹配玩家常用词 1
 	local c_w = U:FindMaxValue(C_Word, pattp[#pattp])
 	if c_w then
 		local start, _end = strfind(c_w, pattp[#pattp], 1, true)
@@ -278,7 +296,7 @@ local function FindHis(his, patt)
 	-- end
 	-- LOG:Debug(lastChat)
 
-	-- 匹配角色名字和地区名字
+	-- 匹配角色名字和地区名字 2
 	-- LOG:Debug(pattp[#pattp])
 	local playerTip = U:PlayerTip(patt, pattp[#pattp])
 	if playerTip then
@@ -289,44 +307,12 @@ local function FindHis(his, patt)
 			U:InsertNoRepeat(_tip, playerTip)
 		end
 	end
-	-- 魔兽词库
-	if W.words then
-		local w = ''
-		local f = 0
-		local w2 = ''
-		local f2 = 0
-		local treeKey = jieba.sub(pattp[#pattp], 1, 1)
-		local tree = W.words[treeKey] or {}
-		for _, v in ipairs(tree) do
-			local word = v.word
-			local freq = tonumber(v.freq) or 0
-			local start, _end = strfind(word, pattp[#pattp], 1, true)
-			if start and start == 1 and _end ~= #word and freq > f then
-				-- 从匹配位置之后截取字符串
-				local p = strsub(word, _end + 1)
-				if p and #p > 0 then
-					w = p
-					f = freq
-				end
-			end
-			if start and start == 1 and _end ~= #word and freq > f2 and freq < f then
-				-- 从匹配位置之后截取字符串
-				local p = strsub(word, _end + 1)
-				if p and #p > 0 then
-					w2 = p
-					f2 = freq
-				end
-			end
-		end
-		if f > 0 then
-			LOG:Debug('词库')
-			U:InsertNoRepeat(_tip, w)
-		end
-		if f2 > 0 then
-			LOG:Debug('词库')
-			U:InsertNoRepeat(_tip, w2)
-		end
+	if W.M_zh then
+		-- 魔兽词库 2
+		-- 中文通用词 补充到6条
+		W.M_zh:searchWords(_tip, pattp)
 	end
+
 	if not multiTip then
 		return { _tip[1] }
 	end
@@ -444,7 +430,7 @@ function MAIN:Init()
 	scale = D:ReadDB('input_size', 1)
 	messageHistory = D:ReadDB('messageHistory', {}, true)
 	C_Word = D:ReadDB('C_Word', {}, true)
-	U:InitWordCache(messageHistory)
+
 	historyIndex = #messageHistory + 1
 	-- 获取默认的聊天输入框
 	local editBox = ChatFrame1EditBox
@@ -552,17 +538,21 @@ function MAIN:Init()
 
 	resizeButton:Hide()
 
-	local II_TIP = {
-		backdropFrame:CreateFontString('II_TIP', "OVERLAY", "GameFontNormal"),
-		backdropFrame:CreateFontString('II_TIP2', "OVERLAY", "GameFontNormal"),
-		backdropFrame:CreateFontString('II_TIP3', "OVERLAY", "GameFontNormal"),
-		backdropFrame:CreateFontString('II_TIP4', "OVERLAY", "GameFontNormal"),
-		backdropFrame:CreateFontString('II_TIP5', "OVERLAY", "GameFontNormal"),
-	}
-	for _, v in ipairs(II_TIP) do
-		v:SetTextColor(1, 1, 1, 0.3) -- 设置颜色为白色
-		v:Hide()
-	end
+
+	local II_TIP = {}
+
+
+	-- 动态创建
+	setmetatable(II_TIP, {
+		__index = function(table, key)
+			local re = rawget(table, key) or backdropFrame:CreateFontString('II_TIP' .. key, "OVERLAY", "GameFontNormal")
+			re:SetTextColor(1, 1, 1, 0.3) -- 设置颜色为白色
+			re:Hide()
+			table[key] = re
+			return re
+		end
+	})
+
 
 	-- 语言
 	local II_LANG = editBox:CreateFontString('II_LANG', "OVERLAY", "GameFontNormal")
@@ -570,7 +560,7 @@ function MAIN:Init()
 	II_LANG:SetPoint('BOTTOMRIGHT', editBox, 'BOTTOMRIGHT', 0, 0)
 	local font, fontsize, flags = editBox:GetFont()
 	II_LANG:SetFont(font, fontsize * 0.4, flags)
-	II_LANG:SetText(_G["INPUT_" .. editBox:GetInputLanguage()])
+	II_LANG:SetText(G["INPUT_" .. editBox:GetInputLanguage()])
 	-- II_LANG:Hide()
 
 	-- LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
@@ -882,6 +872,13 @@ local function ChannelChange(editBox, bg, bg3, border, backdropFrame2, resizeBtn
 	else
 		II_LANG:Show()
 	end
+	local lang = G[editBox:GetName() .. "Language"]
+	if lang then
+		lang:Hide()
+		lang:ClearAllPoints()
+		lang:SetPoint("TOPLEFT", UIParent, -9999, -9999)
+	end
+
 	-- local c_start = CreateColor(0, 0, 0, 0.3)
 	-- local c_end = CreateColor(r, g, b, 0.15)
 	-- bg3:SetGradient("VERTICAL", c_start, c_end)
@@ -1096,11 +1093,15 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 			tip = FindHis(messageHistory, text)
 			cacheTxt = text
 		end
-		for i, v in ipairs(II_TIP) do
-			if II_TIP_BG[i] then
-				II_TIP_BG[i]:Hide()
-			end
-			UpdateFontStringPosition(self, v, tip[i], i, #tip)
+
+		for _, bg in ipairs(II_TIP_BG) do
+			if bg then bg:Hide() end
+		end
+		for _, bg in ipairs(II_TIP) do
+			if bg then bg:Hide() end
+		end
+		for i, v in ipairs(tip) do
+			UpdateFontStringPosition(self, II_TIP[i], tip[i], i, #tip)
 		end
 		if userInput then
 			M.HISTORY:simulateInputChange(text, self:GetInputLanguage())
@@ -1112,7 +1113,7 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 		end
 	end)
 	editBox:HookScript("OnInputLanguageChanged", function(self)
-		II_LANG:SetText(_G["INPUT_" .. self:GetInputLanguage()])
+		II_LANG:SetText(G["INPUT_" .. self:GetInputLanguage()])
 	end)
 	editBox:HookScript("OnKeyDown", function(self, key, ...)
 		-- local totalHeight = self:GetHeight() -- 获取 EditBox 的总高度
@@ -1162,7 +1163,7 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 			if text then
 				self:SetText(text)
 			end
-		elseif #tip > 0 and IsLeftControlKeyDown() and (key == "1" or key == "2" or key == "3" or key == "4" or key == "5") then
+		elseif #tip > 0 and IsLeftControlKeyDown() and (tonumber(key)) then
 			local ps = tip[tonumber(key)]
 			if ps then
 				local message = self:GetText()
@@ -1201,8 +1202,8 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 	-- 11.2.7
 	if W.ClientVersion > 110207 then
 		---@diagnostic disable-next-line: undefined-field
-		for _, frameName in ipairs(_G.CHAT_FRAMES) do
-			local chat = _G[frameName]
+		for _, frameName in ipairs(G.CHAT_FRAMES) do
+			local chat = G[frameName]
 			if chat then
 				local editbox = chat.editBox
 				hooksecurefunc(editbox, "UpdateHeader", function(self)
@@ -1387,7 +1388,7 @@ local function optionSetup(backdropFrame2)
 	-- end)
 
 	function M.MAIN:EnableIL_zh(show)
-		local isLoad = C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2
+		local isLoad = C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == Enum.AddOnEnableState.All
 		if (isLoad and not show) or (not isLoad and show) then
 			StaticPopup_Show("InputInput_RELOAD_UI_CONFIRMATION")
 		end
@@ -1407,7 +1408,7 @@ local frame = CreateFrame("Frame", "II_MAIN_FRAME")
 frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("CVAR_UPDATE")
-frame:RegisterEvent("ADDON_LOADED")
+-- frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("CHAT_MSG_ADDON")
 
 frame:RegisterEvent("ZONE_CHANGED")
@@ -1427,6 +1428,8 @@ local editBox, bg, border, backdropFrame2, resizeButton, resizeBtnTexture, chann
 local SendRecieveGroupSize = 0
 local SendMessageWaiting = nil
 local versionUpdateMsg = nil
+
+
 frame:HookScript("OnEvent", function(self_f, event, ...)
 	if not isInit then
 		editBox, bg, border, backdropFrame2, resizeButton, resizeBtnTexture, channel_name, II_TIP, II_LANG, bg3 =
@@ -1551,11 +1554,11 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 	end
 	if event == 'PLAYER_ENTERING_WORLD' or strfind(event, "WHISPER", 0, true) then
 		for _, chatFrameName in pairs(CHAT_FRAMES) do
-			local chatFrameTab = _G[chatFrameName .. "Tab"]
+			local chatFrameTab = G[chatFrameName .. "Tab"]
 			-- Hook点击标签的事件
 			chatFrameTab:HookScript("OnClick", function(self, button)
 				if button == "LeftButton" then
-					local chatFrameEditBox = _G[chatFrameName .. "EditBox"]
+					local chatFrameEditBox = G[chatFrameName .. "EditBox"]
 					chatFrameEditBox:Hide() -- 隐藏聊天输入框
 					ChatFrame1EditBox:SetFocus()
 					ChatFrame1EditBox:Hide()
@@ -1595,44 +1598,6 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 		U:InitFriends()
 	elseif event == 'GUILD_ROSTER_UPDATE' then
 		U:InitGuilds()
-	elseif event == 'ADDON_LOADED' then
-		local addOnName, containsBindings = ...
-		if addOnName == "InputInput_Libraries_zh" then
-			LOG:Debug("---加载词库0%---")
-			W.dict1 = LibStub("inputinput-dict1").dict
-			W.dict2 = LibStub("inputinput-dict2").dict
-			W.dict3 = LibStub("inputinput-dict3").dict
-			W.dict4 = LibStub("inputinput-dict4").dict
-			W.dict5 = LibStub("inputinput-dict5").dict
-			W.dict6 = LibStub("inputinput-dict6").dict
-			-- 魔兽词库
-			W.words = LibStub("inputinput-words").words
-
-			local total = 60101967
-
-			local logtotal = math.log(total)
-
-			for i, v in pairs(W.dict1) do
-				W.dict1[i] = math.log(v) - logtotal
-			end
-			for i, v in pairs(W.dict2) do
-				W.dict2[i] = math.log(v) - logtotal
-			end
-			for i, v in pairs(W.dict3) do
-				W.dict3[i] = math.log(v) - logtotal
-			end
-			for i, v in pairs(W.dict4) do
-				W.dict4[i] = math.log(v) - logtotal
-			end
-			for i, v in pairs(W.dict5) do
-				W.dict5[i] = math.log(v) - logtotal
-			end
-			for i, v in pairs(W.dict6) do
-				W.dict6[i] = math.log(v) - logtotal
-			end
-			LOG:Debug("---加载词库100%---")
-			U:InitWordCache(messageHistory)
-		end
 	elseif event == 'ZONE_CHANGED' or event == 'ZONE_CHANGED_INDOORS' or event == 'ZONE_CHANGED_NEW_AREA' then
 		U:InitZones()
 	elseif event == 'GROUP_ROSTER_UPDATE' or event == 'RAID_ROSTER_UPDATE' then
@@ -1658,6 +1623,18 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			end
 		end
 	else
+		if INPUTINPUT_LIBRARIES_ZH then
+			W.M_zh = LibStub("INPUTINPUT_LIBRARIES_ZH")
+			W.M_zh:load(GetLocale())
+		end
+		if INPUTINPUT_LIBRARIES_EN then
+			W.M_en = LibStub("INPUTINPUT_LIBRARIES_EN")
+			W.M_en:load()
+		end
+
+		-- 初始历史记录分词缓存
+		U:InitWordCache(messageHistory)
+
 		if (C_AddOns_IsAddOnLoaded("ElvUI") or ElvUI == nil) and
 			(C_AddOns_IsAddOnLoaded("NDui") or NDui == nil) then
 			eventSetup(editBox, bg, border, backdropFrame2, resizeButton, resizeBtnTexture, channel_name, II_TIP, II_LANG,
@@ -1694,11 +1671,16 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 			end)
 
 			U:Delay(7, function(cb)
-				local isLoad = C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2
 				if GetLocale() == 'zhCN' or GetLocale() == 'zhTW' then
-					if not (C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2) then
-						LOG:Warn('|cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r_Libraries_|cffF56C6Czh|r' ..
-							format(L['Not enabled, enter/ii to enable'], "|cff409EFF/ii|r"))
+					if not (C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == Enum.AddOnEnableState.All) then
+						LOG:Warn('|cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r_Libraries_|cffF56C6Czh|r ' ..
+							L['Not enabled'])
+					end
+				end
+				if GetLocale() == 'enUS' then
+					if not (C_AddOns_GetAddOnEnableState("InputInput_Libraries_en") == Enum.AddOnEnableState.All) then
+						LOG:Warn('|cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r_Libraries_|cffF56C6Cen|r ' ..
+							L['Not enabled'])
 					end
 				end
 			end)

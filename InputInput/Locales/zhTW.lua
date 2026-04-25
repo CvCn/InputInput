@@ -95,7 +95,7 @@ L['Disable Login Information'] = '關閉登錄訊息'
 L['Login Information 1'] = "您正在使用%s輸入框增強插件，使用過程中的任何問題都可以透過 %s 或到插件網站 %s 進行反饋"
 L['Login Information 2'] = "輸入 %s 或 %s 打開%s設定面板%s"
 
-L['Not enabled, enter/ii to enable'] = '未開啟，輸入%s開啟'
+L['Not enabled'] = '未開啟'
 
 L['New Version Discovered'] = '%s 發現新版本 %s'
 

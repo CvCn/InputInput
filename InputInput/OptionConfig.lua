@@ -55,22 +55,22 @@ OPTCONFIG.optionConfig = {
         text = L['Disable Input Language Tip'],
         default = false
     },
-    {
-        name = 'enableIL_zh',
-        type = 'CheckButton',
-        text = format(L['Enable InputInput_Libraries_zh'],
-                '|cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r_Libraries_|cffF56C6Czh|r') ..
-            ' |cFF909399' .. ' (' .. L['Need To Reload'] .. ')|r',
-        enter = function(this, self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")                                                       -- 设置提示框的位置
-            GameTooltip:SetText(L['Chinese word processing module can make input prompts more intelligent']) -- 设置提示框的内容
-            GameTooltip:Show()
-        end,
-        leave = function(this, self)
-            GameTooltip:Hide() -- 隐藏提示框
-        end,
-        default = true,
-    },
+    -- {
+    --     name = 'enableIL_zh',
+    --     type = 'CheckButton',
+    --     text = format(L['Enable InputInput_Libraries_zh'],
+    --             '|cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r_Libraries_|cffF56C6Czh|r') ..
+    --         ' |cFF909399' .. ' (' .. L['Need To Reload'] .. ')|r',
+    --     enter = function(this, self)
+    --         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")                                                       -- 设置提示框的位置
+    --         GameTooltip:SetText(L['Chinese word processing module can make input prompts more intelligent']) -- 设置提示框的内容
+    --         GameTooltip:Show()
+    --     end,
+    --     leave = function(this, self)
+    --         GameTooltip:Hide() -- 隐藏提示框
+    --     end,
+    --     default = true,
+    -- },
     {
         name = 'export_log',
         type = 'Button',

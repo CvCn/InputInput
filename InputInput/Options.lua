@@ -66,7 +66,7 @@ local function changeSetting(settings)
     M.MAIN:HideChannel(settings.showChannel)
     M.MAIN:HideTime(settings.showTime)
     M.MAIN:Hidebg(settings.showbg)
-    M.MAIN:EnableIL_zh(settings.enableIL_zh)
+    -- M.MAIN:EnableIL_zh(settings.enableIL_zh)
     M.MAIN:MultiTip(settings.showMultiTip)
     M.MAIN:DisableLoginInformation(settings.disableLoginInformation)
     M.MAIN:DisableInputLanguageTip(settings.disableInputLanguageTip)
@@ -273,22 +273,22 @@ end
 function OPT:loadOPT()
     settings = D:ReadDB("settings", settings)
     InItOPT(nil, nil, -32, '', true)
-    options:SetScript("OnShow", function(self)
-        U:Delay(0.01, function()
-            local text = format(L['Enable InputInput_Libraries_zh'],
-                    '|cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r_Libraries_|cffF56C6Czh|r') ..
-                ' |cFF909399' .. GetAddonMemory('InputInput_Libraries_zh') .. ' (' .. L['Need To Reload'] .. ')|r'
-            this.enableIL_zh.Text:SetText(text)
-            settings.enableIL_zh = C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2
-            this.enableIL_zh:SetChecked(settings.enableIL_zh)
-            for _, v in ipairs(option_info) do
-                if v.name == 'enableIL_zh' then
-                    v.text = text
-                    break
-                end
-            end
-        end)
-    end)
+    -- options:SetScript("OnShow", function(self)
+    --     U:Delay(0.01, function()
+    --         local text = format(L['Enable InputInput_Libraries_zh'],
+    --                 '|cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r_Libraries_|cffF56C6Czh|r') ..
+    --             ' |cFF909399' .. GetAddonMemory('InputInput_Libraries_zh') .. ' (' .. L['Need To Reload'] .. ')|r'
+    --         this.enableIL_zh.Text:SetText(text)
+    --         settings.enableIL_zh = C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == 2
+    --         this.enableIL_zh:SetChecked(settings.enableIL_zh)
+    --         for _, v in ipairs(option_info) do
+    --             if v.name == 'enableIL_zh' then
+    --                 v.text = text
+    --                 break
+    --             end
+    --         end
+    --     end)
+    -- end)
     button:SetScript("OnClick", function()
         settings = InitConfig(option_info, settings, true)
         D:SaveDB("settings", settings)

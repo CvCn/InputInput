@@ -67,22 +67,19 @@ local function trimLargeTablesBySize(obj, threshold, cache)
     -- 计算当前表的总字节大小
     local totalSize = calculateObjectSize(obj)
 
-    -- 如果超过阈值，删除第一个元素
+    -- 如果超过阈值，删除前10个元素
     if totalSize > threshold then
-        -- 获取第一个键
-        local firstKey = nil
-        for k in pairs(obj) do
-            firstKey = k
-            break
-        end
-
-        -- 删除第一个键值对
-        if firstKey ~= nil then
-            obj[firstKey] = nil
-            -- print(string.format(
-            --     "Warning: Table size %d bytes exceeded threshold %d, removed key '%s'",
-            --     totalSize, threshold, tostring(firstKey)
-            -- ))
+        for i = 1, 10 do
+            -- 获取第一个键
+            local firstKey = nil
+            for k in pairs(obj) do
+                firstKey = k
+                break
+            end
+            -- 删除第一个键值对
+            if firstKey ~= nil then
+                obj[firstKey] = nil
+            end
         end
     end
 

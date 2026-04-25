@@ -10,6 +10,7 @@ ignore:
 move-folders:
   InputInput/InputInput: InputInput
   InputInput/InputInput_Libraries_zh: InputInput_Libraries_zh
+  InputInput/InputInput_Libraries_en: InputInput_Libraries_en
 
 move-files:
   InputInput/README.md: InputInput/InputInput/README.md

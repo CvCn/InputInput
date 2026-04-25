@@ -1,0 +1,18 @@
+## Interface: 40402, 40401
+## IconTexture: Interface\AddOns\InputInput\Media\icon
+
+## Title: |cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r_Libraries_|cffF56C6Cen|r
+## Notes: InputInpu addones English word processing module
+## Author: York
+## Version: 1.0.2
+## X-Date: 2026-04-25
+## Dependencies: InputInput
+
+## X-Category: Interface Libraries
+## X-Curse-Project-ID: 
+## X-Wago-ID: 
+
+
+Libs\LibStub.lua
+dict1.lua
+Init.lua
