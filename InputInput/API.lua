@@ -278,12 +278,12 @@ Fun({
         ['1.0.0'] = function() return false end
     },
     C_ClassColor_GetClassColor = {
-        ['8.1.5'] = function (className)
+        ['8.1.5'] = function(className)
             local color = C_ClassColor.GetClassColor(className)
             color.colorStr = color:GenerateHexColor()
             return color
         end,
-        ['1.0.0'] = function (class)
+        ['1.0.0'] = function(class)
             return RAID_CLASS_COLORS[class]
         end
     },
@@ -292,6 +292,12 @@ Fun({
     },
     UnitIsPlayer = {
         ['1.1.0'] = UnitIsPlayer
+    },
+    C_Club_GetClubInfo = {
+        ['1.1.0'] = C_Club.GetClubInfo
+    },
+    C_Club_GetStreamInfo = {
+        ['1.1.0'] = C_Club.GetStreamInfo
     }
 })
 

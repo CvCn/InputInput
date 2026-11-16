@@ -28,6 +28,8 @@ local C_ClassColor_GetClassColor = API.C_ClassColor_GetClassColor
 local GetLocale = API.GetLocale
 local C_Timer_After = API.C_Timer_After
 local UnitIsPlayer = API.UnitIsPlayer
+local C_Club_GetClubInfo = API.C_Club_GetClubInfo
+local C_Club_GetStreamInfo = API.C_Club_GetStreamInfo
 -- 引入结巴分词库
 local jieba = LibStub("inputinput-jieba")
 
@@ -802,9 +804,9 @@ local function Chat(editBox, chatType, backdropFrame2, channel_name)
 		local channelText = ""
 		if showChannelName and channelname then
 			if strfind(channelname, "Community") then
-				local clubInfo = C_Club.GetClubInfo(channelname:match(":(%d+):"));
+				local clubInfo = C_Club_GetClubInfo(channelname:match(":(%d+):"));
 				if clubInfo then
-					local streamInfo = C_Club.GetStreamInfo(clubInfo.clubId, channelname:match(":(%d+)$"));
+					local streamInfo = C_Club_GetStreamInfo(clubInfo.clubId, channelname:match(":(%d+)$"));
 					if streamInfo then
 						channelname = (clubInfo.shortName and clubInfo.shortName or clubInfo.name) ..
 							" - " .. streamInfo.name
@@ -1716,7 +1718,6 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 		end
 		-- 覆盖默认的聊天输入框打开行为
 		hooksecurefunc("ChatEdit_ActivateChat", function(self)
-
 			-- 先更新频道信息
 			-- 为了兼容TinyChat
 			local chatType = self:GetAttribute("chatType")
