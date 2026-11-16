@@ -363,7 +363,7 @@ end
 
 local messageHistory = {}
 local historyIndex = 0
-local newFontSize = 32 -- 新的字体大小
+local newFontSize = 22 -- 新的字体大小
 
 local function LoadPostion(editBox)
 	-- load point
