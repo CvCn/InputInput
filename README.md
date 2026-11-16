@@ -13,10 +13,7 @@
 - /ii or /InputInput or Esc->选项(options)->插件(addOnes)->InputInput
 
 # 支持的游戏版本 Supported WOW Versions：
-- 地心之战（TWW） 110000, 110002
-- 大地的裂变（Cata） 40400
-- 巫妖王之怒（WotLK） 30403
-- 香草60（Vanilla） 11403
+- 全版本
 
 *未做充分测试，有问题请提交反馈 Not fully tested, please submit feedback if there are any issues*
 
@@ -25,11 +22,13 @@
 - NdUI
 - 大脚（BigFoot）
 - LS_GLass
+- TinyChat
 
 # 本地化 Locales：
 - 英语 enUS
 - 简体中文 zhCN
 - 繁体中文 zhTW
+- 俄语 ruRU
 
 *其他语言本地化请提交至Locales文件夹 Please submit localization for other languages to the Locales folder*
 

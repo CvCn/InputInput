@@ -118,3 +118,7 @@ L['This will not export any of your private information'] = "Это не при�
 L['Disable Input Language Tip'] = 'Отключить подсказку языка ввода'
 
 L['chatFade'] = "Сообщения в чате постепенно исчезают"
+
+L['deleteHistory'] = "Удалить запись"
+
+L['Do you want to delete history'] = "Хотите ли вы удалить историю"
