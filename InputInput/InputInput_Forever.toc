@@ -1,0 +1,34 @@
+## Interface: 16001
+## IconTexture: Interface\AddOns\InputInput\Media\icon
+
+## Title: |cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r
+## Notes: Input box enhancement
+## Notes-zhCN: 输入框增强 /ii or /inputinput
+## Notes-zhTW: 輸入框增強 /ii or /inputinput
+## Notes-ruRU: Расширение поля ввода /ii or /inputinput
+## Author: York
+## Version: 1.1.5
+## X-Date: 2026-11-17
+
+## Category-enUS: Chat
+## Category-deDE: Chat
+## Category-esES: Chat
+## Category-esMX: Chat
+## Category-frFR: Discussion
+## Category-itIT: Chat
+## Category-koKR: 대화
+## Category-ptBR: Bate-papo
+## Category-ruRU: Чат
+## Category-zhCN: 聊天
+## Category-zhTW: 對話
+
+## X-Category: Interface Enhancements
+## X-Curse-Project-ID: 1076615
+## X-Wago-ID: aNevRn62
+
+## SavedVariables: InputInput_DB
+
+
+
+Libs/LibEditMode/embed.xml
+Init.xml

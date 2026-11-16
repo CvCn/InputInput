@@ -1,0 +1,42 @@
+## Interface: 120100
+## IconTexture: Interface\AddOns\InputInput\Media\icon
+
+## Title: |cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r_Libraries_|cffF56C6Czh|r
+## Notes: InputInput Libraries ZH--Chinese word processing module, can make input prompts more intelligent
+## Notes-zhCN: InputInput插件中文词语处理模块-可以使输入提示更智能
+## Notes-zhTW: InputInput插件中文詞語處理模組-可以使輸入提示更智能
+## Author: York
+## Version: 1.0.2
+## X-Date: 2026-04-25
+## Dependencies: InputInput
+
+## Category-enUS: Chat
+## Category-deDE: Chat
+## Category-esES: Chat
+## Category-esMX: Chat
+## Category-frFR: Discussion
+## Category-itIT: Chat
+## Category-koKR: 대화
+## Category-ptBR: Bate-papo
+## Category-ruRU: Чат
+## Category-zhCN: 聊天
+## Category-zhTW: 對話
+
+## X-Category: Interface Libraries
+## X-Curse-Project-ID: 
+## X-Wago-ID: 
+
+
+Libs\LibStub.lua
+
+simplified_1.lua
+simplified_2.lua
+simplified_3.lua
+simplified_4.lua
+traditional_1.lua
+traditional_2.lua
+traditional_3.lua
+
+words.lua
+words_traditional.lua
+Init.lua

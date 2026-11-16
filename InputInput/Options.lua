@@ -58,11 +58,12 @@ end
 SlashCmdList["INPUTINPUT"] = OpenSettingsPanel
 
 local function changeSetting(settings)
-    if W.ClientVersion >= 120000 then
-        M.MAIN:HideChat(false)
-    else
-        M.MAIN:HideChat(settings.showChat)
-    end
+    -- if W.ClientVersion >= 120000 then
+    --     M.MAIN:HideChat(false)
+    -- else
+    --     M.MAIN:HideChat(settings.showChat)
+    -- end
+    M.MAIN:HideChat(settings.showChat)
     M.MAIN:HideChannel(settings.showChannel)
     M.MAIN:HideTime(settings.showTime)
     M.MAIN:Hidebg(settings.showbg)
@@ -70,7 +71,7 @@ local function changeSetting(settings)
     M.MAIN:MultiTip(settings.showMultiTip)
     M.MAIN:DisableLoginInformation(settings.disableLoginInformation)
     M.MAIN:DisableInputLanguageTip(settings.disableInputLanguageTip)
-
+    M.MAIN:ChatFade(settings.chatFade)
     -- M:Fire('MAIN', 'HideChat', settings.showChat)
     -- M:Fire('MAIN', 'HideChannel', settings.showChannel)
     -- M:Fire('MAIN', 'HideTime', settings.showTime)
@@ -164,6 +165,8 @@ local function InItOPT(config, preX, preY, name, show)
             if v.type == 'text' then
                 frame = this[v.name] or options:CreateFontString(W.N .. v.name, "OVERLAY", "GameFontNormal")
                 frame:SetText(v.text)
+                local font, fontSize, flag = frame:GetFont()
+                frame:SetFont(font, fontSize * 0.75, flag)
                 frame:SetJustifyH('LEFT')
                 frame:SetTextColor(1, 1, 1)
                 frame:SetWordWrap(true) -- 启用换行
@@ -245,7 +248,13 @@ local function InItOPT(config, preX, preY, name, show)
                     end)
                 end
                 if v.subElement and #v.subElement > 0 then
-                    preY = InItOPT(v.subElement, baseX + offsetX, thisY, '', settings[v.name])
+                    local isShow = false
+                    if settings[v.name] ~= nil then
+                        isShow = settings[v.name]
+                    else
+                        isShow = v.default
+                    end
+                    preY = InItOPT(v.subElement, baseX + offsetX, thisY, '', isShow)
                 end
             end
         end

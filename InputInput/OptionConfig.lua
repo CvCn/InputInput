@@ -14,8 +14,8 @@ OPTCONFIG.optionConfig = {
         click = function(this, self)
         end,
         default = true,
-        version1 = 10100,
-        version2 = 110207,
+        -- version1 = 10100,
+        -- version2 = 110207,
         subElement = {
             {
                 name = 'showTime',
@@ -28,6 +28,21 @@ OPTCONFIG.optionConfig = {
                 type = 'CheckButton',
                 text = L['Show bg'],
                 default = false,
+            },
+            {
+                name = 'chatFade',
+                type = 'CheckButton',
+                text = L['chatFade'],
+                default = true,
+            },
+            {
+                name = 'deleteHistory',
+                type = 'Button',
+                text = L['deleteHistory'],
+                default = true,
+                click = function(this, self)
+                    StaticPopup_Show("InputInput_DELETE_CHATHISTORY_CONFIRMATION")
+                end
             }
         }
     },
@@ -107,12 +122,12 @@ OPTCONFIG.optionConfig = {
     {
         name = 'read_me',
         type = 'text',
-        text = '\n\n|cff909399' .. L['READ ME'] .. '|r',
+        text = '\n|cff909399' .. L['READ ME'] .. '|r',
     },
     {
         name = 'contact',
         type = 'BTNGroup',
-        offset = -150,
+        offset = -80,
         BTNElement = {
             {
                 name = 'KOOK',

@@ -903,6 +903,18 @@ StaticPopupDialogs["InputInput_RELOAD_UI_CONFIRMATION"] = {
     preferredIndex = 3,                            -- 设置提示框的显示优先级，避免与其他静态提示框冲突
 }
 
+StaticPopupDialogs["InputInput_DELETE_CHATHISTORY_CONFIRMATION"] = {
+    text = L['Do you want to delete history'], -- 提示框的文本内容，询问用户是否想要重新加载插件
+    button1 = L['Yes'],                            -- 提示框的第一个按钮，提供“是”的选项
+    button2 = L['No'],                             -- 提示框的第二个按钮，提供“否”的选项
+    OnAccept = function()                          -- 当用户点击“是”时的回调函数
+        M.MAIN:ClearMSGHistory()
+    end,
+    timeout = 10,                                  -- 提示框显示的超时时间，0表示不自动消失
+    whileDead = true,                              -- 在玩家死亡时是否显示该提示框，true表示显示
+    hideOnEscape = true,                           -- 当用户按下ESC键时是否隐藏该提示框，true表示隐藏
+    preferredIndex = 3,                            -- 设置提示框的显示优先级，避免与其他静态提示框冲突
+}
 
 
 local editTip = CreateFrame("Frame", 'II_EDITTIP', UIParent)

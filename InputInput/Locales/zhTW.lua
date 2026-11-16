@@ -76,7 +76,7 @@ L['unknown'] = "未知"
 L['TO'] = "密"
 
 -- 設置 options
-L['Show Chat'] = "顯示訊息"
+L['Show Chat'] = "顯示訊息記錄"
 L['Show channel Name'] = '顯示頻道名稱'
 L['Show Timestamp'] = "顯示時間戳記"
 L['Show bg'] = "顯示訊息背景"
@@ -118,4 +118,10 @@ L['ExportLog'] = '導出運行日誌'
 
 L['This will not export any of your private information'] = "不會導出您的任何隱私信息"
 
-L['Disable Input Language Tip'] = '關閉輸入語言提示'
+L['Disable Input Language Tip'] = '關閉輸入法提示'
+
+L['chatFade'] = "聊天訊息淡出"
+
+L['deleteHistory'] = "刪除記錄"
+
+L['Do you want to delete history'] = "是否要刪除訊息記錄"

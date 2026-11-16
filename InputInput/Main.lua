@@ -26,6 +26,8 @@ local C_ChatInfo_RegisterAddonMessagePrefix = API.C_ChatInfo_RegisterAddonMessag
 local issecretvalue = API.issecretvalue
 local C_ClassColor_GetClassColor = API.C_ClassColor_GetClassColor
 local GetLocale = API.GetLocale
+local C_Timer_After = API.C_Timer_After
+local UnitIsPlayer = API.UnitIsPlayer
 -- 引入结巴分词库
 local jieba = LibStub("inputinput-jieba")
 
@@ -249,7 +251,7 @@ local function FindHis(his, patt)
 
 	-- 匹配历史记录 2
 	searchHis(_tip, pattp[#pattp], his, true)
-	
+
 
 	-- 英文词库 2
 	if W.M_en then
@@ -363,7 +365,7 @@ end
 
 local messageHistory = {}
 local historyIndex = 0
-local newFontSize = 22 -- 新的字体大小
+local newFontSize = 28 -- 新的字体大小
 
 local function LoadPostion(editBox)
 	-- load point
@@ -425,7 +427,9 @@ local function LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II
 	scale_temp = scale
 end
 
+local chatFade = true
 local isInit = false
+
 function MAIN:Init()
 	scale = D:ReadDB('input_size', 1)
 	messageHistory = D:ReadDB('messageHistory', {}, true)
@@ -515,6 +519,28 @@ function MAIN:Init()
 	backdropFrame2:SetPoint("BOTTOM", editBox, "TOP", 0, 15)
 	backdropFrame2:SetWidth(480)
 	backdropFrame2:SetHeight(180)
+	-- 鼠标滚轮消息
+	backdropFrame2:EnableMouseWheel(true)
+	backdropFrame2.scrollOffset = 0
+	backdropFrame2:SetScript("OnMouseWheel", function(self, delta)
+		self.scrollOffset = self.scrollOffset + delta
+		if self.scrollOffset < 0 then self.scrollOffset = 0 end
+		local maxOffset = math.max(0, (#self._msgList or 0) - (self._chatShowLines or 6))
+		if self.scrollOffset > maxOffset then self.scrollOffset = maxOffset end
+		if delta > 0 then
+			chatFade = false
+			-- 按住shift滚动到最顶
+			if IsShiftKeyDown() then
+				self.scrollOffset = maxOffset
+			end
+		else
+			-- 按住shift滚动到最底
+			if IsShiftKeyDown() then
+				self.scrollOffset = 0
+			end
+		end
+		if self._chatFunc then self._chatFunc() end
+	end)
 	-- backdropFrame2:SetPoint("BOTTOMRIGHT", editBox, "BOTTOMRIGHT", 5, -5)
 
 	backdropFrame2:SetFrameLevel(editBox:GetFrameLevel())
@@ -665,6 +691,7 @@ local showbg = false
 ---@param sender string|nil
 ---@param isPlayer boolean|nil
 local function SaveMSG(saveKey, channel, senderGUID, msg, isChannel, sender, isPlayer)
+	if issecretvalue(msg) then return end
 	local key = saveKey
 	local w = strfind(channel, 'BN_WHISPER')
 	local channelMsg = D:ReadDB(key, {}, w)
@@ -672,8 +699,8 @@ local function SaveMSG(saveKey, channel, senderGUID, msg, isChannel, sender, isP
 	currtime = "|TTag:" .. time() .. "|TTag"
 	tinsert(channelMsg, currtime .. FormatMSG(channel, senderGUID, msg, isChannel, sender, isPlayer))
 	local temp = {}
-	if #channelMsg > 10 then
-		for k = #channelMsg - 10, #channelMsg do
+	if #channelMsg > 50 then
+		for k = #channelMsg - 50, #channelMsg do
 			tinsert(temp, channelMsg[k])
 		end
 	else
@@ -699,6 +726,16 @@ local ChatLabels = {
 	["BN_WHISPER"]           = 'CHAT_MSG_BN_WHISPER',
 	["BN_WHISPER_INFORM"]    = 'CHAT_MSG_BN_WHISPER_INFORM',
 }
+
+function M.MAIN:ClearMSGHistory()
+	for lable, _ in pairs(ChatLabels) do
+		local w = strfind(lable, 'BN_WHISPER')
+		D:SaveDB(lable, {}, w)
+	end
+	for i = 1, 10 do
+		D:SaveDB('CHANNEL' .. i, {}, false)
+	end
+end
 
 ---@param editBox EditBox
 local function HideEuiBorder(editBox)
@@ -741,6 +778,8 @@ local function HideLS_GLASSBorder(editBox)
 end
 
 local showChannelName = true
+local chatShowLines = 6
+
 
 ---@param editBox EditBox
 ---@param chatType string
@@ -751,15 +790,33 @@ local function Chat(editBox, chatType, backdropFrame2, channel_name)
 	local info = ChatTypeInfo[chatType]
 	local r, g, b = info.r, info.g, info.b
 	local chatGroup = Chat_GetChatCategory(chatType);
+
+	if backdropFrame2._lastChatGroup ~= chatGroup then
+		backdropFrame2.scrollOffset = 0
+		backdropFrame2._lastChatGroup = chatGroup
+	end
+
 	if chatType == "CHANNEL" then
 		local channelTarget = editBox:GetAttribute("channelTarget") or 'SAY'
 		local channelNumber, channelname = GetChannelName(channelTarget)
 		local channelText = ""
-		if showChannelName then
+		if showChannelName and channelname then
+			if strfind(channelname, "Community") then
+				local clubInfo = C_Club.GetClubInfo(channelname:match(":(%d+):"));
+				if clubInfo then
+					local streamInfo = C_Club.GetStreamInfo(clubInfo.clubId, channelname:match(":(%d+)$"));
+					if streamInfo then
+						channelname = (clubInfo.shortName and clubInfo.shortName or clubInfo.name) ..
+							" - " .. streamInfo.name
+					end
+				end
+			end
+			info = ChatTypeInfo[chatType .. channelTarget]
+			r, g, b = info.r, info.g, info.b
 			channelText = '|cFF' .. U:RGBToHex(r, g, b) .. channelTarget .. ' ' .. channelname .. '|r'
+			channel_name:SetText(channelText)
 		end
-		channel_name:SetText(channelText)
-		msg_list = D:ReadDB('CHANNEL' .. channelNumber, {})
+		msg_list = D:ReadDB('CHANNEL' .. (channelNumber or 0), {})
 	else
 		local classColor
 		local target = (editBox:GetAttribute("tellTarget") or '')
@@ -798,8 +855,13 @@ local function Chat(editBox, chatType, backdropFrame2, channel_name)
 	end
 	-- chat_h = 1
 	local c_h = 0
-	for k = 0, 4 do
-		local msg = msg_list[#msg_list - k]
+
+	local scrollOffset = backdropFrame2.scrollOffset or 0
+	backdropFrame2._msgList = msg_list
+	backdropFrame2._chatShowLines = chatShowLines
+	for k = 0, chatShowLines do
+		local msg = msg_list[#msg_list - k - scrollOffset]
+		if not msg then break end
 		msg = M.ICON:EmojiFilter(msg)
 		msg = M.ICON:IconFilter(msg)
 		msg = U:BTagFilter(msg)
@@ -827,11 +889,17 @@ local function Chat(editBox, chatType, backdropFrame2, channel_name)
 			end
 			local fontfile, _, flags = fontString:GetFont()
 			fontString:SetFont(fontfile or W.defaultFontName, 16 * scale, flags)
-			local a = 1 - math.log(k + 1) + 2 / math.log(#msg_list)
-			if a < 0 then a = 0 end
-			if a > 1 then a = 1 end
-			fontString:SetAlpha(a)
-			bgTexture:SetAlpha(a)
+			if chatFade then
+				local a = 1 - math.log(k + 1) + (chatShowLines - 3) / math.log(#msg_list)
+				if a < 0 then a = 0 end
+				if a > 1 then a = 1 end
+				fontString:SetAlpha(a)
+				bgTexture:SetAlpha(a)
+			else
+				fontString:SetAlpha(1)
+				bgTexture:SetAlpha(1)
+			end
+
 			fontString:Show()
 			if showbg then
 				bgTexture:Show()
@@ -842,6 +910,7 @@ local function Chat(editBox, chatType, backdropFrame2, channel_name)
 		end
 	end
 	backdropFrame2:SetHeight(c_h)
+	backdropFrame2._chatFunc = function() Chat(editBox, chatType, backdropFrame2, channel_name) end
 end
 
 local disableInputLanguageTip = false
@@ -884,6 +953,7 @@ local function ChannelChange(editBox, bg, bg3, border, backdropFrame2, resizeBtn
 	-- bg3:SetGradient("VERTICAL", c_start, c_end)
 	border:SetBackdropBorderColor(r, g, b, 1)
 	resizeBtnTexture:SetVertexColor(r, g, b, 1)
+
 	Chat(editBox, chatType, backdropFrame2, channel_name)
 end
 
@@ -938,7 +1008,7 @@ end
 local autoHide = true
 
 local last_text = ''
-
+local isTinyChatEnabled = false
 ---@param editBox EditBox
 ---@param bg Texture
 ---@param border table|BackdropTemplate|Frame
@@ -975,6 +1045,24 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 		else
 		end
 	end
+	-- forver版本在初次打开时，不调用ChatEdit_ActivateChat事件？
+	-- 直接使用OnShow事件
+	editBox:HookScript("OnShow", function(self)
+		-- 暴雪默认输入框存在信息不能及时更新的问题
+		-- 这个问题正式服也有
+		-- 在下一帧执行一次输入框更新可以保证显示不出问题
+		self:ClearAllPoints()
+		self:SetPoint("TOPLEFT", UIParent, -9999, -9999)
+		C_Timer_After(0, function()
+			if ChatFrame1EditBox:IsVisible() then
+				ChannelChange(ChatFrame1EditBox, bg, bg3, border, backdropFrame2, texture_btn, channel_name,
+					II_LANG)
+			end
+			LoadPostion(self)
+		end)
+		chatFade = D:ReadDB("settings", {}).chatFade
+	end)
+
 	ChatFrame1EditBoxHeaderSuffix:HookScript("OnShow", function(self)
 		ChatFrame1EditBoxHeaderSuffix:Hide()
 	end)
@@ -1069,6 +1157,8 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 					end
 				end
 			end
+			-- 发送消息时重置聊天消息滚动
+			backdropFrame2.scrollOffset = 0
 		end
 		local temp = {}
 		if #messageHistory > 100 then
@@ -1121,7 +1211,7 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 		-- local multiLine = totalHeight > fontHeight * 1.1
 		local multiLine = false
 		if key == "TAB" then
-			if not ElvUI and not NDui then
+			if not ElvUI and not NDui and not isTinyChatEnabled then
 				UpdateChannel(self)
 			end
 			if NDui then
@@ -1213,8 +1303,27 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 		end
 	else
 		hooksecurefunc("ChatEdit_UpdateHeader", function(self)
-			ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
+			if self then
+				ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
+			end
 		end)
+
+		-- forever 版本
+		-- updateHeader事件触发时聊天框信息并不是最新，所以这里在下一帧更新
+		if editBox.HookScript then
+			editBox:HookScript("OnAttributeChanged", function(self, name, value)
+				name = name:lower()
+				if name == "chattype" or name == "channeltarget" or name == "telltarget" then
+					editBox:SetAlpha(0)
+					C_Timer_After(0, function()
+						if self:IsShown() then
+							ChannelChange(self, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
+						end
+						editBox:SetAlpha(1)
+					end)
+				end
+			end)
+		end
 	end
 
 
@@ -1231,11 +1340,32 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 		self:SetText(last_text)
 	end)
 	editBox:HookScript("OnEditFocusLost", function(self)
+		if _G.TinyChatEmoteOpen then
+			self:Show()
+			return
+		end
+
+
 		if not autoHide then
 			self:Show() -- 强制显示
 			self:SetFocus() -- 保持焦点
 		else
+			-- 若鼠标正悬停在表情面板内（正在选择表情），则保持输入框显示，不关闭
+			local emoteFrame = _G.CustomEmoteFrame
+			if emoteFrame and emoteFrame:IsShown() and emoteFrame:IsMouseOver() then
+				self:Show()
+				self:SetFocus()
+				return
+			end
+
 			self:Hide()
+
+			-- 输入框失焦即关闭，同时隐藏 TinyChat 表情面板
+			if emoteFrame and emoteFrame:IsShown() then
+				emoteFrame:Hide()
+			end
+
+
 			ChatChange = false
 			if not self:GetText() or #self:GetText() <= 0 then
 				M.HISTORY:clearHistory()
@@ -1245,18 +1375,23 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 
 	local frame_E = CreateFrame("Frame", "II_EVENT_FRAME")
 
-	--正式服关闭聊天信息显示功能
-	if W.ClientVersion >= 10100 and W.ClientVersion <= 110207 then
-		for k, v in pairs(ChatLabels) do
-			frame_E:RegisterEvent(v)
-		end
-		frame_E:RegisterEvent('CHAT_MSG_CHANNEL')
+	-- 正式服关闭聊天信息显示功能(此功能已回滚，对正式服做适配)
+	-- if W.ClientVersion >= 10100 and W.ClientVersion <= 110207 then
+	for k, v in pairs(ChatLabels) do
+		frame_E:RegisterEvent(v)
 	end
+	frame_E:RegisterEvent('CHAT_MSG_CHANNEL')
+	-- end
+	frame_E:RegisterEvent('CHAT_MSG_COMMUNITIES_CHANNEL')
 
 	frame_E:HookScript("OnEvent",
 		function(self, ...)
 			local event, msg, sender, language, channelString, target, flags, zoneChannelID, channelNumber,
 			channelName, languageID, _, guid, bnSenderID, isMobile, isSubtitle, supressRaidIcons = ...
+
+			if issecretvalue(msg) then return end
+
+
 			LOG:SaveLog('msg_even_' .. event, { ... })
 
 			local chatType = strsub(event, 10) or 'SAY';
@@ -1294,9 +1429,12 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 				end
 			end
 
-			if event == 'CHAT_MSG_CHANNEL' then
+			if issecretvalue(sender) then return end
+
+			if event == 'CHAT_MSG_CHANNEL' or event == 'CHAT_MSG_COMMUNITIES_CHANNEL' then
 				SaveMSG('CHANNEL' .. channelNumber, 'CHANNEL' .. channelNumber, guid or bnSenderID, msg or '',
 					true, sender)
+
 				if ChatChange then
 					ChannelChange(editBox, bg, bg3, border, backdropFrame2, texture_btn, channel_name, II_LANG)
 				end
@@ -1312,21 +1450,23 @@ local function eventSetup(editBox, bg, border, backdropFrame2, resizeButton, tex
 				end
 			end
 			-- 记录聊天频道的信息作为提示
-			if event == 'CHAT_MSG_WHISPER' or event == 'CHAT_MSG_GUILD' or event == 'CHAT_MSG_OFFICER' or event == 'CHAT_MSG_BN_WHISPER' then
-				local patt = (msg or ''):gsub("%|c.-(%[.-%]).-%|r", function(a1)
-					return a1
-				end)
-				if patt and patt ~= "" then
-					-- 常用词
-					local hisp = U:CutWord(patt)
-					if hisp and #hisp > 0 then
-						for _, word in ipairs(hisp) do
-							if word and #word > 1 then
-								U:AddOrAddOne(C_Word, word)
+			if not issecretvalue(msg) then
+				if event == 'CHAT_MSG_WHISPER' or event == 'CHAT_MSG_GUILD' or event == 'CHAT_MSG_OFFICER' or event == 'CHAT_MSG_BN_WHISPER' then
+					local patt = (msg or ''):gsub("%|c.-(%[.-%]).-%|r", function(a1)
+						return a1
+					end)
+					if patt and patt ~= "" then
+						-- 常用词
+						local hisp = U:CutWord(patt)
+						if hisp and #hisp > 0 then
+							for _, word in ipairs(hisp) do
+								if word and #word > 1 then
+									U:AddOrAddOne(C_Word, word)
+								end
 							end
 						end
+						D:SaveDB('C_Word', C_Word, true)
 					end
-					D:SaveDB('C_Word', C_Word, true)
 				end
 			end
 		end)
@@ -1365,6 +1505,14 @@ local function optionSetup(backdropFrame2)
 
 	function MAIN:DisableInputLanguageTip(show)
 		disableInputLanguageTip = show
+	end
+
+	function MAIN:ChatShowLines(show)
+		chatShowLines = show
+	end
+
+	function MAIN:ChatFade(show)
+		chatFade = show
 	end
 
 	-- M:RegisterCallback('MAIN', 'HideChat', function(show)
@@ -1503,56 +1651,57 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 		if fristInstallVersion == nil then
 			D:SaveDB('fristInstallVersion', W.version, true)
 		end
-		if W:getVersion(updateTip) <= W:getVersion(W.version) then
-			local updateTipframe = CreateFrame("Frame", nil, UIParent)
-			updateTipframe:SetSize(1000, 200)                  -- 设置框的大小
-			updateTipframe:SetPoint("CENTER", UIParent, "CENTER", 0, 0) -- 设置框的位置
+		-- if W:getVersion(updateTip) <= W:getVersion(W.version) then
+		-- 	local updateTipframe = CreateFrame("Frame", nil, UIParent)
+		-- 	updateTipframe:SetSize(1000, 200)                  -- 设置框的大小
+		-- 	updateTipframe:SetPoint("CENTER", UIParent, "CENTER", 0, 0) -- 设置框的位置
 
-			-- 创建一个背景纹理并设置为黑色
-			local background = updateTipframe:CreateTexture(nil, "BACKGROUND")
-			background:SetAllPoints(updateTipframe) -- 设置背景纹理填满整个框
-			background:SetColorTexture(0, 0, 0, 0.6) -- 设置背景颜色为黑色（RGBA）
+		-- 	-- 创建一个背景纹理并设置为黑色
+		-- 	local background = updateTipframe:CreateTexture(nil, "BACKGROUND")
+		-- 	background:SetAllPoints(updateTipframe) -- 设置背景纹理填满整个框
+		-- 	background:SetColorTexture(0, 0, 0, 0.6) -- 设置背景颜色为黑色（RGBA）
 
-			local title = updateTipframe:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-			title:SetPoint("TOP", updateTipframe, "TOP", 0, -5) -- 设置文本在框中的位置
-			title:SetText(W.colorName)
-			local fontFile, hight, flags = title:GetFont()
-			title:SetFont(fontFile or W.defaultFontName, 44, flags)
+		-- 	local title = updateTipframe:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		-- 	title:SetPoint("TOP", updateTipframe, "TOP", 0, -5) -- 设置文本在框中的位置
+		-- 	title:SetText(W.colorName)
+		-- 	local fontFile, hight, flags = title:GetFont()
+		-- 	title:SetFont(fontFile or W.defaultFontName, 44, flags)
 
-			-- 创建一个显示文本的框
-			local text = updateTipframe:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-			text:SetPoint("CENTER", updateTipframe, "CENTER", 0, 0) -- 设置文本在框中的位置
-			text:SetText(L['UpdateTip'])                   -- 设置显示的文本
-			local fontFile, hight, flags = text:GetFont()
-			text:SetFont(fontFile or W.defaultFontName, 22, flags)
-			text:SetWordWrap(true)
-			text:SetNonSpaceWrap(true)
-			text:SetWidth(800)
+		-- 	-- 创建一个显示文本的框
+		-- 	local text = updateTipframe:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		-- 	text:SetPoint("CENTER", updateTipframe, "CENTER", 0, 0) -- 设置文本在框中的位置
+		-- 	text:SetText(L['UpdateTip'])                   -- 设置显示的文本
+		-- 	local fontFile, hight, flags = text:GetFont()
+		-- 	text:SetFont(fontFile or W.defaultFontName, 22, flags)
+		-- 	text:SetWordWrap(true)
+		-- 	text:SetNonSpaceWrap(true)
+		-- 	text:SetWidth(800)
 
-			-- 可选：修改文本颜色
-			text:SetTextColor(1, 1, 1) -- 设置文本颜色为白色
+		-- 	-- 可选：修改文本颜色
+		-- 	text:SetTextColor(1, 1, 1) -- 设置文本颜色为白色
 
-			-- 创建关闭按钮
-			local closeButton = CreateFrame("Button", nil, updateTipframe, "UIPanelCloseButton")
-			closeButton:SetPoint("TOPRIGHT", updateTipframe, "TOPRIGHT", -5, -5)
+		-- 	-- 创建关闭按钮
+		-- 	local closeButton = CreateFrame("Button", nil, updateTipframe, "UIPanelCloseButton")
+		-- 	closeButton:SetPoint("TOPRIGHT", updateTipframe, "TOPRIGHT", -5, -5)
 
-			-- 创建“下次不再提示”复选框
-			local checkBox = CreateFrame("CheckButton", nil, updateTipframe, "UICheckButtonTemplate")
-			checkBox:SetPoint("TOPRIGHT", updateTipframe, "TOPRIGHT", 30, 0)
-			checkBox.Text:SetText(L['nextNoTip'])
-			checkBox:SetChecked(false)
+		-- 	-- 创建“下次不再提示”复选框
+		-- 	local checkBox = CreateFrame("CheckButton", nil, updateTipframe, "UICheckButtonTemplate")
+		-- 	checkBox:SetPoint("TOPRIGHT", updateTipframe, "TOPRIGHT", 30, 0)
+		-- 	checkBox.Text:SetText(L['nextNoTip'])
+		-- 	checkBox:SetChecked(false)
 
-			-- 关闭按钮点击事件
-			closeButton:SetScript("OnClick", function()
-				local check = checkBox:GetChecked()
-				if check == true then
-					D:SaveDB('IIUpdateTip', '99999.0.0', true)
-				end
-				updateTipframe:Hide()
-			end)
-		end
+		-- 	-- 关闭按钮点击事件
+		-- 	closeButton:SetScript("OnClick", function()
+		-- 		local check = checkBox:GetChecked()
+		-- 		if check == true then
+		-- 			D:SaveDB('IIUpdateTip', '99999.0.0', true)
+		-- 		end
+		-- 		updateTipframe:Hide()
+		-- 	end)
+		-- end
 	end
 	if event == 'PLAYER_ENTERING_WORLD' or strfind(event, "WHISPER", 0, true) then
+		isTinyChatEnabled = C_AddOns_IsAddOnLoaded("TinyChat")
 		for _, chatFrameName in pairs(CHAT_FRAMES) do
 			local chatFrameTab = G[chatFrameName .. "Tab"]
 			-- Hook点击标签的事件
@@ -1567,20 +1716,27 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 		end
 		-- 覆盖默认的聊天输入框打开行为
 		hooksecurefunc("ChatEdit_ActivateChat", function(self)
+
+			-- 先更新频道信息
+			-- 为了兼容TinyChat
+			local chatType = self:GetAttribute("chatType")
+			local channelTarget = self:GetAttribute("channelTarget")
+			local tellTarget = self:GetAttribute("tellTarget")
+			if chatType then
+				ChatFrame1EditBox:SetAttribute("chatType", chatType)
+			end
+			if channelTarget then
+				ChatFrame1EditBox:SetAttribute("channelTarget", channelTarget)
+			end
+			if tellTarget then
+				ChatFrame1EditBox:SetAttribute("tellTarget", tellTarget)
+			end
 			-- 如果当前焦点不是 ChatFrame1EditBox，切换焦点
 			if self ~= ChatFrame1EditBox then
-				ChatFrame1EditBox:SetText(editBox:GetText()) -- 保留原输入框中的内容
+				ChatFrame1EditBox:SetText(self:GetText()) -- 保留原输入框中的内容
 				ChatFrame1EditBox:Show()
 				ChatFrame1EditBox:SetFocus()
 				self:Hide() -- 隐藏原输入框
-				-- 默认输入框失去焦点后重新设置输入框频道信息
-				local ct = ChatFrame1EditBox:GetAttribute("chatType")
-				local temp = self:GetText()
-				self:SetText("/" .. ct .. " ")
-				if temp:sub(1, 1) == '/' then
-					temp = ''
-				end
-				self:SetText(temp)
 			end
 		end)
 
@@ -1634,12 +1790,12 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 
 		-- 初始历史记录分词缓存
 		U:InitWordCache(messageHistory)
-
+		optionSetup(backdropFrame2)
 		if (C_AddOns_IsAddOnLoaded("ElvUI") or ElvUI == nil) and
 			(C_AddOns_IsAddOnLoaded("NDui") or NDui == nil) then
 			eventSetup(editBox, bg, border, backdropFrame2, resizeButton, resizeBtnTexture, channel_name, II_TIP, II_LANG,
 				bg3)
-			optionSetup(backdropFrame2)
+
 			M:RegisterCallback('OPT', 'loadOPTFinish', function()
 				if not disableLoginInformation then
 					local discord = 'https://discord.gg/qC9RAdXN'
@@ -1670,20 +1826,20 @@ frame:HookScript("OnEvent", function(self_f, event, ...)
 				end
 			end)
 
-			U:Delay(7, function(cb)
-				if GetLocale() == 'zhCN' or GetLocale() == 'zhTW' then
-					if not (C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == Enum.AddOnEnableState.All) then
-						LOG:Warn('|cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r_Libraries_|cffF56C6Czh|r ' ..
-							L['Not enabled'])
-					end
-				end
-				if GetLocale() == 'enUS' then
-					if not (C_AddOns_GetAddOnEnableState("InputInput_Libraries_en") == Enum.AddOnEnableState.All) then
-						LOG:Warn('|cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r_Libraries_|cffF56C6Cen|r ' ..
-							L['Not enabled'])
-					end
-				end
-			end)
+			-- U:Delay(7, function(cb)
+			-- 	if GetLocale() == 'zhCN' or GetLocale() == 'zhTW' then
+			-- 		if not (C_AddOns_GetAddOnEnableState("InputInput_Libraries_zh") == Enum.AddOnEnableState.All) then
+			-- 			LOG:Warn('|cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r_Libraries_|cffF56C6Czh|r ' ..
+			-- 				L['Not enabled'])
+			-- 		end
+			-- 	end
+			-- 	if GetLocale() == 'enUS' then
+			-- 		if not (C_AddOns_GetAddOnEnableState("InputInput_Libraries_en") == Enum.AddOnEnableState.All) then
+			-- 			LOG:Warn('|cff409EFF|cffffff00i|rnput|cffffff00i|rnput|r_Libraries_|cffF56C6Cen|r ' ..
+			-- 				L['Not enabled'])
+			-- 		end
+			-- 	end
+			-- end)
 
 			LoadSize(scale, editBox, backdropFrame2, channel_name, II_TIP, II_LANG)
 			LoadPostion(editBox)

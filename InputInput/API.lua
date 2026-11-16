@@ -289,6 +289,9 @@ Fun({
     },
     C_BattleNet_GetAccountInfoByGUID = {
         ['1.1.0'] = C_BattleNet.GetAccountInfoByGUID
+    },
+    UnitIsPlayer = {
+        ['1.1.0'] = UnitIsPlayer
     }
 })
 

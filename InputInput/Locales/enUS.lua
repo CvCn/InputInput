@@ -76,7 +76,7 @@ L['TO'] = "TO"
 
 
 -- 设置 options
-L['Show Chat'] = "Show Chat"
+L['Show Chat'] = "Show Chat History"
 L['Show channel Name'] = 'Show channel Name'
 L['Show Timestamp'] = "Show Timestamp"
 L['Show bg'] = "Show Message Background"
@@ -118,3 +118,9 @@ L['ExportLog'] = 'Export run log'
 L['This will not export any of your private information'] = 'This will not export any of your private information'
 
 L['Disable Input Language Tip'] = 'Disable Input Language Tip'
+
+L['chatFade'] = "chatFade"
+
+L['deleteHistory'] = "delete History"
+
+L['Do you want to delete history'] = "Do you want to delete history"

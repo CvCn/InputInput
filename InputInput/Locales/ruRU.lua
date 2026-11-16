@@ -116,3 +116,5 @@ L['ExportLog'] = 'Экспортировать журнал выполнения
 L['This will not export any of your private information'] = "Это не приведет к утечке вашей личной информации"
 
 L['Disable Input Language Tip'] = 'Отключить подсказку языка ввода'
+
+L['chatFade'] = "Сообщения в чате постепенно исчезают"
