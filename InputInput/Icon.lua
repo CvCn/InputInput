@@ -14,6 +14,12 @@ local GetAchievementInfo = API.GetAchievementInfo
 local UnitClass = API.UnitClass
 local C_CurrencyInfo_GetCurrencyInfo = API.C_CurrencyInfo_GetCurrencyInfo
 local C_ClassColor_GetClassColor = API.C_ClassColor_GetClassColor
+local GetMaxPlayerLevel = API.GetMaxPlayerLevel
+local UnitLevel = API.UnitLevel
+local C_QuestLog_GetQuestDifficultyLevel = API.C_QuestLog_GetQuestDifficultyLevel
+
+local maxPlayerLevel = GetMaxPlayerLevel()
+local playerLevel = UnitLevel('player')
 
 local emotes = {
     { value = "angel",      key = L["angel"] },
@@ -128,12 +134,12 @@ local itemshowLevel = {
 local function ReplaceIconString(text)
     -- 如果输入为空，直接返回空字符串
     if not text or text == '' then return '' end
-    
+
     -- 通过正则表达式匹配出字符串中的编码类型和ID
     local H_type, id = text:match("%|H(.-):(%d+)")
     local icon
     local suffix = ''
-    
+
     -- 根据不同的编码类型，执行相应的处理逻辑
     if H_type then
         if H_type == 'item' then
@@ -144,7 +150,7 @@ local function ReplaceIconString(text)
                     C_Item_GetItemInfo(id)
                 -- 设置物品的图标
                 icon = itemTexture
-                
+
                 -- 如果物品显示级别设置中包含该物品的类别ID，则获取并设置物品的有效等级作为后缀
                 if U:HasKey(itemshowLevel, classID) then
                     local effectiveILvl, isPreview, baseILvl = C_Item_GetDetailedItemLevelInfo(text:match("%|H(.-)|h"))
@@ -189,14 +195,24 @@ local function ReplaceIconString(text)
                 -- 设置交易技能的后缀为单位名称，带职业颜色编码
                 suffix = string.format('|c%s%s|r', classColor.colorStr, UnitName(unit))
             end
-            
+
             -- 设置交易技能的图标为法术图标
             icon = C_Spell_GetSpellTexture(spellID)
         elseif H_type == 'quest' then
-            -- 解析任务编码，并设置任务的图标和后缀
-            -- local questId, questLevel = text:match("quest:(%d+):(%d+)")
-            -- suffix = questLevel
-            -- local tagID, tagName, worldQuestType, rarity, isElite, tradeskillLineIndex, displayTitle, isDaily, isStory = C_QuestLog.GetQuestTagInfo(questId)
+            -- 解析任务编码，并设置任务的等级后缀
+            -- 非正式服提供此功能
+            -- 不支持GetQuestDifficultyLevel的版本依旧不提供
+            if W.ClientVersion < 120000 then
+                local questId, questLevel = text:match("quest:(%d+):(%d+)")
+                local level = C_QuestLog_GetQuestDifficultyLevel(tonumber(questId))
+                if level ~= nil then
+                    if level < maxPlayerLevel then
+                        suffix = level .. '+'
+                    elseif playerLevel < maxPlayerLevel then
+                        suffix = '|cffff7500' .. level .. "|r"
+                    end
+                end
+            end
         elseif H_type == 'currency' then
             -- 如果ElvUI不存在，则通过C_CurrencyInfo_GetCurrencyInfo接口获取货币信息，并设置货币的图标
             if ElvUI == nil then
@@ -240,7 +256,7 @@ local function ReplaceIconString(text)
             end
         end
     end
-    
+
     -- 将解析得到的图标和后缀拼接到原始字符串上，并返回结果
     local itemSrtr = ''
     if icon then

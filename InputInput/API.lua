@@ -2,9 +2,6 @@ local W, M, U, D, G, L, E, API, LOG = unpack((select(2, ...)))
 
 local version, buildVersion, buildDate, uiVersion = GetBuildInfo()
 
--- 斩断 ctr+shift+m
-
-
 -- 版本信息
 -- @param v 版本号
 -- @return 版本号（number）
@@ -34,6 +31,7 @@ end
 
 local clientVersion = W:getVersion(version)
 W.ClientVersion = clientVersion
+W.BuildVersion = buildVersion
 
 local function Fun(funTable)
     for name, t in pairs(funTable) do
@@ -44,7 +42,9 @@ local function Fun(funTable)
             end)
             for v, f in pairs(t) do
                 -- LOG:Debug(name, clientVersion, getVersion(v))
-                if clientVersion >= W:getVersion(v) then
+                -- forever版本在 12.1.5 (69952) → 1.60.1 (70205) Oct 2 2026  之后，这里使用buildVersion
+                -- forever接口行为和正式服是一致的？不确定
+                if tonumber(buildVersion) >= 70205 or clientVersion >= W:getVersion(v) then
                     API[name] = f
                     break
                 end
@@ -279,9 +279,11 @@ Fun({
     },
     C_ClassColor_GetClassColor = {
         ['8.1.5'] = function(className)
-            local color = C_ClassColor.GetClassColor(className)
-            color.colorStr = color:GenerateHexColor()
-            return color
+            if className then
+                local color = C_ClassColor.GetClassColor(className)
+                color.colorStr = color:GenerateHexColor()
+                return color
+            end
         end,
         ['1.0.0'] = function(class)
             return RAID_CLASS_COLORS[class]
@@ -298,6 +300,9 @@ Fun({
     },
     C_Club_GetStreamInfo = {
         ['1.1.0'] = C_Club.GetStreamInfo
+    },
+    C_QuestLog_GetQuestDifficultyLevel = {
+        ['8.2.5'] =  C_QuestLog.GetQuestDifficultyLevel
     }
 })
 
